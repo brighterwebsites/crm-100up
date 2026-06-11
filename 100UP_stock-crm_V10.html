@@ -1,0 +1,1959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>100UP — Stock CRM V8</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#F7F5F0;color:#1E1E1C;font-size:13px}
+.header{background:#1E1E1C;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.header-left h1{color:#fff;font-size:18px;font-weight:700;letter-spacing:-0.01em}
+.header-left h1 span{color:#E8610A}
+.header-left p{color:#666;font-size:11px;margin-top:2px}
+.header-right{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:7px 16px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s}
+.btn:hover{opacity:0.88}
+.btn-white{background:#E8610A;color:#fff}
+.btn-stock{background:#2C6E49;color:#fff}
+.btn-stock:hover{background:#235539;opacity:1}
+.btn-outline{background:transparent;color:#aaa;border:1.5px solid #444}
+.btn-outline:hover{border-color:#E8610A;color:#E8610A}
+.summary{display:grid;grid-template-columns:repeat(7,1fr);background:#fff;border-bottom:1px solid #E8E6E0}
+.sum-cell{padding:6px 16px;text-align:center;border-right:1px solid #E8E6E0}
+.sum-cell:last-child{border-right:none}
+.sum-num{font-size:18px;font-weight:700}
+.sum-lbl{font-size:9px;color:#888;margin-top:1px;text-transform:uppercase;letter-spacing:0.04em}
+.filter-bar{display:flex;gap:5px;padding:7px 20px;background:#fff;border-bottom:1px solid #E8E6E0;align-items:center;flex-wrap:wrap}
+.filter-lbl{font-size:11px;color:#888;margin-right:4px}
+.fbtn{padding:4px 12px;border-radius:3px;font-size:11px;border:1px solid #ddd;cursor:pointer;background:transparent;color:#555;transition:all 0.15s}
+.fbtn:hover{background:#FDF1E8;border-color:#E8610A;color:#E8610A}
+.fbtn.active{background:#1E1E1C;color:#fff;border-color:#1E1E1C}
+.shc{display:flex;align-items:center;justify-content:center;padding:5px 4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;text-align:center}
+.slc{padding:3px 2px;font-size:8px;color:#666;text-align:center;line-height:1.2;border-right:1px solid #E8E6E0}
+.lanes{min-width:960px}
+.lane{display:grid;border-bottom:1px solid #E8E6E0;min-height:40px;min-width:960px;transition:background 0.1s}
+.lane:hover{background:#FDF1E8}
+.lane-info{padding:4px 10px;display:flex;flex-direction:column;justify-content:center;border-right:2px solid #E0DDD8;background:#fff;overflow:hidden}
+.lane-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1E1E1C;line-height:1.2}
+.lane-sub{font-size:9px;color:#888;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.step-cell{display:flex;align-items:center;justify-content:center;border-right:1px solid #E8E6E0;position:relative;overflow:visible}
+.done-1{background:#FDF1E8}.done-2{background:#F0EEF8}.done-3{background:#FBF0E8}.done-4{background:#F5F0E6}
+.div-s1{border-right:2px solid #E8610A!important}.div-s2{border-right:2px solid #534AB7!important}.div-s3{border-right:2px solid #C45000!important}
+.dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;cursor:pointer;box-shadow:0 1px 5px rgba(0,0,0,0.25);position:relative;z-index:1}
+.dot-1{background:#E8610A}.dot-2{background:#534AB7}.dot-3{background:#C45000}.dot-4{background:#8B5A00}
+.dot-alert{background:#D93025;animation:pulse 1.5s infinite}.dot-stale{background:#E8A020}
+.dot-stock-warn{background:#7B3F00;animation:pulse-stock 1.8s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(217,48,37,0.5)}60%{box-shadow:0 0 0 8px rgba(217,48,37,0)}}
+@keyframes pulse-stock{0%,100%{box-shadow:0 0 0 0 rgba(123,63,0,0.55)}60%{box-shadow:0 0 0 8px rgba(123,63,0,0)}}
+.lane-stock-warn .lane-info{border-left:3px solid #7B3F00!important}
+.stock-warn-tag{display:inline-flex;align-items:center;gap:3px;background:#FFF0E0;color:#7B3F00;border:1px solid #E8A860;border-radius:3px;font-size:8px;font-weight:800;padding:0px 4px;margin-top:2px;letter-spacing:0.03em}
+.tt{display:none;position:absolute;left:36px;top:50%;transform:translateY(-50%);background:#1E1E1C;color:#fff;font-size:11px;padding:7px 12px;border-radius:6px;white-space:normal;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.35);max-width:260px;line-height:1.5}
+.dot:hover .tt{display:block}
+.legend{display:flex;gap:16px;padding:7px 20px;background:#fff;border-top:1px solid #E8E6E0;flex-wrap:wrap;align-items:center}
+.leg{display:flex;align-items:center;gap:6px;font-size:11px;color:#666}
+.leg-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.leg-arrow{margin-left:auto;font-size:11px;color:#aaa;font-style:italic}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:6px;padding:24px;width:540px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4)}
+.modal-wide{width:820px}
+.modal h2{font-size:16px;font-weight:700;margin-bottom:16px;color:#1E1E1C;border-bottom:2px solid #E8610A;padding-bottom:10px}
+.modal h2.stock-head{border-bottom-color:#2C6E49}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:11px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
+.form-group input,.form-group select,.form-group textarea{padding:8px 12px;border:1.5px solid #E0DDD8;border-radius:4px;font-size:13px;font-family:Arial,sans-serif;width:100%}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#E8610A}
+.form-group textarea{resize:vertical;min-height:70px}
+.modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
+.modal-actions .btn{padding:8px 20px}
+.btn-green{background:#E8610A;color:#fff}
+.btn-gray{background:#F0EEE8;color:#1E1E1C;border:1px solid #E0DDD8}
+.btn-gray:hover{background:#E0DDD8}
+.btn-danger{background:#E24B4A;color:#fff}
+.detail-field{margin-bottom:10px}
+.detail-label{font-size:10px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px}
+.detail-val{font-size:13px;color:#1E1E1C;font-weight:500;line-height:1.5}
+.step-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.pill{padding:3px 10px;border-radius:3px;font-size:11px;border:1px solid #E0DDD8;color:#888}
+.pill.done{background:#FDF1E8;color:#C45000;border-color:#F5C49A}
+.pill.cur{font-weight:700;color:#fff;border-color:transparent}
+.p1{background:#E8610A}.p2{background:#534AB7}.p3{background:#C45000}.p4{background:#8B5A00}
+.detail-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid #E8E6E0}
+.comp-box{background:#F7F5F0;border-radius:4px;padding:12px;margin-bottom:12px;border:1px solid #E8E6E0}
+.comp-row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid #E8E6E0}
+.comp-row:last-child{border-bottom:none}
+.comp-label{color:#888}
+.comp-val{font-weight:600}
+.alert-box{background:#FEF0EE;border:1px solid #F5B8A8;border-radius:4px;padding:10px 14px;font-size:12px;color:#8B2010;margin-bottom:12px;font-weight:600}
+.closed-section{background:#F7F5F0;border-top:2px solid #E8610A;overflow-x:auto}
+.closed-header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;cursor:pointer;user-select:none}
+.closed-header-left{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#C45000}
+.closed-header-right{font-size:11px;color:#E8610A}
+.closed-lanes{display:none}
+.closed-lanes.open{display:block}
+.lane-closed{opacity:0.72;min-width:960px}
+.lane-closed .lane-info{background:#F7F5F0}
+.closed-tick{width:22px;height:22px;border-radius:50%;background:#E8610A;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,0.2)}
+.closed-full{background:#FDF1E8}
+.dot-wrap{display:flex;flex-direction:column;align-items:center;gap:1px}
+.dot-date{font-size:8px;color:#C45000;font-weight:700;white-space:nowrap;background:#FDF1E8;padding:0px 3px;border-radius:2px;line-height:1.3;border:1px solid #F5C49A}
+
+/* ── STOCK STYLES ── */
+.stock-table{width:100%;border-collapse:collapse;margin-top:8px}
+.stock-table th{font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:#888;font-weight:700;padding:8px 12px;border-bottom:2px solid #E8E6E0;text-align:left;background:#FAFAF8}
+.stock-table td{padding:10px 12px;border-bottom:1px solid #F0EDE8;font-size:13px;vertical-align:middle}
+.stock-table tr:last-child td{border-bottom:none}
+.stock-table tr.row-ok:hover td{background:#F0FAF4}
+.stock-table tr.row-zero td{background:#F9F9F7}
+.stock-table tr.row-zero:hover td{background:#F0F0EC}
+.stock-table tr.row-neg td{background:#FEF0EE}
+.stock-table tr.row-neg:hover td{background:#FCDCD8}
+.stock-avail-ok{color:#2C6E49;font-weight:800;font-size:16px}
+.stock-avail-zero{color:#999;font-weight:700;font-size:15px}
+.stock-avail-neg{color:#C41A1A;font-weight:800;font-size:16px}
+.stock-short-badge{display:inline-block;background:#C41A1A;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:3px;letter-spacing:0.04em;margin-left:6px;vertical-align:middle;text-transform:uppercase}
+.stock-zero-badge{display:inline-block;background:#888;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;letter-spacing:0.04em;margin-left:6px;vertical-align:middle;text-transform:uppercase}
+.stock-add-row{display:flex;gap:8px;align-items:flex-end;padding:14px 0 4px;border-top:2px solid #E8E6E0;margin-top:10px;flex-wrap:wrap}
+.stock-add-row input{padding:8px 10px;border:1.5px solid #E0DDD8;border-radius:4px;font-size:13px;font-family:Arial,sans-serif}
+.stock-add-row input:focus{outline:none;border-color:#2C6E49}
+.stock-input-name{flex:1;min-width:140px}
+.stock-input-qty{width:80px}
+.job-stock-box{background:#F0FAF4;border:1px solid #B6DFC8;border-radius:4px;padding:12px;margin-bottom:12px}
+.job-stock-box .detail-label{color:#2C6E49}
+.job-stock-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #D8EFE4;font-size:12px}
+.job-stock-item:last-of-type{border-bottom:none}
+.job-stock-item-name{flex:1;font-weight:600;color:#1E1E1C}
+.job-stock-item-qty{color:#2C6E49;font-weight:700;min-width:60px;text-align:right}
+.job-stock-assign{display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.job-stock-assign select,.job-stock-assign input{padding:6px 10px;border:1.5px solid #B6DFC8;border-radius:4px;font-size:12px;font-family:Arial,sans-serif;background:#fff}
+.job-stock-assign select:focus,.job-stock-assign input:focus{outline:none;border-color:#2C6E49}
+.job-stock-assign select{flex:1;min-width:160px}
+.job-stock-assign input{width:70px}
+.stock-badge{display:inline-flex;align-items:center;gap:3px;background:#E8F5ED;color:#2C6E49;border:1px solid #B6DFC8;border-radius:3px;font-size:8px;font-weight:700;padding:0px 4px;margin-left:4px;vertical-align:middle}
+.stock-badge-warn{background:#FEF0EE;color:#8B2010;border-color:#F5B8A8}
+.over-alloc-warn{background:#FEF0EE;border:1px solid #F5B8A8;border-radius:3px;padding:5px 10px;font-size:11px;color:#8B2010;font-weight:600;margin-top:6px}
+.edit-qty-wrap{display:flex;align-items:center;gap:4px}
+.edit-qty-wrap input{width:70px;padding:5px 8px;border:1.5px solid #E0DDD8;border-radius:3px;font-size:13px;font-family:Arial,sans-serif;text-align:center}
+.edit-qty-wrap input:focus{outline:none;border-color:#2C6E49}
+
+/* ── STOCK STRIP ── */
+.stock-strip{display:flex;align-items:center;gap:6px;padding:5px 20px;background:#fff;border-bottom:1px solid #E8E6E0;flex-wrap:wrap;overflow:hidden}
+.stock-strip-lbl{font-size:10px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;flex-shrink:0}
+.stock-tile{display:inline-flex;align-items:center;gap:5px;padding:3px 10px 3px 8px;border-radius:4px;cursor:pointer;border:1px solid transparent;transition:all 0.15s;white-space:nowrap;font-size:11px}
+.stock-tile:hover{filter:brightness(0.94)}
+.stock-tile-ok{background:#E8F5ED;border-color:#B6DFC8;color:#1A4D30}
+.stock-tile-zero{background:#F0EEE8;border-color:#D8D5CE;color:#555}
+.stock-tile-neg{background:#FEE8E7;border-color:#F5B8A8;color:#7A1010;animation:pulse-strip 2s infinite}
+@keyframes pulse-strip{0%,100%{border-color:#F5B8A8}50%{border-color:#C41A1A}}
+.stock-tile-qty{font-size:13px;font-weight:800;line-height:1}
+.stock-tile-name{font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+.stock-strip-empty{font-size:11px;color:#bbb;font-style:italic}
+.stock-strip-btn{font-size:11px;color:#2C6E49;font-weight:700;cursor:pointer;background:none;border:1px solid #B6DFC8;border-radius:3px;padding:2px 8px;margin-left:4px;flex-shrink:0}
+.stock-strip-btn:hover{background:#E8F5ED}
+
+/* ── ORDER LIST VIEW ── */
+.order-view{padding:16px 20px;max-width:960px}
+.order-section-head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;padding:10px 0 8px;margin-top:4px}
+.order-section-head .order-badge{font-size:11px;font-weight:800;padding:2px 9px;border-radius:3px;letter-spacing:0.04em}
+.order-card{border-radius:5px;margin-bottom:10px;overflow:hidden;border:1px solid}
+.order-card-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;gap:8px}
+.order-card-item-name{font-size:14px;font-weight:800;flex:1}
+.order-qty-pill{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:800;padding:4px 12px;border-radius:4px;white-space:nowrap}
+.order-card-body{padding:0 14px 12px}
+.order-cust-row{display:grid;grid-template-columns:1fr 110px 100px;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.06);font-size:12px}
+.order-cust-row:last-child{border-bottom:none}
+.order-cust-name{font-weight:700;color:#1E1E1C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.order-cust-name:hover{text-decoration:underline;color:#E8610A}
+.order-cust-qty{font-weight:700;text-align:right;white-space:nowrap}
+.order-cust-date{font-size:11px;text-align:right;white-space:nowrap;font-weight:600}
+.order-col-head{display:grid;grid-template-columns:1fr 110px 100px;gap:8px;padding:4px 0 6px;font-size:9px;text-transform:uppercase;letter-spacing:0.05em;color:#999;font-weight:700;border-bottom:1px solid rgba(0,0,0,0.1);margin-bottom:2px}
+.order-card-neg{background:#FEF0EE;border-color:#F5B8A8}
+.order-card-neg .order-card-head{background:#FEE3DF}
+.order-card-neg .order-card-item-name{color:#7A1010}
+.order-card-neg .order-qty-pill{background:#C41A1A;color:#fff}
+.order-card-neg .order-cust-name{color:#7A1010}
+.order-card-neg .order-cust-qty{color:#C41A1A}
+.order-card-neg .order-cust-date{color:#A04040}
+.order-card-zero{background:#FFF7EC;border-color:#E8C870}
+.order-card-zero .order-card-head{background:#FFF0D0}
+.order-card-zero .order-card-item-name{color:#7A5000}
+.order-card-zero .order-qty-pill{background:#C47800;color:#fff}
+.order-card-zero .order-cust-name{color:#6A4400}
+.order-card-zero .order-cust-qty{color:#C47800}
+.order-card-zero .order-cust-date{color:#A07000}
+.order-empty{text-align:center;padding:32px 20px;color:#aaa;font-size:13px;font-style:italic}
+.order-summary-bar{display:flex;gap:10px;flex-wrap:wrap;padding:10px 14px;background:#fff;border:1px solid #E8E6E0;border-radius:5px;margin-bottom:16px}
+.order-sum-cell{display:flex;flex-direction:column;align-items:center;min-width:90px;padding:4px 10px}
+.order-sum-num{font-size:20px;font-weight:800;line-height:1.1}
+.order-sum-lbl{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;text-align:center}
+.order-sum-div{width:1px;background:#E8E6E0;align-self:stretch;margin:0 2px}
+
+/* ── JOB ORDER MODAL ── */
+.jo-modal{width:860px}
+.jo-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #E8610A}
+.jo-ref{font-size:11px;font-weight:700;color:#E8610A;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px}
+.jo-title{font-size:18px;font-weight:800;color:#1E1E1C}
+.jo-subtitle{font-size:12px;color:#888;margin-top:2px}
+.jo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.jo-field{display:flex;flex-direction:column;gap:3px}
+.jo-field.full{grid-column:1/-1}
+.jo-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#888}
+.jo-input{padding:7px 10px;border:1.5px solid #E0DDD8;border-radius:4px;font-size:13px;font-family:Arial,sans-serif;width:100%;background:#fff}
+.jo-input:focus{outline:none;border-color:#E8610A}
+.jo-textarea{padding:7px 10px;border:1.5px solid #E0DDD8;border-radius:4px;font-size:12px;font-family:Arial,sans-serif;width:100%;resize:vertical;min-height:60px;line-height:1.5}
+.jo-textarea:focus{outline:none;border-color:#E8610A}
+.jo-section{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#E8610A;margin:14px 0 8px;padding-bottom:5px;border-bottom:1px solid #F5C49A}
+.jo-parts-table{width:100%;border-collapse:collapse;margin-bottom:4px}
+.jo-parts-table th{font-size:10px;text-transform:uppercase;letter-spacing:0.04em;color:#888;font-weight:700;padding:6px 8px;border-bottom:2px solid #E8E6E0;text-align:left;background:#FAFAF8}
+.jo-parts-table td{padding:7px 8px;border-bottom:1px solid #F0EDE8;font-size:12px;vertical-align:middle}
+.jo-parts-table tr:last-child td{border-bottom:none}
+.jo-parts-table .from-stock{background:#F0FAF4}
+.jo-parts-table .custom-row{background:#FDF9F0}
+.jo-parts-input{padding:4px 7px;border:1.5px solid #E0DDD8;border-radius:3px;font-size:12px;font-family:Arial,sans-serif;width:100%}
+.jo-parts-input:focus{outline:none;border-color:#E8610A}
+.jo-qty-input{width:70px;text-align:center}
+.jo-add-row{display:flex;gap:6px;align-items:flex-end;padding:8px 0 2px;border-top:1px dashed #E0DDD8;margin-top:4px;flex-wrap:wrap}
+.jo-add-row input{padding:6px 9px;border:1.5px solid #E0DDD8;border-radius:3px;font-size:12px;font-family:Arial,sans-serif}
+.jo-add-row input:focus{outline:none;border-color:#E8610A}
+.btn-jo-print{background:#1E1E1C;color:#fff}
+.btn-jo-print:hover{background:#333;opacity:1}
+.jo-saved-badge{display:inline-flex;align-items:center;gap:4px;background:#E8F5ED;color:#1A4D30;border:1px solid #B6DFC8;border-radius:3px;font-size:11px;font-weight:700;padding:3px 9px;margin-left:8px}
+.jo-detail-btn{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;background:#FDF1E8;color:#C45000;border:1px solid #F5C49A;border-radius:3px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+.jo-detail-btn:hover{background:#F5C49A}
+
+/* ── STOCK ALLOCATION JOB TAGS ── */
+.alloc-jobs{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.alloc-tag{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:all 0.15s;white-space:nowrap;max-width:220px}
+.alloc-tag-s1{background:#FDF1E8;color:#C45000;border-color:#F5C49A}.alloc-tag-s1:hover{background:#F5C49A}
+.alloc-tag-s2{background:#F0EEF8;color:#3C3489;border-color:#C5C0EC}.alloc-tag-s2:hover{background:#C5C0EC}
+.alloc-tag-s3{background:#FBF0E8;color:#993C1D;border-color:#F0C0A0}.alloc-tag-s3:hover{background:#F0C0A0}
+.alloc-tag-s4{background:#F5F0E6;color:#633806;border-color:#D4C4A0}.alloc-tag-s4:hover{background:#D4C4A0}
+.alloc-tag-closed{background:#E8F5ED;color:#1A4D30;border-color:#B6DFC8}.alloc-tag-closed:hover{background:#B6DFC8}
+.alloc-tag-name{overflow:hidden;text-overflow:ellipsis;max-width:140px}
+.alloc-tag-qty{background:rgba(0,0,0,0.12);border-radius:2px;padding:0 4px;font-size:10px;font-weight:800;flex-shrink:0}
+.alloc-tag-stage{font-size:9px;opacity:0.7;flex-shrink:0}
+.alloc-none{font-size:11px;color:#bbb;font-style:italic}
+.alloc-count-lbl{font-size:12px;font-weight:700;color:#555;margin-bottom:2px}
+.stock-table td.alloc-cell{vertical-align:top;padding-top:10px}
+
+/* ── MOBILE CARD VIEW ── */
+.mobile-view{display:none}
+.mob-card{background:#fff;border-radius:6px;margin:10px 12px;box-shadow:0 1px 4px rgba(0,0,0,0.1);overflow:hidden;border-left:4px solid #E8610A}
+.mob-card-s2{border-left-color:#534AB7}.mob-card-s3{border-left-color:#C45000}.mob-card-s4{border-left-color:#8B5A00}
+.mob-card-head{padding:12px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.mob-name{font-size:15px;font-weight:700;color:#1E1E1C}
+.mob-loc{font-size:12px;color:#888;margin-top:2px}
+.mob-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:3px;white-space:nowrap;flex-shrink:0}
+.mb-1{background:#FDF1E8;color:#C45000}.mb-2{background:#F0EEF8;color:#3C3489}.mb-3{background:#FBF0E8;color:#C45000}.mb-4{background:#F5F0E6;color:#8B5A00}
+.mob-progress{padding:0 14px 4px}
+.mob-prog-label{font-size:10px;color:#888;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em}
+.mob-prog-bar{height:6px;background:#F0EDE8;border-radius:3px;overflow:hidden;margin-bottom:8px}
+.mob-prog-fill{height:100%;border-radius:3px;background:#E8610A;transition:width 0.3s}
+.mob-card-foot{padding:10px 14px;border-top:1px solid #F0EDE8;display:flex;gap:8px}
+.mob-btn{flex:1;padding:8px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;border:none;text-align:center}
+.mob-btn-primary{background:#E8610A;color:#fff}.mob-btn-gray{background:#F0EEE8;color:#1E1E1C}
+.mob-alert{background:#FEF0EE;border-left:3px solid #E24B4A;padding:6px 10px;font-size:11px;color:#8B2010;font-weight:600;margin:0 14px 8px;border-radius:0 3px 3px 0}
+.mob-stale{background:#FEF8EC;border-left:3px solid #E8A020;padding:6px 10px;font-size:11px;color:#7A5000;font-weight:600;margin:0 14px 8px;border-radius:0 3px 3px 0}
+.mob-section-head{padding:10px 12px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#888}
+.mob-empty{text-align:center;padding:40px 20px;color:#aaa;font-size:13px}
+.mob-date{font-size:11px;color:#C45000;font-weight:600;margin:0 14px 8px}
+
+@media(max-width:700px){
+  .desktop-view{display:none!important}
+  .mobile-view{display:block}
+  .header-left p{display:none}
+  .header-left h1{font-size:16px}
+  .btn-outline{padding:6px 10px;font-size:11px}
+  .btn-white{padding:6px 12px;font-size:11px}
+  .btn-stock{padding:6px 12px;font-size:11px}
+  .summary{grid-template-columns:repeat(4,1fr)}
+  .sum-cell:nth-child(5){border-top:1px solid #E8E6E0}
+  .sum-cell:nth-child(6){border-top:1px solid #E8E6E0}
+  .sum-cell:nth-child(7){border-top:1px solid #E8E6E0}
+  .filter-bar{padding:8px 12px;gap:4px}
+  .fbtn{padding:4px 9px;font-size:10px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1><span>100UP</span> — Stock CRM <span style="font-size:10px;font-weight:600;background:#333;color:#aaa;padding:2px 7px;border-radius:3px;letter-spacing:0.04em;vertical-align:middle;margin-left:4px">V8</span></h1>
+    <p>Pipeline + stock inventory</p>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-white" onclick="openAdd()">+ Add job</button>
+    <button class="btn btn-stock" onclick="openStockModal()">&#128230; Stock</button>
+    <button class="btn btn-outline" onclick="exportData()" title="Export all data">&#11014; Export</button>
+    <label class="btn btn-outline" title="Import data" style="cursor:pointer;margin:0">&#11015; Import<input type="file" accept=".json" onchange="importData(event)" style="display:none"/></label>
+    <button class="btn btn-outline" onclick="saveData()">&#128190; Save</button>
+  </div>
+</div>
+
+<div class="summary">
+  <div class="sum-cell"><div class="sum-num" id="total-count" style="color:#2C2C2A">0</div><div class="sum-lbl">Total jobs</div></div>
+  <div class="sum-cell"><div class="sum-num" id="s1-count" style="color:#E8610A">0</div><div class="sum-lbl">Communication</div></div>
+  <div class="sum-cell"><div class="sum-num" id="s2-count" style="color:#534AB7">0</div><div class="sum-lbl">Quoting</div></div>
+  <div class="sum-cell"><div class="sum-num" id="s3-count" style="color:#C45000">0</div><div class="sum-lbl">Installation</div></div>
+  <div class="sum-cell"><div class="sum-num" id="s4-count" style="color:#8B5A00">0</div><div class="sum-lbl">Compliance</div></div>
+  <div class="sum-cell"><div class="sum-num" id="closed-count" style="color:#E8610A">0</div><div class="sum-lbl">&#10003; Closed</div></div>
+  <div class="sum-cell"><div class="sum-num" id="stock-count" style="color:#2C6E49">0</div><div class="sum-lbl">&#128230; Stock items</div></div>
+</div>
+
+<div class="filter-bar">
+  <span class="filter-lbl">Show:</span>
+  <button class="fbtn active" onclick="setFilter('all',this)">All jobs</button>
+  <button class="fbtn" onclick="setFilter('alert',this)">&#128308; Alerts</button>
+  <button class="fbtn" onclick="setFilter('stale',this)">&#128993; Stale</button>
+  <button class="fbtn" onclick="setFilter('stockshort',this)">&#128230; Stock short</button>
+  <button class="fbtn" onclick="setFilter('1',this)">Communication</button>
+  <button class="fbtn" onclick="setFilter('2',this)">Quoting</button>
+  <button class="fbtn" onclick="setFilter('3',this)">Installation</button>
+  <button class="fbtn" onclick="setFilter('4',this)">Compliance</button>
+  <button class="fbtn" onclick="setFilter('closed',this)">&#10003; Closed jobs</button>
+  <button class="fbtn" id="fbtn-order" onclick="setFilter('order',this)" style="border-color:#C47800;color:#C47800;font-weight:700">&#128221; Order list</button>
+</div>
+
+<div class="stock-strip" id="stock-strip">
+  <span class="stock-strip-lbl">&#128230; Stock</span>
+  <span class="stock-strip-empty">Loading...</span>
+</div>
+
+<div class="desktop-view">
+<div id="scroll-wrap" style="overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 210px)">
+  <div id="stage-header-row"></div>
+  <div id="step-label-row"></div>
+  <div id="lanes"></div>
+</div>
+<div class="closed-section" id="closed-section">
+  <div class="closed-header" onclick="toggleClosed()">
+    <div class="closed-header-left">&#10003; Closed jobs <span id="closed-badge" style="background:#E8610A;color:#fff;padding:2px 8px;border-radius:20px;font-size:11px;margin-left:4px">0</span></div>
+    <div class="closed-header-right" id="closed-toggle-label">Show &#9660;</div>
+  </div>
+  <div class="closed-lanes" id="closed-lanes"></div>
+</div>
+<div class="legend">
+  <div class="leg"><div class="leg-dot" style="background:#E8610A"></div>Current step</div>
+  <div class="leg"><div class="leg-dot" style="background:#E24B4A"></div>Overdue / urgent</div>
+  <div class="leg"><div class="leg-dot" style="background:#E8A020"></div>Stale — 21+ days</div>
+  <div class="leg"><div class="leg-dot" style="background:#FDF1E8;border:1px solid #F5C49A"></div>Completed step</div>
+  <div class="leg"><div class="leg-dot" style="background:#2C6E49"></div>Stock assigned</div>
+  <div class="leg"><div class="leg-dot" style="background:#7B3F00"></div>Stock short — dated job</div>
+  <div class="leg-arrow">Hover dot for notes &nbsp;·&nbsp; Click to open &nbsp;·&nbsp; left → right</div>
+</div>
+</div>
+
+<div class="mobile-view" id="mobile-view"></div>
+
+<div id="order-view" style="display:none;overflow-y:auto;max-height:calc(100vh - 210px)"></div>
+
+<!-- ADD JOB MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <h2>+ Add new job</h2>
+    <div class="form-row">
+      <div class="form-group"><label>Customer name *</label><input id="f-name" placeholder="e.g. John Smith"/></div>
+      <div class="form-group"><label>Location</label><input id="f-loc" placeholder="e.g. Ballarat VIC"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>System</label><input id="f-system" placeholder="e.g. 12kW Sigenergy"/></div>
+      <div class="form-group"><label>Value ($)</label><input id="f-value" type="number" placeholder="e.g. 44000"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Email</label><input id="f-email" type="email" placeholder="customer@email.com"/></div>
+      <div class="form-group"><label>Phone</label><input id="f-phone" placeholder="04xx xxx xxx"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Contact method</label>
+        <select id="f-contact"><option>Email</option><option>Phone call</option><option>Text message</option><option>Website enquiry</option><option>Face to face</option></select>
+      </div>
+      <div class="form-group"><label>Start at stage</label>
+        <select id="f-stage">
+          <option value="1">Stage 1 — Communication</option>
+          <option value="2">Stage 2 — Quoting</option>
+          <option value="3">Stage 3 — Installation</option>
+          <option value="4">Stage 4 — Compliance</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group full"><label>Notes</label><textarea id="f-notes" placeholder="Any notes about this customer or job..."></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('add-modal')">Cancel</button>
+      <button class="btn btn-green" onclick="addJob()">Save job</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <div id="detail-content"></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('detail-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- CES SUMMARY MODAL -->
+<div class="modal-overlay" id="ces-modal">
+  <div class="modal modal-wide">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <h2 style="margin:0">CES summary</h2>
+      <span style="font-size:11px;color:#888" id="ces-sub"></span>
+    </div>
+    <p style="font-size:12px;color:#666;margin:0 0 12px">Check the details, then copy and paste straight into your email.</p>
+    <div id="ces-warnings"></div>
+    <div id="ces-content"></div>
+    <div class="modal-actions">
+      <button class="btn btn-green" onclick="copyCesTable()">&#128203; Copy table</button>
+      <button class="btn btn-gray" onclick="closeModal('ces-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- DATE PICKER MODAL -->
+<div class="modal-overlay" id="date-modal">
+  <div class="modal" style="width:420px">
+    <h2 id="date-modal-title">Set install date</h2>
+    <p style="font-size:13px;color:#666;margin-bottom:16px" id="date-modal-sub">Choose the date for this step</p>
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" id="date-picker-input" style="font-size:15px;padding:10px 12px" oninput="onDatePick()"/>
+    </div>
+    <div id="date-clash-warn"></div>
+    <div id="date-booked-list"></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('date-modal')">Cancel</button>
+      <button class="btn btn-green" onclick="confirmDate()">Confirm date</button>
+    </div>
+  </div>
+</div>
+
+<!-- STOCK MODAL -->
+<div class="modal-overlay" id="stock-modal">
+  <div class="modal modal-wide">
+    <h2 class="stock-head">&#128230; Stock inventory</h2>
+    <div id="stock-modal-content"></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('stock-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- JOB ORDER MODAL -->
+<div class="modal-overlay" id="jo-modal">
+  <div class="modal modal-wide jo-modal">
+    <div id="jo-modal-content"></div>
+    <div class="modal-actions" id="jo-modal-actions"></div>
+  </div>
+</div>
+
+<script>
+const PIPELINE={
+  1:{name:'Communication',color:'#1D9E75',light:'#E1F5EE',text:'#085041',steps:['First contact','Info collection','System proposals','Customer selects']},
+  2:{name:'Quoting',color:'#534AB7',light:'#EEEDFE',text:'#3C3489',steps:['Quote in Xero','Send quote','Deposit received']},
+  3:{name:'Installation',color:'#993C1D',light:'#FAECE7',text:'#712B13',steps:['Job info to installer','Date booked','Parts ordered','Install complete']},
+  4:{name:'Compliance & close',color:'#854F0B',light:'#FAEEDA',text:'#633806',steps:['CES submitted','Inspector review','Fixes complete','CES received','Rebate submitted','Rebate received','Job closed']},
+};
+const SOFF={1:0,2:4,3:7,4:11};
+const TOTAL=17;
+const STAGE_END={3:'div-s1',6:'div-s2',10:'div-s3'};
+const DONE_CLS={1:'done-1',2:'done-2',3:'done-3',4:'done-4'};
+const DOT_CLS={1:'dot-1',2:'dot-2',3:'dot-3',4:'dot-4'};
+const GRID='200px repeat(17,1fr) 40px';
+const NOW=Date.now();
+const DAY=86400000;
+
+let jobs=[];
+let stocks=[];
+let filter='all';
+let nextId=200;
+let stockNextId=1;
+
+// ── STOCK HELPERS ──────────────────────────────────────────────
+function getAllocated(stockId){
+  let total=0;
+  jobs.forEach(j=>{
+    if(j.stockItems) j.stockItems.forEach(si=>{if(si.stockId===stockId) total+=(si.qty||0);});
+  });
+  return total;
+}
+function getAvailable(stockId){
+  const s=stocks.find(x=>x.id===stockId);
+  if(!s) return 0;
+  return s.qty - getAllocated(stockId);
+}
+function hasStock(j){return j.stockItems&&j.stockItems.length>0;}
+function jobStockShort(j){
+  // A dated job with at least one stock item where global availability is negative
+  if(!j.dateBooked&&!j.installDate) return false;
+  if(!j.stockItems||j.stockItems.length===0) return false;
+  return j.stockItems.some(si=>getAvailable(si.stockId)<0);
+}
+function shortStockNames(j){
+  if(!j.stockItems) return [];
+  return j.stockItems.filter(si=>getAvailable(si.stockId)<0).map(si=>si.name);
+}
+
+// ── STOCK MODAL ────────────────────────────────────────────────
+function openStockModal(){renderStockModal();document.getElementById('stock-modal').classList.add('open');}
+
+function renderStockStrip(){
+  const el=document.getElementById('stock-strip');
+  if(!el)return;
+  if(stocks.length===0){
+    el.innerHTML='<span class="stock-strip-lbl">&#128230; Stock</span><span class="stock-strip-empty">No stock items — click Stock to add</span>';
+    return;
+  }
+  // sort: short first, then zero, then ok
+  const sorted=[...stocks].sort((a,b)=>{
+    const av=getAvailable(a.id), bv=getAvailable(b.id);
+    if(av<0&&bv>=0)return -1; if(bv<0&&av>=0)return 1;
+    return av-bv;
+  });
+  const tiles=sorted.map(s=>{
+    const avail=getAvailable(s.id);
+    const cls=avail<0?'stock-tile-neg':avail===0?'stock-tile-zero':'stock-tile-ok';
+    const qtyLabel=avail<0?avail:avail===0?'0':'+'+avail;
+    return `<div class="stock-tile ${cls}" onclick="openStockModal()" title="${escHtml(s.name)}: ${qtyLabel} available">
+      <span class="stock-tile-qty">${qtyLabel}</span>
+      <span class="stock-tile-name">${escHtml(s.name)}</span>
+    </div>`;
+  }).join('');
+  el.innerHTML=`<span class="stock-strip-lbl">&#128230; Stock</span>${tiles}<button class="stock-strip-btn" onclick="openStockModal()">+ Manage</button>`;
+}
+
+function renderStockModal(){
+  // sort: short first, then zero, then positive
+  const sorted=[...stocks].sort((a,b)=>{
+    const av=getAvailable(a.id), bv=getAvailable(b.id);
+    if(av<0&&bv>=0)return -1; if(bv<0&&av>=0)return 1;
+    return av-bv;
+  });
+
+  const STAGE_NAMES={1:'Comms',2:'Quote',3:'Install',4:'Compliance'};
+
+  let rows='';
+  if(sorted.length===0){
+    rows='<tr><td colspan="5" style="text-align:center;color:#aaa;padding:24px;font-size:12px">No stock items yet. Add one below.</td></tr>';
+  } else {
+    sorted.forEach(s=>{
+      const alloc=getAllocated(s.id);
+      const avail=s.qty-alloc;
+      const isNeg=avail<0, isZero=avail===0;
+      const rowCls=isNeg?'row-neg':isZero?'row-zero':'row-ok';
+      const availCls=isNeg?'stock-avail-neg':isZero?'stock-avail-zero':'stock-avail-ok';
+      const availDisplay=isNeg?String(avail):isZero?'0':'+'+avail;
+      const nameBadge=isNeg?`<span class="stock-short-badge">SHORT</span>`:isZero?`<span class="stock-zero-badge">ZERO</span>`:'';
+
+      // ── Build allocated-to job tags ──
+      const allocJobs=jobs.filter(j=>j.stockItems&&j.stockItems.some(si=>si.stockId===s.id));
+      let allocHtml='';
+      if(allocJobs.length===0){
+        allocHtml=`<span class="alloc-none">Unallocated</span>`;
+      } else {
+        const tags=allocJobs.map(j=>{
+          const si=j.stockItems.find(si=>si.stockId===s.id);
+          const qty=si?si.qty:0;
+          const cl=isClosed(j)?'alloc-tag-closed':'alloc-tag-s'+j.stage;
+          const stageLbl=isClosed(j)?'✓ Closed':STAGE_NAMES[j.stage];
+          const dateLbl=j.dateBooked?` · ${fmtDate(j.dateBooked)}`:'';
+          return `<span class="alloc-tag ${cl}" onclick="closeModal('stock-modal');setTimeout(()=>openDetail(${j.id}),80)" title="Open ${escHtml(j.name)}">
+            <span class="alloc-tag-name">${escHtml(j.name)}</span>
+            <span class="alloc-tag-qty">×${qty}</span>
+            <span class="alloc-tag-stage">${stageLbl}${dateLbl}</span>
+          </span>`;
+        }).join('');
+        allocHtml=`<div class="alloc-count-lbl">${alloc} unit${alloc!==1?'s':''} across ${allocJobs.length} job${allocJobs.length!==1?'s':''}</div><div class="alloc-jobs">${tags}</div>`;
+      }
+
+      rows+=`<tr class="${rowCls}">
+        <td style="font-weight:700;vertical-align:top;padding-top:10px">${escHtml(s.name)}${nameBadge}</td>
+        <td style="vertical-align:top;padding-top:10px">
+          <div class="edit-qty-wrap">
+            <input type="number" id="sqty-${s.id}" value="${s.qty}" min="0" title="Edit on-hand quantity"/>
+            <button class="btn btn-gray" style="padding:4px 10px;font-size:11px" onclick="saveStockQty(${s.id})">Save</button>
+          </div>
+        </td>
+        <td class="alloc-cell">${allocHtml}</td>
+        <td style="vertical-align:top;padding-top:10px"><span class="${availCls}">${availDisplay}</span></td>
+        <td style="vertical-align:top;padding-top:10px">
+          <button class="btn btn-danger" style="padding:4px 10px;font-size:11px" onclick="deleteStock(${s.id})">Delete</button>
+        </td>
+      </tr>`;
+    });
+  }
+
+  const shortCount=stocks.filter(s=>getAvailable(s.id)<0).length;
+  const shortWarning=shortCount>0
+    ?`<div style="background:#FEE8E7;border:1px solid #F5B8A8;border-radius:4px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#7A1010;font-weight:700">
+        &#9888; ${shortCount} item${shortCount>1?'s are':' is'} short — stock is over-allocated. Update on-hand quantities when stock arrives.
+      </div>`
+    :'';
+
+  document.getElementById('stock-modal-content').innerHTML=`
+    ${shortWarning}
+    <table class="stock-table">
+      <thead><tr>
+        <th>Item name</th>
+        <th style="width:150px">On hand (editable)</th>
+        <th>Allocated to jobs <span style="font-size:10px;font-weight:400;color:#aaa">— click a job tag to open it</span></th>
+        <th style="width:90px">Available</th>
+        <th style="width:70px"></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="stock-add-row">
+      <input class="stock-input-name" id="new-stock-name" placeholder="New item name (e.g. Sigenergy 12kW Inverter)" />
+      <input class="stock-input-qty" id="new-stock-qty" type="number" placeholder="Qty" min="0" value="0"/>
+      <button class="btn btn-stock" onclick="addStockItem()">+ Add item</button>
+    </div>
+    <p style="font-size:11px;color:#aaa;margin-top:10px">&#9432; Available = On hand minus Allocated. Negative means over-committed — that's allowed.</p>
+  `;
+}
+
+function addStockItem(){
+  const name=document.getElementById('new-stock-name').value.trim();
+  const qty=parseInt(document.getElementById('new-stock-qty').value)||0;
+  if(!name){alert('Item name is required.');return;}
+  stocks.push({id:stockNextId++,name,qty});
+  saveData();renderStockModal();renderStockStrip();updateSummary();toast(name+' added to stock!');
+}
+
+function saveStockQty(id){
+  const s=stocks.find(x=>x.id===id);if(!s)return;
+  const val=parseInt(document.getElementById('sqty-'+id).value)||0;
+  s.qty=val;
+  saveData();renderStockModal();renderStockStrip();updateSummary();toast('Stock quantity saved!');
+}
+
+function deleteStock(id){
+  const s=stocks.find(x=>x.id===id);if(!s)return;
+  const alloc=getAllocated(id);
+  const msg=alloc>0
+    ?`"${s.name}" is assigned to ${alloc} job(s). Deleting will remove those assignments. Continue?`
+    :`Remove "${s.name}" from stock?`;
+  if(!confirm(msg))return;
+  stocks=stocks.filter(x=>x.id!==id);
+  jobs.forEach(j=>{if(j.stockItems) j.stockItems=j.stockItems.filter(si=>si.stockId!==id);});
+  saveData();renderStockModal();renderStockStrip();updateSummary();render();toast('Stock item removed.');
+}
+
+// ── JOB STOCK ASSIGNMENT ───────────────────────────────────────
+function buildJobStockSection(j){
+  if(!j.stockItems) j.stockItems=[];
+  const items=j.stockItems;
+
+  let itemsHtml='<div style="font-size:12px;color:#aaa;padding:4px 0">No stock assigned to this job.</div>';
+  if(items.length>0){
+    itemsHtml=items.map((si,idx)=>`
+      <div class="job-stock-item">
+        <span class="job-stock-item-name">${escHtml(si.name)}</span>
+        <span class="job-stock-item-qty">× ${si.qty}</span>
+        <button onclick="removeStockFromJob(${j.id},${idx})" class="btn btn-gray" style="padding:2px 8px;font-size:11px;color:#E24B4A;flex-shrink:0">✕ Remove</button>
+      </div>`).join('');
+  }
+
+  // Build select options — show all stock items regardless of availability
+  let opts='<option value="">Select stock item...</option>';
+  if(stocks.length===0){
+    opts='<option value="" disabled>No stock items — create some in Stock</option>';
+  } else {
+    stocks.forEach(s=>{
+      const avail=getAvailable(s.id);
+      const label=avail>=0?`${s.name} (${avail} available)`:`${s.name} (${Math.abs(avail)} short)`;
+      opts+=`<option value="${s.id}">${escHtml(label)}</option>`;
+    });
+  }
+
+  return `
+    <div class="job-stock-box">
+      <div class="detail-label" style="margin-bottom:8px">&#128230; Assigned stock</div>
+      <div id="job-stock-items-${j.id}">${itemsHtml}</div>
+      <div class="job-stock-assign" style="margin-top:10px">
+        <select id="stock-sel-${j.id}">${opts}</select>
+        <input type="number" id="stock-qty-${j.id}" value="1" min="1" placeholder="Qty"/>
+        <button class="btn btn-stock" style="padding:6px 12px;font-size:12px;white-space:nowrap" onclick="addStockToJob(${j.id})">+ Assign</button>
+      </div>
+    </div>`;
+}
+
+function addStockToJob(jobId){
+  const j=jobs.find(x=>x.id===jobId);if(!j)return;
+  if(!j.stockItems) j.stockItems=[];
+  const sel=document.getElementById('stock-sel-'+jobId);
+  const stockId=parseInt(sel.value);
+  if(!stockId){alert('Please select a stock item.');return;}
+  const qty=parseInt(document.getElementById('stock-qty-'+jobId).value)||1;
+  const s=stocks.find(x=>x.id===stockId);if(!s)return;
+
+  // Check if already assigned — add to existing
+  const existing=j.stockItems.find(si=>si.stockId===stockId);
+  if(existing){existing.qty+=qty;}
+  else{j.stockItems.push({stockId,name:s.name,qty});}
+
+  // Warn if over-allocated
+  const avail=getAvailable(stockId);
+  if(avail<0){
+    toast(`⚠ ${s.name} is ${Math.abs(avail)} over-allocated across all jobs`);
+  } else {
+    toast(`${qty}× ${s.name} assigned!`);
+  }
+  saveData();render();renderStockStrip();openDetail(jobId);
+}
+
+function removeStockFromJob(jobId,idx){
+  const j=jobs.find(x=>x.id===jobId);if(!j||!j.stockItems)return;
+  const si=j.stockItems[idx];
+  j.stockItems.splice(idx,1);
+  saveData();render();openDetail(jobId);toast((si?si.name:'Item')+' removed from job.');
+}
+
+// ── PERSIST ───────────────────────────────────────────────────
+function saveData(){
+  localStorage.setItem('100up_v2',JSON.stringify(jobs));
+  localStorage.setItem('100up_nid',nextId);
+  localStorage.setItem('100up_stocks',JSON.stringify(stocks));
+  localStorage.setItem('100up_snid',stockNextId);
+  toast('Saved!');
+}
+
+function loadData(){
+  const s=localStorage.getItem('100up_v2');
+  if(s){jobs=JSON.parse(s);nextId=parseInt(localStorage.getItem('100up_nid')||'200');}
+  else{jobs=[];nextId=200;}
+  const st=localStorage.getItem('100up_stocks');
+  stocks=st?JSON.parse(st):[];
+  stockNextId=parseInt(localStorage.getItem('100up_snid')||'1');
+  // ensure all jobs have stockItems array
+  jobs.forEach(j=>{if(!j.stockItems)j.stockItems=[];});
+}
+
+function exportData(){
+  const data={jobs,stocks,nextId,stockNextId,exportedAt:new Date().toISOString(),version:'stock-1.0'};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`100UP_stock-crm_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  toast('Data exported!');
+}
+
+function importData(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.jobs||!Array.isArray(data.jobs))throw new Error('Invalid file');
+      if(!confirm(`Import ${data.jobs.length} jobs from ${data.exportedAt?new Date(data.exportedAt).toLocaleDateString('en-AU'):'this file'}? This will replace your current data.`))return;
+      jobs=data.jobs;
+      stocks=data.stocks||[];
+      nextId=data.nextId||200;
+      stockNextId=data.stockNextId||1;
+      jobs.forEach(j=>{if(!j.stockItems)j.stockItems=[];});
+      saveData();render();
+      toast(`Imported ${jobs.length} jobs, ${stocks.length} stock items!`);
+    }catch(err){alert('Could not read file. Make sure it is a 100UP export file.');}
+  };
+  reader.readAsText(file);
+  event.target.value='';
+}
+
+function toast(msg){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;bottom:24px;right:24px;background:#1E1E1C;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.2);max-width:320px';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2200);
+}
+
+function toastStock(msg){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;bottom:24px;right:24px;background:#2C6E49;color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.25);max-width:360px;line-height:1.5;border-left:4px solid #1A4D30';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),4000);
+}
+
+// ── ORDER LIST VIEW ───────────────────────────────────────────
+// Shared computation used by the order view, the printable PO, and the copy-list action
+function computeOrderData(){
+  const STAGE_NAMES={1:'Comms',2:'Quote',3:'Install',4:'Compliance'};
+  const items=stocks.map(s=>{
+    const alloc=getAllocated(s.id);
+    const avail=s.qty-alloc;
+    const allocJobs=jobs.filter(j=>j.stockItems&&j.stockItems.some(si=>si.stockId===s.id));
+    // Sort jobs by install date (soonest first), undated last
+    allocJobs.sort((a,b)=>{
+      const da=a.dateBooked||a.installDate,db=b.dateBooked||b.installDate;
+      if(da&&db)return new Date(da)-new Date(db);
+      if(da)return -1;if(db)return 1;
+      return 0;
+    });
+    return {s,alloc,avail,allocJobs};
+  });
+  const shortItems=items.filter(x=>x.avail<0);
+  const zeroItems=items.filter(x=>x.avail===0&&x.allocJobs.length>0);
+  const totalJobsAffected=new Set([
+    ...shortItems.flatMap(x=>x.allocJobs.map(j=>j.id)),
+    ...zeroItems.flatMap(x=>x.allocJobs.map(j=>j.id))
+  ]).size;
+  const totalUnitsToOrder=shortItems.reduce((sum,x)=>sum+Math.abs(x.avail),0);
+  return {STAGE_NAMES,items,shortItems,zeroItems,totalJobsAffected,totalUnitsToOrder};
+}
+
+function renderOrderView(){
+  const el=document.getElementById('order-view');
+  if(!el)return;
+
+  const {STAGE_NAMES,shortItems,zeroItems,totalJobsAffected,totalUnitsToOrder}=computeOrderData();
+
+  function buildCard(x,type){
+    const {s,avail,allocJobs}=x;
+    const toOrder=type==='short'?Math.abs(avail):0;
+    const cardCls=type==='short'?'order-card-neg':'order-card-zero';
+    const qtyLabel=type==='short'
+      ?`ORDER ${toOrder} unit${toOrder!==1?'s':''}`
+      :`ZERO STOCK`;
+    const custRows=allocJobs.map(j=>{
+      const si=j.stockItems.find(si=>si.stockId===s.id);
+      const qty=si?si.qty:0;
+      const dt=j.dateBooked||j.installDate;
+      const dtLbl=dt?fmtDate(dt):'No date set';
+      const stageLbl=isClosed(j)?'✓ Closed':STAGE_NAMES[j.stage];
+      return `<div class="order-cust-row">
+        <span class="order-cust-name" onclick="document.getElementById('order-view').style.display='none';document.querySelector('.desktop-view').style.display='';document.getElementById('mobile-view').style.display='';setTimeout(()=>openDetail(${j.id}),50)">${escHtml(j.name)}</span>
+        <span class="order-cust-qty">×${qty} needed</span>
+        <span class="order-cust-date">${stageLbl} · ${dtLbl}</span>
+      </div>`;
+    }).join('');
+    return `<div class="order-card ${cardCls}">
+      <div class="order-card-head">
+        <span class="order-card-item-name">&#128230; ${escHtml(s.name)}</span>
+        <span style="font-size:11px;color:#888;margin-right:8px">On hand: ${s.qty} &nbsp;|&nbsp; Allocated: ${getAllocated(s.id)}</span>
+        <span class="order-qty-pill">${qtyLabel}</span>
+      </div>
+      <div class="order-card-body">
+        <div class="order-col-head"><span>Customer</span><span style="text-align:right">Qty needed</span><span style="text-align:right">Stage · Date</span></div>
+        ${custRows||'<div style="font-size:12px;color:#aaa;padding:6px 0">No jobs allocated.</div>'}
+      </div>
+    </div>`;
+  }
+
+  let shortHtml='',zeroHtml='';
+  if(shortItems.length===0){
+    shortHtml=`<div class="order-empty">&#10003; No parts are short — all stock covers current allocations.</div>`;
+  } else {
+    shortHtml=shortItems.map(x=>buildCard(x,'short')).join('');
+  }
+  if(zeroItems.length===0){
+    zeroHtml=`<div class="order-empty">No items at zero with active jobs.</div>`;
+  } else {
+    zeroHtml=zeroItems.map(x=>buildCard(x,'zero')).join('');
+  }
+
+  el.innerHTML=`<div class="order-view">
+    <div class="order-summary-bar">
+      <div class="order-sum-cell"><div class="order-sum-num" style="color:#C41A1A">${shortItems.length}</div><div class="order-sum-lbl">Items short</div></div>
+      <div class="order-sum-div"></div>
+      <div class="order-sum-cell"><div class="order-sum-num" style="color:#C41A1A">${totalUnitsToOrder}</div><div class="order-sum-lbl">Units to order</div></div>
+      <div class="order-sum-div"></div>
+      <div class="order-sum-cell"><div class="order-sum-num" style="color:#C47800">${zeroItems.length}</div><div class="order-sum-lbl">At zero</div></div>
+      <div class="order-sum-div"></div>
+      <div class="order-sum-cell"><div class="order-sum-num" style="color:#555">${totalJobsAffected}</div><div class="order-sum-lbl">Jobs affected</div></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <button class="btn btn-jo-print" onclick="printOrderPO()">&#128196; Print / Save PO</button>
+      <button class="btn btn-stock" onclick="copyOrderList()">&#128203; Copy parts list</button>
+    </div>
+    <div class="order-section-head" style="color:#C41A1A">
+      &#9888; Parts to order <span class="order-badge" style="background:#C41A1A;color:#fff">${shortItems.length} item${shortItems.length!==1?'s':''}</span>
+    </div>
+    ${shortHtml}
+    <div class="order-section-head" style="color:#C47800;margin-top:10px">
+      &#128993; Watch list — zero stock <span class="order-badge" style="background:#C47800;color:#fff">${zeroItems.length} item${zeroItems.length!==1?'s':''}</span>
+    </div>
+    ${zeroHtml}
+    <p style="font-size:11px;color:#aaa;margin-top:16px">&#9432; Customer names are clickable — opens the job detail. Sorted by earliest install date.</p>
+  </div>`;
+}
+
+// ── PURCHASE ORDER / PARTS LIST FROM ORDER VIEW ────────────────
+function printOrderPO(){
+  const {shortItems,zeroItems,totalUnitsToOrder}=computeOrderData();
+  const today=new Date();
+  const dateStr=today.toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+  const ref='PO-'+today.toISOString().split('T')[0].replace(/-/g,'');
+
+  const jobsFor=x=>x.allocJobs.map(j=>{
+    const si=j.stockItems.find(si=>si.stockId===x.s.id);
+    const qty=si?si.qty:0;
+    const dt=j.dateBooked||j.installDate;
+    const dtLbl=dt?fmtDate(dt):'no date';
+    return `${escHtml(j.name)} (&times;${qty} &middot; ${dtLbl})`;
+  }).join(', ');
+
+  const shortRows=shortItems.length
+    ? shortItems.map((x,i)=>`<tr style="background:${i%2===0?'#fff':'#FAFAF8'}">
+        <td style="padding:9px 10px;border-bottom:1px solid #eee;font-weight:700">${escHtml(x.s.name)}</td>
+        <td style="padding:9px 10px;border-bottom:1px solid #eee;text-align:center;color:#888">${x.s.qty}</td>
+        <td style="padding:9px 10px;border-bottom:1px solid #eee;text-align:center;color:#888">${x.alloc}</td>
+        <td style="padding:9px 10px;border-bottom:1px solid #eee;text-align:center;font-weight:800;font-size:16px;color:#C41A1A">${Math.abs(x.avail)}</td>
+        <td style="padding:9px 10px;border-bottom:1px solid #eee;color:#555;font-size:12px">${jobsFor(x)}</td>
+        <td style="padding:9px 10px;border-bottom:1px solid #eee;text-align:center;font-size:18px">&#9723;</td>
+      </tr>`).join('')
+    : '<tr><td colspan="6" style="padding:18px;text-align:center;color:#bbb">No parts short — nothing to order.</td></tr>';
+
+  const zeroRows=zeroItems.map((x,i)=>`<tr style="background:${i%2===0?'#fff':'#FFFBF2'}">
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;font-weight:600">${escHtml(x.s.name)}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:center;color:#888">${x.alloc}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;color:#555;font-size:12px">${jobsFor(x)}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:center;font-size:18px">&#9723;</td>
+    </tr>`).join('');
+
+  const zeroSection=zeroItems.length?`
+    <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#C47800;border-bottom:1.5px solid #E8C870;padding-bottom:5px;margin:22px 0 10px">Watch list — zero on hand, jobs booked</div>
+    <table style="margin-bottom:18px">
+      <thead><tr>
+        <th style="background:#7A5000">Item</th>
+        <th style="background:#7A5000;width:90px;text-align:center">Allocated</th>
+        <th style="background:#7A5000">Needed for</th>
+        <th style="background:#7A5000;width:60px;text-align:center">&#10003;</th>
+      </tr></thead>
+      <tbody>${zeroRows}</tbody>
+    </table>`:'';
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>Purchase Order — ${ref}</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:Arial,sans-serif;color:#1E1E1C;font-size:13px;padding:28px 32px;max-width:860px;margin:0 auto}
+      @media print{body{padding:12px 16px}.no-print{display:none!important}}
+      table{width:100%;border-collapse:collapse}
+      th{background:#1E1E1C;color:#fff;padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em}
+    </style>
+  </head><body>
+    <div class="no-print" style="background:#1E1E1C;color:#fff;padding:10px 18px;border-radius:5px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-weight:700">&#128196; Purchase Order Preview — ${ref}</span>
+      <button onclick="window.print()" style="background:#E8610A;color:#fff;border:none;padding:7px 18px;border-radius:4px;font-weight:700;cursor:pointer;font-size:13px">&#128424; Print / Save PDF</button>
+    </div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #E8610A;padding-bottom:14px;margin-bottom:18px">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:#E8610A;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:3px">100UP Solar — Purchase Order</div>
+        <div style="font-size:22px;font-weight:800">${ref}</div>
+        <div style="font-size:13px;color:#888;margin-top:3px">Generated: ${dateStr}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:26px;font-weight:800;color:#C41A1A">${totalUnitsToOrder}</div>
+        <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.05em">Units to order</div>
+        <div style="font-size:12px;color:#888;margin-top:4px">${shortItems.length} item${shortItems.length!==1?'s':''} short</div>
+      </div>
+    </div>
+    <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#E8610A;border-bottom:1.5px solid #F5C49A;padding-bottom:5px;margin-bottom:10px">Parts to order</div>
+    <table style="margin-bottom:8px">
+      <thead><tr>
+        <th>Item</th>
+        <th style="width:70px;text-align:center">On hand</th>
+        <th style="width:80px;text-align:center">Allocated</th>
+        <th style="width:90px;text-align:center">Order qty</th>
+        <th>Needed for (job &times; qty &middot; date)</th>
+        <th style="width:60px;text-align:center">&#10003;</th>
+      </tr></thead>
+      <tbody>${shortRows}</tbody>
+    </table>
+    ${zeroSection}
+    <div style="margin-top:26px;border-top:1.5px solid #eee;padding-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:24px">
+      <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#888;margin-bottom:4px">Supplier</div><div style="border:1.5px solid #ccc;border-radius:3px;height:46px"></div></div>
+      <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#888;margin-bottom:4px">Ordered by / date</div><div style="border:1.5px solid #ccc;border-radius:3px;height:46px"></div></div>
+    </div>
+    <div style="margin-top:22px;font-size:10px;color:#bbb;text-align:center;border-top:1px solid #eee;padding-top:10px">100UP Solar &middot; ${ref} &middot; Generated ${new Date().toLocaleDateString('en-AU')}</div>
+  </body></html>`;
+
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+}
+
+function copyOrderList(){
+  const {shortItems,zeroItems,totalUnitsToOrder}=computeOrderData();
+  const dateStr=new Date().toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});
+  const lines=[];
+  lines.push(`100UP Solar — Parts to order (${dateStr})`);
+  lines.push('─'.repeat(34));
+  if(shortItems.length===0){
+    lines.push('Nothing short — all stock covers current jobs.');
+  } else {
+    shortItems.forEach(x=>{
+      const dts=x.allocJobs.map(j=>j.dateBooked||j.installDate).filter(Boolean).sort();
+      const soonest=dts.length?` (first needed ${fmtDate(dts[0])})`:'';
+      lines.push(`• ${x.s.name} — order ${Math.abs(x.avail)}${soonest}`);
+    });
+    lines.push('');
+    lines.push(`Total: ${totalUnitsToOrder} unit${totalUnitsToOrder!==1?'s':''} across ${shortItems.length} item${shortItems.length!==1?'s':''}`);
+  }
+  if(zeroItems.length){
+    lines.push('');
+    lines.push('Watch list (zero on hand, jobs booked):');
+    zeroItems.forEach(x=>lines.push(`• ${x.s.name} — ${x.alloc} allocated, 0 on hand`));
+  }
+  const text=lines.join('\n');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>toast('📋 Parts list copied — paste into a supplier email!')).catch(()=>fallbackCopy(text));
+  } else { fallbackCopy(text); }
+}
+
+// ── PIPELINE RENDERING ─────────────────────────────────────────
+function buildHeaders(){
+  const shr=document.getElementById('stage-header-row');
+  shr.style.cssText='display:grid;grid-template-columns:200px 4fr 3fr 4fr 8fr 40px;border-bottom:1px solid #ccc;min-width:960px';
+  shr.innerHTML=`
+    <div style="background:#F7F5F0;border-right:2px solid #E0DDD8"></div>
+    <div class="shc" style="background:#FDF1E8;color:#C45000;border-right:2px solid #E8610A">Stage 1 — Communication</div>
+    <div class="shc" style="background:#F0EEF8;color:#3C3489;border-right:2px solid #534AB7">Stage 2 — Quoting</div>
+    <div class="shc" style="background:#FBF0E8;color:#C45000;border-right:2px solid #C45000">Stage 3 — Installation</div>
+    <div class="shc" style="background:#F5F0E6;color:#8B5A00">Stage 4 — Compliance &amp; Close</div>
+    <div style="background:#F7F5F0;border-left:2px solid #E0DDD8"></div>`;
+  const slr=document.getElementById('step-label-row');
+  slr.style.cssText=`display:grid;grid-template-columns:${GRID};border-bottom:2px solid #bbb;min-width:960px`;
+  const SL=[
+    {s:'#FDF1E8',t:'#C45000',d:'div-s1',l:'First contact'},
+    {s:'#FDF1E8',t:'#C45000',d:'div-s1',l:'Info collection'},
+    {s:'#FDF1E8',t:'#C45000',d:'div-s1',l:'Proposals'},
+    {s:'#FDF1E8',t:'#C45000',d:'div-s2',l:'Selects'},
+    {s:'#F0EEF8',t:'#3C3489',d:'div-s2',l:'Quote Xero'},
+    {s:'#F0EEF8',t:'#3C3489',d:'div-s2',l:'Send quote'},
+    {s:'#F0EEF8',t:'#3C3489',d:'div-s3',l:'Deposit'},
+    {s:'#FBF0E8',t:'#C45000',d:'div-s3',l:'Job info'},
+    {s:'#FBF0E8',t:'#C45000',d:'div-s3',l:'Date booked'},
+    {s:'#FBF0E8',t:'#C45000',d:'div-s3',l:'Parts ordered'},
+    {s:'#FBF0E8',t:'#C45000',d:'',      l:'Install done'},
+    {s:'#F5F0E6',t:'#8B5A00',d:'',      l:'CES submitted'},
+    {s:'#F5F0E6',t:'#8B5A00',d:'',      l:'Inspector'},
+    {s:'#F5F0E6',t:'#8B5A00',d:'',      l:'Fixes'},
+    {s:'#F5F0E6',t:'#8B5A00',d:'',      l:'CES received'},
+    {s:'#F5F0E6',t:'#8B5A00',d:'',      l:'Rebate'},
+    {s:'#FDF1E8',t:'#C45000',d:'',      l:'&#10003; Job closed'},
+  ];
+  slr.innerHTML=`<div style="background:#F7F5F0;border-right:2px solid #E0DDD8"></div>`+
+    SL.map(s=>`<div class="slc ${s.d}" style="background:${s.s};color:${s.t}">${s.l}</div>`).join('')+
+    `<div style="background:#F7F5F0;border-left:2px solid #E0DDD8"></div>`;
+}
+
+function fmtDate(d){
+  if(!d)return null;
+  const dt=new Date(d);
+  if(isNaN(dt))return null;
+  return dt.toLocaleDateString('en-AU',{day:'numeric',month:'short'});
+}
+
+function escHtml(str){
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function isClosed(j){return j.stage===4&&j.step===6;}
+
+function updateSummary(){
+  const active=jobs.filter(j=>!isClosed(j));
+  const closed=jobs.filter(j=>isClosed(j));
+  document.getElementById('total-count').textContent=jobs.length;
+  [1,2,3,4].forEach(s=>document.getElementById(`s${s}-count`).textContent=active.filter(j=>j.stage===s).length);
+  document.getElementById('closed-count').textContent=closed.length;
+  document.getElementById('stock-count').textContent=stocks.length;
+  document.getElementById('closed-badge').textContent=closed.length;
+}
+
+function render(){
+  const orderView=document.getElementById('order-view');
+  const desktopView=document.querySelector('.desktop-view');
+  const mobileView=document.getElementById('mobile-view');
+  if(filter==='order'){
+    if(desktopView) desktopView.style.display='none';
+    if(mobileView) mobileView.style.display='none';
+    if(orderView) orderView.style.display='block';
+    renderOrderView();
+    updateSummary();
+    renderStockStrip();
+    return;
+  }
+  // Normal pipeline view
+  if(desktopView) desktopView.style.display='';
+  if(mobileView) mobileView.style.display='';
+  if(orderView) orderView.style.display='none';
+
+  const active=jobs.filter(j=>!isClosed(j));
+  const closed=jobs.filter(j=>isClosed(j));
+  const byNewest=(a,b)=>(b.created||0)-(a.created||0);
+  let list=[...active].sort(byNewest);
+  if(filter==='alert') list=list.filter(j=>j.alert);
+  else if(filter==='stale') list=list.filter(j=>j.stale);
+  else if(filter==='stockshort') list=list.filter(j=>jobStockShort(j));
+  else if(filter==='closed') list=[...closed].sort(byNewest);
+  else if(['1','2','3','4'].includes(filter)){
+    list=list.filter(j=>String(j.stage)===filter);
+    if(filter==='3'){
+      list.sort((a,b)=>{
+        if(!a.dateBooked&&!b.dateBooked)return(b.created||0)-(a.created||0);
+        if(!a.dateBooked)return 1;if(!b.dateBooked)return -1;
+        return new Date(a.dateBooked)-new Date(b.dateBooked);
+      });
+    }
+  }
+  const el=document.getElementById('lanes');
+  el.innerHTML=list.length?list.map(j=>renderLane(j,false)).join(''):'<div style="text-align:center;padding:40px;color:#999">No jobs match this filter.</div>';
+  const closedEl=document.getElementById('closed-lanes');
+  closedEl.innerHTML=closed.length?closed.map(j=>renderLane(j,true)).join(''):'<div style="text-align:center;padding:20px;color:#999;font-size:12px">No closed jobs yet.</div>';
+  updateSummary();
+  renderStockStrip();
+  renderMobile();
+}
+
+function renderLane(j,closed){
+  const g=SOFF[j.stage]+j.step;
+  const isFullyClosed=isClosed(j);
+  const hasStk=hasStock(j);
+  const stockShort=jobStockShort(j);
+  const shortNames=shortStockNames(j);
+  let cells='';
+  for(let i=0;i<TOTAL;i++){
+    const done=isFullyClosed||(i<g),cur=!isFullyClosed&&i===g;
+    const dc=done?(isFullyClosed?'closed-full':DONE_CLS[j.stage]):'';
+    const div=STAGE_END[i]||'';
+    let inner='';
+    if(isFullyClosed&&i===16){
+      inner=`<div class="closed-tick" onclick="openDetail(${j.id})" title="Job closed">&#10003;</div>`;
+    } else if(cur){
+      let cls=DOT_CLS[j.stage],lbl='&#11044;';
+      if(j.alert){cls='dot-alert';lbl='!';}
+      else if(j.stale){cls='dot-stale';lbl='~';}
+      else if(stockShort){cls='dot-stock-warn';lbl='&#128230;';}
+      const stockNote=stockShort
+        ?`<br><span style="color:#FFB86C;font-weight:700">&#9888; STOCK SHORT: ${shortNames.map(n=>escHtml(n)).join(', ')}</span>`
+        :hasStk?`<br><span style="color:#B6DFC8">&#128230; ${j.stockItems.length} item(s) assigned</span>`:'';
+      const dotEl=`<div class="dot ${cls}" onclick="openDetail(${j.id})"><span>${lbl}</span><div class="tt"><strong>${escHtml(j.name)}</strong><br>${PIPELINE[j.stage].steps[j.step]}${stockNote}<br><span style="opacity:0.8">${escHtml(j.notes||'')}</span></div></div>`;
+      const showDate=((i===8||i===9)&&j.dateBooked)?fmtDate(j.dateBooked):(i===10&&j.installDate)?fmtDate(j.installDate):null;
+      if(showDate){inner=`<div class="dot-wrap">${dotEl}<div class="dot-date">${showDate}</div></div>`;}
+      else{inner=dotEl;}
+    }
+    cells+=`<div class="step-cell ${dc} ${div}">${inner}</div>`;
+  }
+  const stockBadge=stockShort
+    ?`<span class="stock-warn-tag">&#128230; STOCK SHORT</span>`
+    :hasStk?`<span class="stock-badge">&#128230; ${j.stockItems.length}</span>`:'';
+  return `<div class="lane ${closed?'lane-closed':''} ${stockShort?'lane-stock-warn':''}" style="grid-template-columns:${GRID}">
+    <div class="lane-info" ${closed?'style="background:#f0faf6"':''}>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px">
+        <div class="lane-name" style="flex:1">${escHtml(j.name)}${isFullyClosed?' <span style="color:#1D9E75;font-size:10px">&#10003;</span>':''}</div>
+        <div onclick="quickDelete(${j.id})" title="Remove" style="cursor:pointer;color:#ccc;font-size:14px;font-weight:700;line-height:1;padding:0 2px;flex-shrink:0" onmouseover="this.style.color='#E24B4A'" onmouseout="this.style.color='#ccc'">&times;</div>
+      </div>
+      ${j.loc?`<div class="lane-sub">&#128205; ${escHtml(j.loc)}</div>`:''}
+      ${j.phone?`<div class="lane-sub">&#128222; ${escHtml(j.phone)}</div>`:''}
+      ${stockBadge}
+    </div>${cells}<div style="background:${isFullyClosed?'#1D9E75':'#f5f5f3'};border-left:2px solid ${isFullyClosed?'#1D9E75':'#ccc'}"></div></div>`;
+}
+
+function renderMobile(){
+  const STAGE_BADGE_CLS={1:'mb-1',2:'mb-2',3:'mb-3',4:'mb-4'};
+  const BORDER_CLS={1:'',2:'mob-card-s2',3:'mob-card-s3',4:'mob-card-s4'};
+  const active=jobs.filter(j=>!isClosed(j));
+  const closed=jobs.filter(j=>isClosed(j));
+  const byNewest=(a,b)=>(b.created||0)-(a.created||0);
+  let list=[...active].sort(byNewest);
+  if(filter==='alert') list=list.filter(j=>j.alert);
+  else if(filter==='stale') list=list.filter(j=>j.stale);
+  else if(filter==='stockshort') list=list.filter(j=>jobStockShort(j));
+  else if(filter==='closed') list=[...closed].sort(byNewest);
+  else if(['1','2','3','4'].includes(filter)){
+    list=list.filter(j=>String(j.stage)===filter);
+    if(filter==='3'){
+      list.sort((a,b)=>{
+        if(!a.dateBooked&&!b.dateBooked)return(b.created||0)-(a.created||0);
+        if(!a.dateBooked)return 1;if(!b.dateBooked)return -1;
+        return new Date(a.dateBooked)-new Date(b.dateBooked);
+      });
+    }
+  }
+  const totalSteps=17;
+  const gStep=j=>SOFF[j.stage]+j.step;
+  const pct=j=>Math.round((gStep(j)/totalSteps)*100);
+  const el=document.getElementById('mobile-view');
+  if(!list.length){el.innerHTML='<div class="mob-empty">No jobs match this filter.</div>';return;}
+  el.innerHTML=list.map(j=>{
+    const stageName=PIPELINE[j.stage].name;
+    const canAdv=!(j.stage===4&&j.step===6);
+    const isCl=isClosed(j);
+    const stockShort=jobStockShort(j);
+    const shortNames=shortStockNames(j);
+    let extras='';
+    if(j.alert) extras+='<div class="mob-alert">&#9888; Overdue — needs attention</div>';
+    else if(j.stale) extras+='<div class="mob-stale">&#128993; No activity for 21+ days</div>';
+    if(stockShort) extras+=`<div class="mob-alert" style="background:#FFF0E0;border-left-color:#7B3F00;color:#7B3F00">&#128230; STOCK SHORT — ${shortNames.join(', ')}</div>`;
+    if(j.dateBooked) extras+='<div class="mob-date">&#128197; Install booked: '+fmtDate(j.dateBooked)+'</div>';
+    else if(hasStock(j)&&!stockShort) extras+='<div class="mob-date" style="color:#2C6E49">&#128230; '+j.stockItems.length+' stock item(s) assigned</div>';
+    return '<div class="mob-card '+BORDER_CLS[j.stage]+'" style="'+(stockShort?'border-left-color:#7B3F00':'')+'">'
+      +'<div class="mob-card-head"><div>'
+      +'<div class="mob-name">'+escHtml(j.name)+(isCl?' &#10003;':'')+'</div>'
+      +(j.loc?'<div class="mob-loc">&#128205; '+escHtml(j.loc)+'</div>':'')
+      +'</div><span class="mob-badge '+STAGE_BADGE_CLS[j.stage]+'">'+stageName+'</span></div>'
+      +extras
+      +'<div class="mob-progress"><div class="mob-prog-label">'+PIPELINE[j.stage].steps[j.step]+'</div>'
+      +'<div class="mob-prog-bar"><div class="mob-prog-fill" style="width:'+pct(j)+'%;background:'+(j.alert?'#E24B4A':stockShort?'#7B3F00':j.stale?'#E8A020':'#E8610A')+'"></div></div></div>'
+      +'<div class="mob-card-foot">'
+      +(canAdv?'<button class="mob-btn mob-btn-primary" onclick="advanceStep('+j.id+')">Advance &rarr;</button>':'<span style="font-size:12px;color:#E8610A;font-weight:700;padding:8px 0">&#10003; Closed</span>')
+      +'<button class="mob-btn mob-btn-gray" onclick="openDetail('+j.id+')">Details</button>'
+      +'<button class="mob-btn" style="background:#F0FAF4;color:#2C6E49;border:1px solid #B6DFC8;flex:0.7" onclick="copyJobDetails('+j.id+')" title="Copy to clipboard">&#128203;</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+function toggleClosed(){
+  const el=document.getElementById('closed-lanes');
+  const lbl=document.getElementById('closed-toggle-label');
+  el.classList.toggle('open');
+  lbl.innerHTML=el.classList.contains('open')?'Hide &#9650;':'Show &#9660;';
+}
+
+function setFilter(f,btn){
+  filter=f;
+  document.querySelectorAll('.fbtn').forEach(b=>{
+    b.classList.remove('active');
+    // restore order button style when not active
+    if(b.id==='fbtn-order'){b.style.borderColor='#C47800';b.style.color='#C47800';}
+  });
+  btn.classList.add('active');
+  if(f==='order'){btn.style.borderColor='';btn.style.color='';}
+  render();
+}
+
+function openAdd(){
+  ['f-name','f-loc','f-system','f-value','f-email','f-phone','f-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('add-modal').classList.add('open');
+}
+
+function addJob(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){alert('Customer name is required.');return;}
+  jobs.unshift({
+    id:nextId++,name,
+    loc:document.getElementById('f-loc').value.trim(),
+    system:document.getElementById('f-system').value.trim(),
+    value:parseFloat(document.getElementById('f-value').value)||0,
+    email:document.getElementById('f-email').value.trim(),
+    phone:document.getElementById('f-phone').value.trim(),
+    contact:document.getElementById('f-contact').value,
+    stage:parseInt(document.getElementById('f-stage').value),
+    step:0,stale:false,alert:false,
+    notes:document.getElementById('f-notes').value.trim(),
+    created:Date.now(),
+    stockItems:[],
+    installDate:'',dateBooked:'',cesSubmitted:'',cesReceived:'',rebateSubmitted:'',rebateReceived:'',fixesNeeded:false
+  });
+  saveData();closeModal('add-modal');render();toast(name+' added!');
+}
+
+function openDetail(id){
+  const j=jobs.find(x=>x.id===id);if(!j)return;
+  if(!j.stockItems) j.stockItems=[];
+  const g=SOFF[j.stage]+j.step;
+  let pills='',gi=0;
+  for(let s=1;s<=4;s++){
+    PIPELINE[s].steps.forEach((name,i)=>{
+      const done=gi<g,cur=gi===g;
+      pills+=`<span class="pill${done?' done':''}${cur?' cur p'+s:''}">${name}</span>`;
+      gi++;
+    });
+  }
+  let ov=false,dC=null;
+  if(j.stage===4){
+    const ds=d=>d?Math.floor((new Date()-new Date(d))/86400000):null;
+    dC=ds(j.cesSubmitted);
+    ov=dC!==null&&!j.cesReceived&&dC>14;
+  }
+  const canAdv=!(j.stage===4&&j.step===6);
+
+  const editDate=(label,field,val,color)=>`
+    <div class="detail-field">
+      <div class="detail-label">${label}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+        <input type="date" value="${val||''}" id="ef-${field}-${j.id}" style="font-size:12px;padding:4px 8px;border:1.5px solid #e0e0e0;border-radius:6px;color:${color||'#2C2C2A'};font-weight:${color?'700':'400'};width:150px"/>
+        <button onclick="saveFieldDate(${j.id},'${field}')" class="btn btn-green" style="padding:4px 10px;font-size:11px">Save</button>
+      </div>
+    </div>`;
+
+  const editField=(label,field,val,full)=>`
+    <div class="detail-field"${full?' style="grid-column:1/-1"':''}>
+      <div class="detail-label">${label}</div>
+      <div style="display:flex;align-items:center;gap:5px;margin-top:2px">
+        <input type="text" value="${escHtml(val||'')}" id="ef-${field}-${j.id}" style="font-size:12px;padding:4px 8px;border:1.5px solid #e0e0e0;border-radius:6px;width:100%;font-family:Arial,sans-serif"/>
+        <button onclick="saveTextField(${j.id},'${field}')" class="btn btn-green" style="padding:3px 8px;font-size:11px;white-space:nowrap">Save</button>
+      </div>
+    </div>`;
+
+  document.getElementById('detail-content').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <h2 style="margin:0">${escHtml(j.name)}</h2>
+      <span style="font-size:10px;color:#888">${j.created?new Date(j.created).toLocaleDateString('en-AU'):''}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      ${editField('Name','name',j.name,true)}
+      ${editField('Phone','phone',j.phone,false)}
+      ${editField('Address / location','loc',j.loc,false)}
+      ${j.dateBooked||j.stage>=3?editDate('Date booked','dateBooked',j.dateBooked,'#993C1D'):''}
+      ${j.installDate||j.stage>=3?editDate('Install complete','installDate',j.installDate,''):''}
+    </div>
+    <div class="detail-field" style="margin-bottom:10px">
+      <div class="detail-label">Pipeline progress</div>
+      <div class="step-pills">${pills}</div>
+    </div>
+    ${buildJobStockSection(j)}
+    ${j.stockConsumed&&j.stockConsumed.length>0?`
+    <div class="job-stock-box" style="background:#E8F5ED;border-color:#B6DFC8;margin-bottom:12px">
+      <div class="detail-label" style="color:#1A4D30;margin-bottom:6px">&#9989; Stock consumed at install</div>
+      ${j.stockConsumed.map(si=>`<div class="job-stock-item"><span class="job-stock-item-name">${escHtml(si.name)}</span><span class="job-stock-item-qty" style="color:#1A4D30">× ${si.qty} used</span></div>`).join('')}
+    </div>`:''}
+    <div class="detail-field" style="margin-bottom:12px">
+      <div class="detail-label">Notes</div>
+      <textarea id="ef-notes-${j.id}" style="width:100%;margin-top:4px;padding:8px 10px;font-size:12px;font-family:Arial,sans-serif;border:1.5px solid #e0e0e0;border-radius:6px;resize:vertical;min-height:70px;line-height:1.5">${escHtml(j.notes||'')}</textarea>
+      <button onclick="saveNotes(${j.id})" class="btn btn-green" style="margin-top:5px;padding:4px 12px;font-size:11px">Save notes</button>
+    </div>
+    ${j.stage===4?`<div class="comp-box" style="margin-bottom:12px">
+      ${editDate('CES submitted','cesSubmitted',j.cesSubmitted,'')}
+      <div class="comp-row" style="margin-top:6px"><span class="comp-label">Days waiting for CES</span><span class="comp-val" style="${ov?'color:#E24B4A':''}">${j.cesReceived?'Received '+j.cesReceived:dC!==null?dC+'d and counting':'—'}</span></div>
+      ${editDate('CES received','cesReceived',j.cesReceived,'#1D9E75')}
+      <div class="comp-row" style="margin-top:6px"><span class="comp-label">Fixes needed</span><span class="comp-val">${j.fixesNeeded?'Yes':'No'} <button onclick="toggleFixes(${j.id})" class="btn btn-gray" style="padding:2px 8px;font-size:11px;margin-left:6px">${j.fixesNeeded?'Clear':'Flag'}</button></span></div>
+      ${editDate('Rebate submitted','rebateSubmitted',j.rebateSubmitted,'')}
+      ${editDate('Rebate received','rebateReceived',j.rebateReceived,'#1D9E75')}
+    </div>`:''}
+    ${ov?`<div class="alert-box">&#9888;&#65039; CES waiting ${dC} days — overdue! Chase the inspector now.</div>`:''}
+    <div class="detail-actions">
+      ${canAdv?`<button class="btn btn-green" onclick="advanceStep(${j.id})">Advance &rarr;</button>`:'<span style="color:#1D9E75;font-weight:700">&#10003; Job closed</span>'}
+      ${(j.stage>1||j.step>0)?`<button class="btn btn-gray" onclick="moveBack(${j.id})">&larr; Move back</button>`:''}
+      <button class="btn btn-gray" onclick="closeModal('detail-modal');openJobOrder(${j.id})" style="background:#FDF1E8;color:#C45000;border:1px solid #F5C49A">&#128196; Job order</button>
+      ${(j.stage===4||(j.stage===3&&j.installDate))?`<button class="btn btn-gray" onclick="openCesSummary(${j.id})" style="background:#F5F0E6;color:#8B5A00;border:1px solid #E5D6B0">&#128203; CES summary</button>`:''}
+      <button class="btn btn-gray" onclick="copyJobDetails(${j.id})" style="background:#F0FAF4;color:#2C6E49;border:1px solid #B6DFC8">&#128203; Copy details</button>
+      <button class="btn btn-gray" onclick="if(confirm('Remove this job?')){deleteJob(${j.id})}">Delete job</button>
+    </div>`;
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+// ── CES SUMMARY ───────────────────────────────────────────────
+// Maps each stock item (by stock id) to the detail a CES summary needs.
+// EDIT THIS to match your stock. cat = battery | inverter | panel | other.
+//   battery  -> mfr, model, kw  (nominal capacity kW, per unit), kwh (storage kWh, per unit)
+//   inverter -> mfr, model, kva (per unit)
+//   panel    -> mfr, model, w   (watts per panel)
+//   other    -> ignored in the CES blocks (e.g. gateways)
+// ⚠ = verify the model string / certification standard against your CEC listing.
+// Deye + Jinko legal names come from your Ann Schluter sheet; the rest are best-guess.
+const CES_CATALOG={
+  1:{cat:'inverter',mfr:'Sigenergy Technology Co., Ltd',model:'SigenStor EC 12.0 SP (AS4777.2:2020)',kva:12,verify:true},
+  2:{cat:'battery', mfr:'Sigenergy Technology Co., Ltd',model:'SigenStor BAT 8.0',kw:8,kwh:8.06,verify:true},
+  3:{cat:'inverter',mfr:'NingBo Deye Inverter Technology Co Ltd',model:'AI-W5.1-8P1-AU-B (AS4777-2 2020)',kva:8},
+  4:{cat:'battery', mfr:'Ningbo Deye Ess Technology Co Ltd',model:'AI-W5.1-B',kw:5.1,kwh:5.12},
+  5:{cat:'inverter',mfr:'Sigenergy Technology Co., Ltd',model:'SigenStor EC 8.0 SP (AS4777.2:2020)',kva:8,verify:true},
+  6:{cat:'panel',   mfr:'Jinko Solar Co., Ltd',model:'JKM475N-60HL4-V (IEC 61215)',w:475,verify:true},
+  7:{cat:'panel',   mfr:'Trina Solar Co., Ltd',model:'TSM-DE19R 475W (IEC 61215)',w:475,verify:true},
+  8:{cat:'other'},
+};
+const CES_HDR_FILL='#D9D9D9';
+
+function cesItems(j){
+  // Prefer what was actually consumed at install; fall back to assigned stock.
+  if(j.stockConsumed&&j.stockConsumed.length>0) return j.stockConsumed;
+  return j.stockItems||[];
+}
+
+function buildCesData(j){
+  const items=cesItems(j);
+  const groups={battery:[],inverter:[],panel:[]};
+  const unknown=[]; const verify=new Set();
+  items.forEach(si=>{
+    const c=CES_CATALOG[si.stockId];
+    if(!c){unknown.push(si.name);return;}
+    if(c.cat==='other')return;
+    if(c.verify)verify.add(c.model);
+    if(groups[c.cat]) groups[c.cat].push({c,qty:si.qty||0});
+  });
+  let totalW=0;
+  groups.panel.forEach(p=>totalW+=(p.c.w||0)*p.qty);
+  const totalKw=Math.round(totalW/10)/100; // kW, 2dp
+  return {groups,unknown,verify:[...verify],totalKw};
+}
+
+function fmtCesDate(d){
+  if(!d)return '';
+  const dt=new Date(d); if(isNaN(dt))return escHtml(d);
+  const p=n=>String(n).padStart(2,'0');
+  return p(dt.getDate())+'.'+p(dt.getMonth()+1)+'.'+dt.getFullYear();
+}
+
+function cesLocationCell(j){
+  const lines=[];
+  if(j.name)lines.push(j.name);
+  if(j.loc)lines.push(j.loc);
+  if(j.email)lines.push('Email: '+j.email);
+  lines.push('Phone:'+(j.phone?' '+j.phone:''));
+  return lines.map(escHtml).join('<br>');
+}
+
+// Returns the inner-table HTML only (this is what gets copied into the email).
+function buildCesTableHtml(j){
+  const {groups,totalKw}=buildCesData(j);
+  const tdC='padding:4px 8px;border:1px solid #999;text-align:center;vertical-align:middle';
+  const th=`padding:4px 8px;border:1px solid #999;text-align:center;vertical-align:middle;background:${CES_HDR_FILL};font-weight:bold`;
+  const E=`<td style="${tdC}"></td>`;
+  let rows='';
+  // Battery block
+  if(groups.battery.length){
+    rows+=`<tr><td style="${th}">Battery system manufacture</td><td style="${th}">Battery Model</td><td style="${th}">nominal capacity kW</td><td style="${th}">Nominal storage capacity kWh</td><td style="${th}">Number of battery systems</td></tr>`;
+    groups.battery.forEach(b=>{
+      rows+=`<tr><td style="${tdC}">${escHtml(b.c.mfr)}</td><td style="${tdC}">${escHtml(b.c.model)}</td><td style="${tdC}">${b.c.kw??''}</td><td style="${tdC}">${b.c.kwh!=null?Math.round(b.c.kwh*b.qty*100)/100:''}</td><td style="${tdC}">${b.qty}</td></tr>`;
+    });
+  }
+  // Inverter block
+  if(groups.inverter.length){
+    rows+=`<tr><td style="${th}">Inverter Manufacturer</td><td style="${th}">Inverter Model</td><td style="${th}">inverter capacity kVa</td><td style="${th}">Number of inverters installed</td>${E.replace(tdC,th)}</tr>`;
+    groups.inverter.forEach(v=>{
+      rows+=`<tr><td style="${tdC}">${escHtml(v.c.mfr)}</td><td style="${tdC}">${escHtml(v.c.model)}</td><td style="${tdC}">${v.c.kva??''}</td><td style="${tdC}">${v.qty}</td>${E}</tr>`;
+    });
+  }
+  // Panel block
+  if(groups.panel.length){
+    rows+=`<tr><td style="${th}">Solar panels manufacture</td><td style="${th}">Panels model</td><td style="${th}">Capacity W</td><td style="${th}">Number of panels</td>${E.replace(tdC,th)}</tr>`;
+    groups.panel.forEach(p=>{
+      rows+=`<tr><td style="${tdC}">${escHtml(p.c.mfr)}</td><td style="${tdC}">${escHtml(p.c.model)}</td><td style="${tdC}">${p.c.w??''}</td><td style="${tdC}">${p.qty}</td>${E}</tr>`;
+    });
+  }
+  // Install block
+  rows+=`<tr><td style="${th}">install location</td><td style="${th}">Total rated capacity kW</td><td style="${th}">Installation date</td>${E.replace(tdC,th)}${E.replace(tdC,th)}</tr>`;
+  const dateStr=fmtCesDate(j.installDate||j.dateBooked);
+  rows+=`<tr><td style="${tdC};text-align:left;vertical-align:top">${cesLocationCell(j)}</td><td style="${tdC}">${groups.panel.length?totalKw:''}</td><td style="${tdC}">${dateStr}</td>${E}${E}</tr>`;
+  return `<table style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#000">${rows}</table>`;
+}
+
+function openCesSummary(id){
+  const j=jobs.find(x=>x.id===id); if(!j)return;
+  const {unknown,verify,groups}=buildCesData(j);
+  document.getElementById('ces-sub').textContent=j.name||'';
+  const warns=[];
+  if(!groups.battery.length&&!groups.inverter.length&&!groups.panel.length){
+    warns.push('No matching stock on this job yet — assign the inverter, battery and panels first, then re-open this.');
+  } else {
+    if(!groups.panel.length)warns.push('No solar panels on this job\u2019s stock, so the panel block and total kW are blank.');
+    if(!groups.inverter.length)warns.push('No inverter on this job\u2019s stock.');
+    if(!groups.battery.length)warns.push('No battery on this job\u2019s stock.');
+  }
+  if(unknown.length)warns.push('Not in the CES catalogue (skipped): '+unknown.join(', ')+'. Add them to CES_CATALOG in the file.');
+  if(verify.length)warns.push('\u26A0 Verify these model strings / standards against your CEC listing before sending: '+verify.join('; ')+'.');
+  document.getElementById('ces-warnings').innerHTML=warns.length
+    ? '<div style="background:#FFF6E5;border:1px solid #F0D38A;border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:#7A5A00;line-height:1.5">'+warns.map(escHtml).join('<br>')+'</div>'
+    : '';
+  document.getElementById('ces-content').innerHTML='<div id="ces-table-wrap" style="overflow-x:auto">'+buildCesTableHtml(j)+'</div>';
+  document.getElementById('ces-modal').classList.add('open');
+}
+
+function copyCesTable(){
+  const wrap=document.getElementById('ces-table-wrap'); if(!wrap)return;
+  const html=wrap.innerHTML;
+  const tmp=document.createElement('div'); tmp.innerHTML=html;
+  const text=tmp.innerText;
+  if(navigator.clipboard&&window.ClipboardItem){
+    const item=new ClipboardItem({
+      'text/html':new Blob([html],{type:'text/html'}),
+      'text/plain':new Blob([text],{type:'text/plain'})
+    });
+    navigator.clipboard.write([item])
+      .then(()=>toast('\uD83D\uDCCB CES table copied — paste into your email!'))
+      .catch(()=>fallbackCopy(text));
+  } else {fallbackCopy(text);}
+}
+
+// ── JOB ORDER ─────────────────────────────────────────────────
+function joRef(j){
+  const pad=n=>String(n).padStart(4,'0');
+  return 'JO-'+pad(j.id)+'-'+new Date().getFullYear();
+}
+
+function openJobOrder(id){
+  const j=jobs.find(x=>x.id===id);if(!j)return;
+  if(!j.jobOrder) j.jobOrder={};
+  const jo=j.jobOrder;
+
+  const today=new Date().toISOString().split('T')[0];
+  const ref=jo.ref||joRef(j);
+  const issued=jo.issued||today;
+  const installer=jo.installer||'';
+  const vehicle=jo.vehicle||'';
+  const siteAccess=jo.siteAccess||'';
+  const specialInstructions=jo.specialInstructions||'';
+  const systemDesc=jo.systemDesc||(j.system||'');
+  const extraNotes=jo.extraNotes||'';
+
+  const stockRows=(j.stockItems||[]).map((si,i)=>`
+    <tr class="from-stock">
+      <td><input class="jo-parts-input" id="jo-sn-${i}" value="${escHtml(si.name)}" placeholder="Part name"/></td>
+      <td><span style="font-size:10px;background:#E8F5ED;color:#2C6E49;padding:1px 5px;border-radius:2px;font-weight:700">Stock</span></td>
+      <td><input class="jo-parts-input jo-qty-input" id="jo-sq-${i}" type="number" value="${si.qty}" min="0"/></td>
+      <td><input class="jo-parts-input" id="jo-sno-${i}" value="${escHtml(si.notes||'')}" placeholder="Notes..."/></td>
+      <td></td>
+    </tr>`).join('');
+
+  const customItems=jo.customItems||[];
+  const customRowsHtml=customItems.map((ci,i)=>`
+    <tr class="custom-row" id="jo-crow-${i}">
+      <td><input class="jo-parts-input" id="jo-cn-${i}" value="${escHtml(ci.name)}" placeholder="Item description"/></td>
+      <td><span style="font-size:10px;background:#FDF1E8;color:#C45000;padding:1px 5px;border-radius:2px;font-weight:700">Custom</span></td>
+      <td><input class="jo-parts-input jo-qty-input" id="jo-cq-${i}" type="number" value="${ci.qty||1}" min="0"/></td>
+      <td><input class="jo-parts-input" id="jo-cno-${i}" value="${escHtml(ci.notes||'')}" placeholder="Notes..."/></td>
+      <td><button onclick="removeCustomItem(${id},${i})" class="btn btn-danger" style="padding:2px 7px;font-size:11px">✕</button></td>
+    </tr>`).join('');
+
+  const hasParts=(j.stockItems&&j.stockItems.length>0)||customItems.length>0;
+  const emptyRow=hasParts?'':'<tr><td colspan="5" style="text-align:center;color:#bbb;font-size:12px;padding:14px">No parts assigned yet — add custom items below or assign stock from the job detail.</td></tr>';
+
+  const savedBadge=jo.savedAt
+    ?`<span class="jo-saved-badge">&#10003; Saved ${new Date(jo.savedAt).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}</span>`
+    :'';
+
+  document.getElementById('jo-modal-content').innerHTML=`
+    <div class="jo-header">
+      <div>
+        <div class="jo-ref">${ref}</div>
+        <div class="jo-title">Job Order — ${escHtml(j.name)}</div>
+        <div class="jo-subtitle">${escHtml(j.loc||'')}${j.phone?' · '+escHtml(j.phone):''}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        ${savedBadge}
+        <div style="font-size:11px;color:#888;margin-top:4px">${PIPELINE[j.stage].name} › ${PIPELINE[j.stage].steps[j.step]}</div>
+      </div>
+    </div>
+
+    <div class="jo-section">Job details</div>
+    <div class="jo-grid">
+      <div class="jo-field"><label class="jo-label">Job order ref</label><input class="jo-input" id="jo-ref" value="${escHtml(ref)}"/></div>
+      <div class="jo-field"><label class="jo-label">Date issued</label><input class="jo-input" id="jo-issued" type="date" value="${issued}"/></div>
+      <div class="jo-field"><label class="jo-label">Customer</label><input class="jo-input" id="jo-customer" value="${escHtml(j.name)}"/></div>
+      <div class="jo-field"><label class="jo-label">Phone</label><input class="jo-input" id="jo-phone" value="${escHtml(j.phone||'')}"/></div>
+      <div class="jo-field full"><label class="jo-label">Address</label><input class="jo-input" id="jo-address" value="${escHtml(j.loc||'')}"/></div>
+      <div class="jo-field"><label class="jo-label">Install date</label><input class="jo-input" id="jo-installdate" type="date" value="${j.dateBooked||''}"/></div>
+      <div class="jo-field"><label class="jo-label">Installer name</label><input class="jo-input" id="jo-installer" value="${escHtml(installer)}" placeholder="e.g. Mark R."/></div>
+      <div class="jo-field"><label class="jo-label">Vehicle / rego</label><input class="jo-input" id="jo-vehicle" value="${escHtml(vehicle)}" placeholder="e.g. Ford Ranger — 1ABC234"/></div>
+      <div class="jo-field full"><label class="jo-label">System description</label><input class="jo-input" id="jo-systemdesc" value="${escHtml(systemDesc)}" placeholder="e.g. 12kW Sigenergy off-grid system"/></div>
+    </div>
+
+    <div class="jo-section">Parts &amp; materials</div>
+    <table class="jo-parts-table">
+      <thead><tr>
+        <th style="width:42%">Item / description</th>
+        <th style="width:80px">Type</th>
+        <th style="width:80px">Qty</th>
+        <th>Notes</th>
+        <th style="width:40px"></th>
+      </tr></thead>
+      <tbody id="jo-parts-body">${emptyRow}${stockRows}${customRowsHtml}</tbody>
+    </table>
+    <div class="jo-add-row">
+      <input id="jo-new-name" class="jo-parts-input" style="flex:1;min-width:160px" placeholder="Custom item / description (e.g. Tilt frame 15°, Cable 50m, Labour)"/>
+      <input id="jo-new-qty" class="jo-parts-input jo-qty-input" type="number" value="1" min="1" placeholder="Qty"/>
+      <input id="jo-new-notes" class="jo-parts-input" style="width:140px" placeholder="Notes (optional)"/>
+      <button class="btn btn-stock" onclick="addCustomItem(${id})" style="padding:6px 14px;font-size:12px;white-space:nowrap">+ Add item</button>
+    </div>
+
+    <div class="jo-section">Site &amp; instructions</div>
+    <div class="jo-grid">
+      <div class="jo-field full"><label class="jo-label">Site access notes</label><textarea class="jo-textarea" id="jo-siteaccess" placeholder="Gate codes, road conditions, parking, hazards...">${escHtml(siteAccess)}</textarea></div>
+      <div class="jo-field full"><label class="jo-label">Special instructions</label><textarea class="jo-textarea" id="jo-special" placeholder="Specific install requirements, customer preferences, electrical notes...">${escHtml(specialInstructions)}</textarea></div>
+      <div class="jo-field full"><label class="jo-label">Additional notes</label><textarea class="jo-textarea" id="jo-extranotes" placeholder="Anything else the installer should know...">${escHtml(extraNotes)}</textarea></div>
+    </div>`;
+
+  document.getElementById('jo-modal-actions').innerHTML=`
+    <button class="btn btn-gray" onclick="closeModal('jo-modal');openDetail(${id})">&#8592; Back to job</button>
+    <button class="btn btn-gray" onclick="saveJobOrder(${id})">&#128190; Save</button>
+    <button class="btn btn-jo-print" onclick="saveJobOrder(${id});printJobOrder(${id})">&#128196; Print / Save PDF</button>
+    <button class="btn btn-gray" onclick="closeModal('jo-modal')">Close</button>`;
+
+  document.getElementById('jo-modal').classList.add('open');
+}
+
+function saveJobOrder(id){
+  const j=jobs.find(x=>x.id===id);if(!j)return;
+  if(!j.jobOrder) j.jobOrder={};
+  const jo=j.jobOrder;
+  jo.ref=document.getElementById('jo-ref').value.trim();
+  jo.issued=document.getElementById('jo-issued').value;
+  jo.installer=document.getElementById('jo-installer').value.trim();
+  jo.vehicle=document.getElementById('jo-vehicle').value.trim();
+  jo.siteAccess=document.getElementById('jo-siteaccess').value.trim();
+  jo.specialInstructions=document.getElementById('jo-special').value.trim();
+  jo.systemDesc=document.getElementById('jo-systemdesc').value.trim();
+  jo.extraNotes=document.getElementById('jo-extranotes').value.trim();
+  jo.savedAt=Date.now();
+  (j.stockItems||[]).forEach((si,i)=>{
+    const n=document.getElementById('jo-sn-'+i);
+    const q=document.getElementById('jo-sq-'+i);
+    const no=document.getElementById('jo-sno-'+i);
+    if(n) si.name=n.value.trim();
+    if(q) si.qty=parseInt(q.value)||si.qty;
+    if(no) si.notes=no.value.trim();
+  });
+  const saved=[];
+  (jo.customItems||[]).forEach((ci,i)=>{
+    const n=document.getElementById('jo-cn-'+i);
+    const q=document.getElementById('jo-cq-'+i);
+    const no=document.getElementById('jo-cno-'+i);
+    saved.push({name:n?n.value.trim():ci.name,qty:q?parseInt(q.value)||1:ci.qty,notes:no?no.value.trim():ci.notes||''});
+  });
+  jo.customItems=saved;
+  const dt=document.getElementById('jo-installdate').value;
+  if(dt) j.dateBooked=dt;
+  saveData();
+  toast('Job order saved!');
+  const badge=document.querySelector('.jo-saved-badge');
+  if(badge) badge.textContent='✓ Saved '+new Date().toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});
+}
+
+function addCustomItem(id){
+  const j=jobs.find(x=>x.id===id);if(!j)return;
+  if(!j.jobOrder) j.jobOrder={};
+  if(!j.jobOrder.customItems) j.jobOrder.customItems=[];
+  const name=document.getElementById('jo-new-name').value.trim();
+  if(!name){alert('Item description is required.');return;}
+  const qty=parseInt(document.getElementById('jo-new-qty').value)||1;
+  const notes=document.getElementById('jo-new-notes').value.trim();
+  saveJobOrder(id);
+  j.jobOrder.customItems.push({name,qty,notes});
+  saveData();
+  openJobOrder(id);
+  toast(name+' added!');
+}
+
+function removeCustomItem(id,idx){
+  const j=jobs.find(x=>x.id===id);if(!j||!j.jobOrder||!j.jobOrder.customItems)return;
+  saveJobOrder(id);
+  j.jobOrder.customItems.splice(idx,1);
+  saveData();
+  openJobOrder(id);
+}
+
+function printJobOrder(id){
+  const j=jobs.find(x=>x.id===id);if(!j)return;
+  const jo=j.jobOrder||{};
+  const ref=jo.ref||joRef(j);
+  const issued=jo.issued?new Date(jo.issued).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}):'—';
+  const installDate=j.dateBooked?new Date(j.dateBooked).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}):'Not scheduled';
+
+  const allParts=[
+    ...(j.stockItems||[]).map(si=>({name:si.name,qty:si.qty,notes:si.notes||'',type:'Stock'})),
+    ...(jo.customItems||[]).map(ci=>({name:ci.name,qty:ci.qty,notes:ci.notes||'',type:'Custom'}))
+  ];
+
+  const partsRows=allParts.length
+    ? allParts.map((p,i)=>`<tr style="background:${i%2===0?'#fff':'#FAFAF8'}">
+        <td style="padding:8px 10px;border-bottom:1px solid #eee;font-weight:600">${escHtml(p.name)}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:center"><span style="background:${p.type==='Stock'?'#E8F5ED':'#FDF1E8'};color:${p.type==='Stock'?'#1A4D30':'#C45000'};padding:1px 7px;border-radius:2px;font-size:11px;font-weight:700">${p.type}</span></td>
+        <td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:center;font-weight:700;font-size:15px">${p.qty}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #eee;color:#666">${escHtml(p.notes)}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #eee;width:80px;text-align:center;font-size:18px">&#9723;</td>
+      </tr>`).join('')
+    : '<tr><td colspan="5" style="padding:16px;text-align:center;color:#bbb">No parts listed</td></tr>';
+
+  const section=(title,content)=>content?`
+    <div style="margin-bottom:18px">
+      <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#E8610A;border-bottom:1.5px solid #F5C49A;padding-bottom:5px;margin-bottom:10px">${title}</div>
+      <div style="font-size:13px;color:#333;line-height:1.6;white-space:pre-wrap">${escHtml(content)}</div>
+    </div>`:'';
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>Job Order — ${escHtml(ref)}</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:Arial,sans-serif;color:#1E1E1C;font-size:13px;padding:28px 32px;max-width:820px;margin:0 auto}
+      @media print{body{padding:12px 16px}.no-print{display:none!important}}
+      table{width:100%;border-collapse:collapse}
+      th{background:#1E1E1C;color:#fff;padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em}
+      .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;margin-bottom:18px}
+      .info-cell{display:flex;flex-direction:column;gap:2px}
+      .info-lbl{font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:#999;font-weight:700}
+      .info-val{font-size:13px;font-weight:600;color:#1E1E1C}
+      .sign-box{border:1.5px solid #ccc;border-radius:3px;height:60px;margin-top:6px}
+    </style>
+  </head><body>
+    <div class="no-print" style="background:#1E1E1C;color:#fff;padding:10px 18px;border-radius:5px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-weight:700">&#128196; Job Order Preview — ${escHtml(ref)}</span>
+      <button onclick="window.print()" style="background:#E8610A;color:#fff;border:none;padding:7px 18px;border-radius:4px;font-weight:700;cursor:pointer;font-size:13px">&#128424; Print / Save PDF</button>
+    </div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #E8610A;padding-bottom:14px;margin-bottom:18px">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:#E8610A;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:3px">100UP Solar — Job Order</div>
+        <div style="font-size:22px;font-weight:800">${escHtml(ref)}</div>
+        <div style="font-size:13px;color:#888;margin-top:3px">Issued: ${issued}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:18px;font-weight:800;color:#1E1E1C">${escHtml(j.name)}</div>
+        <div style="font-size:12px;color:#888;margin-top:2px">${escHtml(j.loc||'')}</div>
+        ${j.phone?`<div style="font-size:12px;color:#888">&#128222; ${escHtml(j.phone)}</div>`:''}
+      </div>
+    </div>
+    <div class="info-grid">
+      <div class="info-cell"><span class="info-lbl">System</span><span class="info-val">${escHtml(jo.systemDesc||j.system||'—')}</span></div>
+      <div class="info-cell"><span class="info-lbl">Install date</span><span class="info-val" style="color:#993C1D">${installDate}</span></div>
+      <div class="info-cell"><span class="info-lbl">Installer</span><span class="info-val">${escHtml(jo.installer||'—')}</span></div>
+      <div class="info-cell"><span class="info-lbl">Vehicle / Rego</span><span class="info-val">${escHtml(jo.vehicle||'—')}</span></div>
+    </div>
+    <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#E8610A;border-bottom:1.5px solid #F5C49A;padding-bottom:5px;margin-bottom:10px">Parts &amp; materials</div>
+    <table style="margin-bottom:18px">
+      <thead><tr>
+        <th>Item / Description</th><th style="width:80px;text-align:center">Type</th>
+        <th style="width:70px;text-align:center">Qty</th><th>Notes</th>
+        <th style="width:80px;text-align:center">&#10003; Checked</th>
+      </tr></thead>
+      <tbody>${partsRows}</tbody>
+    </table>
+    ${section('Site access notes',jo.siteAccess)}
+    ${section('Special instructions',jo.specialInstructions)}
+    ${section('Additional notes',jo.extraNotes)}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:24px;border-top:1.5px solid #eee;padding-top:18px">
+      <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#888;margin-bottom:4px">Installer sign-off</div><div class="sign-box"></div><div style="font-size:10px;color:#aaa;margin-top:4px">Signature &amp; date</div></div>
+      <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#888;margin-bottom:4px">Customer sign-off</div><div class="sign-box"></div><div style="font-size:10px;color:#aaa;margin-top:4px">Signature &amp; date</div></div>
+    </div>
+    <div style="margin-top:22px;font-size:10px;color:#bbb;text-align:center;border-top:1px solid #eee;padding-top:10px">100UP Solar · ${escHtml(ref)} · Generated ${new Date().toLocaleDateString('en-AU')}</div>
+  </body></html>`;
+
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+}
+
+let pendingAdvance=null;
+
+// ── BOOKED INSTALL DATES (shown when picking a new date) ───────
+function bookedInstalls(excludeId){
+  // Jobs with a scheduled install date that hasn't been completed yet
+  return jobs
+    .filter(j=>j.id!==excludeId && j.dateBooked && !j.installDate)
+    .sort((a,b)=>new Date(a.dateBooked)-new Date(b.dateBooked));
+}
+
+function renderBookedDatesList(excludeId,selDate){
+  const wrap=document.getElementById('date-booked-list');
+  if(!wrap)return;
+  const list=bookedInstalls(excludeId);
+  if(list.length===0){
+    wrap.innerHTML='<div style="font-size:11px;color:#aaa;font-style:italic;margin-top:12px;border-top:1.5px solid #E8E6E0;padding-top:10px">No other installs currently booked.</div>';
+    return;
+  }
+  const todayStr=new Date().toISOString().split('T')[0];
+  const rows=list.map(j=>{
+    const date=j.dateBooked;
+    const past=date<todayStr;
+    const match=selDate&&date===selDate;
+    const dayLbl=new Date(date).toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-bottom:1px solid #F0EDE8;font-size:12px;${past?'opacity:0.5;':''}${match?'background:#FFF0E0;':''}">
+      <span style="font-weight:700;color:#993C1D;white-space:nowrap;min-width:104px">${dayLbl}</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(j.name)}${match?' <span style="color:#7B3F00;font-weight:700">&larr; same day</span>':''}</span>
+      ${j.loc?`<span style="color:#aaa;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${escHtml(j.loc)}</span>`:''}
+    </div>`;
+  }).join('');
+  wrap.innerHTML=`<div style="margin-top:14px;border-top:1.5px solid #E8E6E0;padding-top:10px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#888;margin-bottom:5px">&#128197; Installs already booked (${list.length})</div>
+    <div style="max-height:170px;overflow-y:auto">${rows}</div>
+  </div>`;
+}
+
+function onDatePick(){
+  const val=document.getElementById('date-picker-input').value;
+  const excludeId=pendingAdvance?pendingAdvance.id:null;
+  const warn=document.getElementById('date-clash-warn');
+  if(warn){
+    const clashes=bookedInstalls(excludeId).filter(j=>j.dateBooked===val);
+    warn.innerHTML=(val&&clashes.length)
+      ?`<div style="background:#FFF0E0;border:1px solid #E8A860;border-radius:4px;padding:7px 10px;font-size:12px;color:#7B3F00;font-weight:600;margin-top:10px">&#9888; ${clashes.length} install${clashes.length>1?'s':''} already booked on this day: ${clashes.map(j=>escHtml(j.name)).join(', ')}</div>`
+      :'';
+  }
+  renderBookedDatesList(excludeId,val);
+}
+
+function advanceStep(id){
+  const j=jobs.find(x=>x.id===id);if(!j)return;
+  const steps=PIPELINE[j.stage].steps;
+  const today=new Date().toISOString().split('T')[0];
+  let nextStage=j.stage,nextStep=j.step;
+  if(j.step<steps.length-1){nextStep=j.step+1;}
+  else if(j.stage<4){nextStage=j.stage+1;nextStep=0;}
+  const needsDate=(nextStage===3&&nextStep===1)||(nextStage===3&&nextStep===3);
+  if(needsDate){
+    pendingAdvance={id,nextStage,nextStep};
+    const label=nextStep===1?'Install date booked':'Install complete date';
+    const sub=nextStep===1?'What date is the install scheduled for?':'What date was the install completed?';
+    document.getElementById('date-modal-title').textContent=label;
+    document.getElementById('date-modal-sub').textContent=sub;
+    document.getElementById('date-picker-input').value=today;
+    onDatePick();
+    closeModal('detail-modal');
+    document.getElementById('date-modal').classList.add('open');
+    return;
+  }
+  doAdvance(id,today);
+}
+
+function confirmDate(){
+  const val=document.getElementById('date-picker-input').value;
+  if(!val){alert('Please select a date.');return;}
+  closeModal('date-modal');
+  doAdvance(pendingAdvance.id,val,pendingAdvance.nextStage,pendingAdvance.nextStep);
+  pendingAdvance=null;
+}
+
+function doAdvance(id,dateVal,overrideStage,overrideStep){
+  const j=jobs.find(x=>x.id===id);if(!j)return;
+  const steps=PIPELINE[j.stage].steps;
+  const today=new Date().toISOString().split('T')[0];
+  if(overrideStage!==undefined){j.stage=overrideStage;j.step=overrideStep;}
+  else if(j.step<steps.length-1){j.step++;}
+  else if(j.stage<4){j.stage++;j.step=0;}
+  if(j.stage===3&&j.step===1) j.dateBooked=dateVal||today;
+  if(j.stage===3&&j.step===3){
+    j.installDate=dateVal||today;
+    // ── Consume stock on install complete ──
+    if(j.stockItems&&j.stockItems.length>0){
+      j.stockConsumed=j.stockItems.map(si=>({...si})); // save record
+      j.stockItems.forEach(si=>{
+        const s=stocks.find(x=>x.id===si.stockId);
+        if(s) s.qty=Math.max(0,s.qty-si.qty);
+      });
+      j.stockItems=[];
+      const lines=j.stockConsumed.map(si=>`${si.qty}× ${si.name}`).join(', ');
+      toastStock(`📦 Stock consumed: ${lines}`);
+    }
+  }
+  if(j.stage===4&&j.step===0) j.cesSubmitted=today;
+  if(j.stage===4&&j.step===3) j.cesReceived=today;
+  if(j.stage===4&&j.step===4) j.rebateSubmitted=today;
+  if(j.stage===4&&j.step===5) j.rebateReceived=today;
+  j.stale=false;
+  saveData();render();toast('Job advanced!');
+}
+
+function moveBack(id){
+  const j=jobs.find(x=>x.id===id);if(!j)return;
+  if(j.step>0){
+    // ── Restore stock if moving back from install complete ──
+    if(j.stage===3&&j.step===3&&j.stockConsumed&&j.stockConsumed.length>0){
+      j.stockConsumed.forEach(si=>{
+        const s=stocks.find(x=>x.id===si.stockId);
+        if(s) s.qty+=si.qty;
+      });
+      j.stockItems=j.stockConsumed.map(si=>({...si}));
+      j.stockConsumed=[];
+      const lines=j.stockItems.map(si=>`${si.qty}× ${si.name}`).join(', ');
+      toastStock(`↩ Stock restored: ${lines}`);
+    }
+    j.step--;
+    if(j.stage===4&&j.step<5) j.rebateReceived='';
+    if(j.stage===4&&j.step<4) j.rebateSubmitted='';
+    if(j.stage===4&&j.step<3) j.cesReceived='';
+    if(j.stage===4&&j.step<1) j.cesSubmitted='';
+    if(j.stage===3&&j.step<3) j.installDate='';
+    if(j.stage===3&&j.step<1) j.dateBooked='';
+  } else if(j.stage>1){
+    j.stage--;
+    j.step=PIPELINE[j.stage].steps.length-1;
+    if(j.stage===3){j.cesSubmitted='';j.cesReceived='';j.rebateSubmitted='';j.rebateReceived='';}
+  }
+  saveData();closeModal('detail-modal');render();toast('Moved back one step.');
+}
+
+function saveTextField(id,field){
+  const j=jobs.find(x=>x.id===id);if(!j)return;
+  const val=document.getElementById(`ef-${field}-${id}`).value.trim();
+  if(field==='value') j[field]=parseFloat(val)||0;
+  else j[field]=val;
+  saveData();render();openDetail(id);toast('Saved!');
+}
+
+function saveNotes(id){
+  const j=jobs.find(x=>x.id===id);if(!j)return;
+  j.notes=document.getElementById(`ef-notes-${id}`).value.trim();
+  saveData();render();toast('Notes saved!');
+}
+
+function saveFieldDate(id,field){
+  const j=jobs.find(x=>x.id===id);if(!j)return;
+  const val=document.getElementById(`ef-${field}-${id}`).value;
+  j[field]=val||'';
+  if(field==='dateBooked'&&val){
+    const clashes=jobs.filter(x=>x.id!==id&&x.dateBooked===val&&!x.installDate);
+    if(clashes.length) toastStock(`\u26A0 Also booked ${fmtDate(val)}: ${clashes.map(x=>x.name).join(', ')}`);
+  }
+  saveData();render();openDetail(id);toast('Date saved!');
+}
+
+function toggleFixes(id){
+  const j=jobs.find(x=>x.id===id);if(!j)return;
+  j.fixesNeeded=!j.fixesNeeded;
+  saveData();render();openDetail(id);
+}
+
+function quickDelete(id){
+  const j=jobs.find(x=>x.id===id);if(!j)return;
+  if(confirm(`Remove ${j.name} from the pipeline?`)){
+    jobs=jobs.filter(x=>x.id!==id);
+    saveData();render();toast(`${j.name} removed.`);
+  }
+}
+
+function deleteJob(id){
+  jobs=jobs.filter(j=>j.id!==id);
+  saveData();closeModal('detail-modal');render();toast('Job removed.');
+}
+
+function copyJobDetails(id){
+  const j=jobs.find(x=>x.id===id);if(!j)return;
+  const stageName=PIPELINE[j.stage].name;
+  const stepName=PIPELINE[j.stage].steps[j.step];
+  const lines=[];
+  lines.push(`JOB SUMMARY — ${j.name}`);
+  lines.push('─'.repeat(36));
+  if(j.loc)lines.push(`📍 ${j.loc}`);
+  if(j.phone)lines.push(`📱 ${j.phone}`);
+  if(j.email)lines.push(`✉  ${j.email}`);
+  if(j.system)lines.push(`\n🔧 System: ${j.system}`);
+  if(j.dateBooked||j.installDate){
+    lines.push('');
+    if(j.dateBooked)lines.push(`📅 Install booked: ${fmtDate(j.dateBooked)}`);
+    if(j.installDate)lines.push(`✅ Install complete: ${fmtDate(j.installDate)}`);
+  }
+  if(j.stockItems&&j.stockItems.length>0){
+    lines.push('\n📦 Stock assigned:');
+    j.stockItems.forEach(si=>lines.push(`   • ${si.name} × ${si.qty}`));
+  }
+  lines.push(`\nPipeline: ${stageName} › ${stepName}`);
+  const text=lines.join('\n');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>toast('📋 Copied — paste into email or SMS!')).catch(()=>fallbackCopy(text));
+  } else {fallbackCopy(text);}
+}
+function fallbackCopy(text){
+  const ta=document.createElement('textarea');
+  ta.value=text;ta.style.cssText='position:fixed;opacity:0;top:0;left:0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');toast('📋 Copied — paste into email or SMS!');}
+  catch(e){alert('Copy failed — please copy manually:\n\n'+text);}
+  ta.remove();
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});
+});
+
+setInterval(saveData,60000);
+loadData();buildHeaders();render();renderStockStrip();
+</script>
+</body>
+</html>

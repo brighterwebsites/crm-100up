@@ -1,0 +1,551 @@
+{
+  "jobs": [
+    {
+      "id": 201,
+      "name": "Garry Purton",
+      "loc": "607 Hardies Hill Rd Garibaldi VIC 3352 AU",
+      "system": "",
+      "value": 0,
+      "email": "",
+      "phone": "0488 924 361",
+      "contact": "Email",
+      "stage": 2,
+      "step": 1,
+      "stale": false,
+      "alert": false,
+      "notes": "",
+      "created": 1779877802780,
+      "stockItems": [
+        {
+          "stockId": 5,
+          "name": "SigenStor EC 8.0 SP",
+          "qty": 2
+        },
+        {
+          "stockId": 2,
+          "name": "SigenStor BAT 8.0",
+          "qty": 4
+        },
+        {
+          "stockId": 7,
+          "name": "Trina 475",
+          "qty": 56
+        },
+        {
+          "stockId": 8,
+          "name": "Sigen Gateway (Single Phase)",
+          "qty": 1
+        }
+      ],
+      "installDate": "",
+      "dateBooked": "",
+      "cesSubmitted": "",
+      "cesReceived": "",
+      "rebateSubmitted": "",
+      "rebateReceived": "",
+      "fixesNeeded": false
+    },
+    {
+      "id": 200,
+      "name": "Janet Lovejoy",
+      "loc": "56 Lovejoy Lane, BEAUFORT, VIC, 3373",
+      "system": "",
+      "value": 0,
+      "email": "",
+      "phone": "",
+      "contact": "Email",
+      "stage": 3,
+      "step": 2,
+      "stale": false,
+      "alert": false,
+      "notes": "Sigenergy System\n- Inverter: Sigenergy 12kW\n- Battery: Sigenergy 24kWh\n- Solar Panels: 20kW (Jinko 475W X 42)\n- Includes: Cabling and trenching from the shed to the house\nInclude installation and certification",
+      "created": 1779316599603,
+      "stockItems": [
+        {
+          "stockId": 1,
+          "name": "SigenStor EC 12.0 SP",
+          "qty": 1
+        },
+        {
+          "stockId": 2,
+          "name": "SigenStor BAT 8.0",
+          "qty": 3
+        },
+        {
+          "stockId": 6,
+          "name": "Jinco 475",
+          "qty": 42
+        },
+        {
+          "stockId": 8,
+          "name": "Sigen Gateway (Single Phase)",
+          "qty": 1
+        }
+      ],
+      "installDate": "",
+      "dateBooked": "2026-06-17",
+      "cesSubmitted": "",
+      "cesReceived": "",
+      "rebateSubmitted": "",
+      "rebateReceived": "",
+      "fixesNeeded": false
+    },
+    {
+      "id": 1,
+      "name": "Ann Hanegraaf",
+      "loc": "96 Middle Rd DUNOLLY, VIC 3472",
+      "system": "12kW Sigenergy dual inverter",
+      "value": 0,
+      "email": "reebeeisme@gmail.com",
+      "phone": "0448 100 294",
+      "contact": "Email",
+      "stage": 3,
+      "step": 2,
+      "stale": false,
+      "alert": false,
+      "notes": "Deye Off grid solar system\n- Inverter: 1 x 8kW Deye inverter\n- Batteries: 3 x Deye battery units, 15.3kWh usable battery storage\n- Solar: 32 x 475W Jinco solar panels, 15.2kW total solar array",
+      "installDate": "",
+      "cesSubmitted": "",
+      "cesReceived": "",
+      "rebateSubmitted": "",
+      "rebateReceived": "",
+      "fixesNeeded": false,
+      "dateBooked": "2026-06-10",
+      "stockItems": [
+        {
+          "stockId": 3,
+          "name": "Deye AI-W5.1-8P1-AU-B",
+          "qty": 1
+        },
+        {
+          "stockId": 4,
+          "name": "Deye AI-W5.1-B",
+          "qty": 3
+        },
+        {
+          "stockId": 6,
+          "name": "Jinco 475",
+          "qty": 32
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Garry Purton",
+      "loc": "VIC",
+      "system": "Off-grid roof mount",
+      "value": 0,
+      "email": "garrypurton@icloud.com",
+      "phone": "",
+      "contact": "Email",
+      "stage": 1,
+      "step": 3,
+      "stale": false,
+      "alert": false,
+      "notes": "Proposal sent 29 Apr — flat vs tilted panels. No reply yet.",
+      "installDate": "",
+      "cesSubmitted": "",
+      "cesReceived": "",
+      "rebateSubmitted": "",
+      "rebateReceived": "",
+      "fixesNeeded": false,
+      "stockItems": []
+    },
+    {
+      "id": 4,
+      "name": "Murray Alpen",
+      "loc": "17 Yvonne St Wendouree, VIC 3355 Australia",
+      "system": "Solar options TBC",
+      "value": 0,
+      "email": "mjalpen@bigpond.com",
+      "phone": "04 07012887",
+      "contact": "Email",
+      "stage": 3,
+      "step": 2,
+      "stale": false,
+      "alert": false,
+      "notes": "Option 1 - Sigenergy Off Grid Solar System\n- Inverter: 1 x 12kW Sigenergy inverter + 1 x Sigenergy Gateway\n- Battery: 3 x Sigenergy battery units, 24kWh usable storage\n- Solar: 30 x 475W solar panels, 14.3kW total array\n- Mounting: 30 panels on roof (standard frame)",
+      "installDate": "",
+      "cesSubmitted": "",
+      "cesReceived": "",
+      "rebateSubmitted": "",
+      "rebateReceived": "",
+      "fixesNeeded": false,
+      "stockItems": [
+        {
+          "stockId": 1,
+          "name": "SigenStor EC 12.0 SP",
+          "qty": 1
+        },
+        {
+          "stockId": 2,
+          "name": "SigenStor BAT 8.0",
+          "qty": 3
+        },
+        {
+          "stockId": 6,
+          "name": "Jinco 475",
+          "qty": 30
+        },
+        {
+          "stockId": 8,
+          "name": "Sigen Gateway (Single Phase)",
+          "qty": 1
+        }
+      ],
+      "dateBooked": "2026-07-01"
+    },
+    {
+      "id": 5,
+      "name": "John & T. Lakey",
+      "loc": "Ingliston VIC",
+      "system": "System extension ~$50k",
+      "value": 50000,
+      "email": "info@lakeyfarm.com",
+      "phone": "",
+      "contact": "Email",
+      "stage": 1,
+      "step": 1,
+      "stale": false,
+      "alert": false,
+      "notes": "Fodder factory 40-50kWh/day. Modelling skip Jun/Jul winter.",
+      "installDate": "",
+      "cesSubmitted": "",
+      "cesReceived": "",
+      "rebateSubmitted": "",
+      "rebateReceived": "",
+      "fixesNeeded": false,
+      "stockItems": []
+    },
+    {
+      "id": 6,
+      "name": "Ross Luelf",
+      "loc": "VIC",
+      "system": "Solar battery",
+      "value": 0,
+      "email": "rluelf@cbl.com.au",
+      "phone": "",
+      "contact": "Email",
+      "stage": 1,
+      "step": 3,
+      "stale": false,
+      "alert": false,
+      "notes": "Quote sent 30 Apr. No reply yet.",
+      "installDate": "",
+      "cesSubmitted": "",
+      "cesReceived": "",
+      "rebateSubmitted": "",
+      "rebateReceived": "",
+      "fixesNeeded": false,
+      "stockItems": []
+    },
+    {
+      "id": 7,
+      "name": "Sarah Trezise",
+      "loc": "49 Burkes Ln Redesdale VIC 3444 AU",
+      "system": "12kW Sigenergy Jinko panels",
+      "value": 0,
+      "email": "sarah@cooatallaconsulting.com.au",
+      "phone": "0407 686 629",
+      "contact": "Email",
+      "stage": 4,
+      "step": 0,
+      "stale": false,
+      "alert": false,
+      "notes": "Sigenergy system\nSolar panels: 35 × jinko 475\nSigenergy 12kW inverter \nBatteries: 2 × 8kWh (16kWh total) \nSigenergy DC car charger 12kW\nAir Conditioning (Mitsubishi 8kW Cooling / 9kW Heating)",
+      "installDate": "2026-05-15",
+      "cesSubmitted": "2026-05-20",
+      "cesReceived": "",
+      "rebateSubmitted": "",
+      "rebateReceived": "",
+      "fixesNeeded": false,
+      "dateBooked": "2026-05-13",
+      "stockItems": []
+    },
+    {
+      "id": 8,
+      "name": "12 Vale Ln",
+      "loc": "Musk Vale VIC",
+      "system": "Off-grid",
+      "value": 0,
+      "email": "",
+      "phone": "",
+      "contact": "Email",
+      "stage": 4,
+      "step": 6,
+      "stale": false,
+      "alert": true,
+      "notes": "CES 5 months overdue — fixes sent 2 May. Waiting on certificate.",
+      "installDate": "2026-05-10",
+      "cesSubmitted": "2026-05-10",
+      "cesReceived": "2026-05-10",
+      "rebateSubmitted": "2026-05-10",
+      "rebateReceived": "2026-05-10",
+      "fixesNeeded": true,
+      "stockItems": []
+    },
+    {
+      "id": 9,
+      "name": "348 Davenport Rd",
+      "loc": "Learmonth VIC",
+      "system": "50kW ground mount",
+      "value": 0,
+      "email": "",
+      "phone": "",
+      "contact": "Email",
+      "stage": 4,
+      "step": 6,
+      "stale": false,
+      "alert": true,
+      "notes": "Inspected and passed. No cert yet. Description wording update sent 2 May.",
+      "installDate": "2025-03-30",
+      "cesSubmitted": "2025-04-10",
+      "cesReceived": "2026-05-10",
+      "rebateSubmitted": "2026-05-10",
+      "rebateReceived": "2026-05-10",
+      "fixesNeeded": true,
+      "stockItems": []
+    },
+    {
+      "id": 10,
+      "name": "Ann Larson",
+      "loc": "175 Fairview Dr CLUNES, VIC 3370",
+      "system": "Solar + batteries TBC",
+      "value": 0,
+      "email": "ann.larson@socialdimensions.com.au",
+      "phone": "0427 070 683",
+      "contact": "Email",
+      "stage": 3,
+      "step": 2,
+      "stale": false,
+      "alert": false,
+      "notes": "Solar battery System\n- Inverter: 1 x 12kW Sigenergy inverter\n- Batteries: 3 x Sigenergy battery units, 23.4kWh usable battery storage\n- Solar: 32 x 475W Jinco solar panels, 15kW .",
+      "installDate": "",
+      "cesSubmitted": "",
+      "cesReceived": "",
+      "rebateSubmitted": "",
+      "rebateReceived": "",
+      "fixesNeeded": false,
+      "dateBooked": "2026-06-03",
+      "stockItems": [
+        {
+          "stockId": 1,
+          "name": "SigenStor EC 12.0 SP",
+          "qty": 1
+        },
+        {
+          "stockId": 2,
+          "name": "SigenStor BAT 8.0",
+          "qty": 3
+        },
+        {
+          "stockId": 6,
+          "name": "Jinco 475",
+          "qty": 32
+        },
+        {
+          "stockId": 8,
+          "name": "Sigen Gateway (Single Phase)",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Ann Schluter",
+      "loc": "557 Strathlea Rd STRATHLEA, VIC 3364",
+      "system": "Deye 8kW + 3 batteries",
+      "value": 20067,
+      "email": "schluterann6@gmail.com",
+      "phone": "0460 972 886",
+      "contact": "Email",
+      "stage": 3,
+      "step": 3,
+      "stale": false,
+      "alert": false,
+      "notes": "Off grid solar system\nDeye 8kw inverter\nDeye 13.8kWh battery \nRisen 595w X14 solar panel.",
+      "installDate": "2026-05-21",
+      "cesSubmitted": "",
+      "cesReceived": "",
+      "rebateSubmitted": "",
+      "rebateReceived": "",
+      "fixesNeeded": false,
+      "dateBooked": "2026-05-20",
+      "stockItems": [],
+      "stockConsumed": [
+        {
+          "stockId": 3,
+          "name": "Deye AI-W5.1-8P1-AU-B",
+          "qty": 1
+        },
+        {
+          "stockId": 4,
+          "name": "Deye AI-W5.1-B",
+          "qty": 3
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "name": "Jeffrey Owens",
+      "loc": "288 Tippetts Rd DEREEL, VIC 3352",
+      "system": "28kW Deye dual system",
+      "value": 44685,
+      "email": "jeffrey.j.owens@gmail.com",
+      "phone": "0402 743 341",
+      "contact": "Email",
+      "stage": 3,
+      "step": 2,
+      "stale": false,
+      "alert": false,
+      "notes": "Dual Deye off-grid solar system\nSolar: Jinko panels × 56 (27.4kW)\nInverters: Deye 8kW × 2 (16kW total)\nBattery: Deye AI-W5.1-B × 6 (27.6kWh usable)",
+      "installDate": "",
+      "cesSubmitted": "",
+      "cesReceived": "",
+      "rebateSubmitted": "",
+      "rebateReceived": "",
+      "fixesNeeded": false,
+      "dateBooked": "2026-05-27",
+      "stockItems": [
+        {
+          "stockId": 3,
+          "name": "Deye AI-W5.1-8P1-AU-B",
+          "qty": 2
+        },
+        {
+          "stockId": 4,
+          "name": "Deye AI-W5.1-B",
+          "qty": 6
+        },
+        {
+          "stockId": 6,
+          "name": "Jinco 475",
+          "qty": 56
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "name": "David Blake",
+      "loc": "VIC",
+      "system": "Deye off-grid system",
+      "value": 0,
+      "email": "suitesounds@live.com",
+      "phone": "",
+      "contact": "Email",
+      "stage": 1,
+      "step": 3,
+      "stale": false,
+      "alert": false,
+      "notes": "Site visit done. Chose Deye option. South-facing roof needs tilt frame.",
+      "installDate": "",
+      "cesSubmitted": "",
+      "cesReceived": "",
+      "rebateSubmitted": "",
+      "rebateReceived": "",
+      "fixesNeeded": false,
+      "stockItems": []
+    },
+    {
+      "id": 15,
+      "name": "Michael Skelton",
+      "loc": "Malmsbury VIC",
+      "system": "40kW 3-phase Sigenergy",
+      "value": 52500,
+      "email": "mike@skelton.biz",
+      "phone": "",
+      "contact": "Email",
+      "stage": 1,
+      "step": 3,
+      "stale": false,
+      "alert": false,
+      "notes": "2x10kW inverters, 32kWh battery, ground mount, EV charger. End of May.",
+      "installDate": "",
+      "cesSubmitted": "",
+      "cesReceived": "",
+      "rebateSubmitted": "",
+      "rebateReceived": "",
+      "fixesNeeded": false,
+      "stockItems": []
+    },
+    {
+      "id": 16,
+      "name": "Ben Hynes",
+      "loc": "VIC",
+      "system": "Off-grid solar",
+      "value": 0,
+      "email": "811greenhills@gmail.com",
+      "phone": "",
+      "contact": "Email",
+      "stage": 3,
+      "step": 0,
+      "stale": false,
+      "alert": false,
+      "notes": "Parts ordered via Energy Spurt. Awaiting install date.",
+      "installDate": "",
+      "cesSubmitted": "",
+      "cesReceived": "",
+      "rebateSubmitted": "",
+      "rebateReceived": "",
+      "fixesNeeded": false,
+      "stockItems": [
+        {
+          "stockId": 5,
+          "name": "SigenStor EC 8.0 SP",
+          "qty": 2
+        },
+        {
+          "stockId": 2,
+          "name": "SigenStor BAT 8.0",
+          "qty": 6
+        }
+      ]
+    }
+  ],
+  "stocks": [
+    {
+      "id": 1,
+      "name": "SigenStor EC 12.0 SP",
+      "qty": 2
+    },
+    {
+      "id": 2,
+      "name": "SigenStor BAT 8.0",
+      "qty": 16
+    },
+    {
+      "id": 3,
+      "name": "Deye AI-W5.1-8P1-AU-B",
+      "qty": 3
+    },
+    {
+      "id": 4,
+      "name": "Deye AI-W5.1-B",
+      "qty": 9
+    },
+    {
+      "id": 5,
+      "name": "SigenStor EC 8.0 SP",
+      "qty": 2
+    },
+    {
+      "id": 6,
+      "name": "Jinco 475",
+      "qty": 192
+    },
+    {
+      "id": 7,
+      "name": "Trina 475",
+      "qty": 0
+    },
+    {
+      "id": 8,
+      "name": "Sigen Gateway (Single Phase)",
+      "qty": 2
+    }
+  ],
+  "nextId": 202,
+  "stockNextId": 9,
+  "exportedAt": "2026-05-29T07:31:50.829Z",
+  "version": "stock-1.0"
+}
