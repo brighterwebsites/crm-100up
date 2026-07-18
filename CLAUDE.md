@@ -6,7 +6,11 @@
 
 The app is a **single self-contained HTML file** — inline JavaScript, inline CSS (CSS custom properties), no build step, no backend, no external database. All persistence is via browser `localStorage`. Font: DM Sans (Google Fonts).
 
-Current version: **V10** (latest working file: `100UP_stock-crm_V10.html` or similar — confirm the latest file in the repo before editing).
+Current version: **V46** (latest working file: `100UP_suite_V46.html` — confirm the latest file in the repo before editing).
+
+> **Naming discrepancy, unresolved as of this note**: the filename says V46, but the in-app page title / version badge reads "V3" (title: "100UP — Quote Designer + CRM V3"). The filename and in-app version have drifted out of sync, breaking convention #1 below. Confirm with Fred which number is authoritative before assuming either is correct, and resync them as part of the next change.
+>
+> Also note the file naming pattern itself changed from `100UP_stock-crm_VXX.html` to `100UP_suite_VXX.html` at some point — later references to the older pattern below describe the convention, not a literal filename to look for.
 
 ## Core functionality
 
@@ -26,7 +30,7 @@ Current version: **V10** (latest working file: `100UP_stock-crm_V10.html` or sim
 - **Purchase Order generation**: Print/Save PO in a new tab + "Copy parts list" to clipboard.
 - **CES summary**: "📋 CES summary" button on Stage 4 jobs (and Stage 3 jobs with an install date). Opens a popup modal with a formatted HTML table copyable into email (Gmail/Outlook) for electrical safety certificate submissions. Driven by `CES_CATALOG`, which maps stock IDs to CES-grade specifications.
 - **"Copy details"**: plain-text job info to clipboard for pasting into any comms app.
-- JSON data export with date-stamped filenames, e.g. `100UP_stock-crm_2026-05-29.json`.
+- JSON data export with date-stamped filenames, e.g. `100UP_stock-crm_2026-06-25.json`.
 
 ## Conventions & standing instructions
 
@@ -57,11 +61,12 @@ Current version: **V10** (latest working file: `100UP_stock-crm_V10.html` or sim
 |---|---|
 | `100UP_calculators_GEN_v63.html` | Canonical part names for stock items |
 | `Book3.xlsx` | Verified CES example (Ann Schluter job) — ground truth for CES summary format |
-| `100UP_stock-crm_VXX.html` | The app itself — latest version is the working base |
+| `100UP_suite_VXX.html` (root) | The app itself — latest version at HEAD on `main` is the working base |
+| `archive/` | Superseded iterations, kept for history — never the source of truth |
 
 ## Working with this repo in Claude Code
 
-- The latest `100UP_stock-crm_V*.html` is the source of truth. Verify which version is current before editing.
+- The latest `100UP_suite_V*.html` **in the repo root** (not `archive/`) is the source of truth. Verify which version is current before editing.
 - After any change: bump the version (filename + title + badge), commit with a short message describing the feature/fix.
 - Test by opening the file directly in a browser — there is no build or server step.
 - Fred typically tests with real `localStorage` data; never change the localStorage key names or data schema without an explicit migration plan, or existing data will appear "lost".
