@@ -1196,6 +1196,28 @@ button {
 
 .p-row:hover .p-job-left { background: #f9fafb; }
 
+/* ══════════════════════════════════════════════════════
+   STOCK PAGE
+   ══════════════════════════════════════════════════════ */
+
+.stock-row-on td { background: var(--stage-1-light) !important; }
+
+.cat-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-radius: 999px;
+  padding: 3px 9px;
+  white-space: nowrap;
+  background: #eef0f3;
+  color: #4b5262;
+}
+.cat-tag[data-cat="battery"]  { background: #eaf6ec; color: #1e7a3c; }
+.cat-tag[data-cat="inverter"] { background: #eef1fe; color: #3a4bcf; }
+.cat-tag[data-cat="panel"]    { background: #fff7e0; color: #93701a; }
+.cat-tag[data-cat="other"]    { background: #eef0f3; color: #4b5262; }
+
 /* slide-in detail panel */
 .pipeline-detail-panel {
   width: 0;
