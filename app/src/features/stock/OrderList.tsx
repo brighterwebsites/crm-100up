@@ -14,6 +14,9 @@ import { copyPartsList } from '../jobs/modals'
 export default function OrderList({ onOpenJob }: { onOpenJob: (id: number) => void }) {
   const { jobs, customers, items, stocks, suppliers, refresh } = useData()
   const [copied, setCopied] = useState<string | null>(null)
+  const [saved, setSaved] = useState<string | null>(null)
+  const [saveErr, setSaveErr] = useState<string | null>(null)
+  const [saving, setSaving] = useState<string | null>(null)
 
   const data = useMemo(() => computeOrderData(jobs, items, stocks, suppliers), [jobs, items, stocks, suppliers])
 
@@ -35,6 +38,21 @@ export default function OrderList({ onOpenJob }: { onOpenJob: (id: number) => vo
     )
   }
 
+  async function savePo(name: string, supplierId: number | null, cards: OrderCard[]) {
+    setSaveErr(null)
+    setSaving(name)
+    const lines = cards.map((c) => ({ stock_id: c.stock.id, qty_ordered: c.toOrder || c.alloc, cost: c.stock.last_cost }))
+    const { error } = await supabase.rpc('create_purchase_order', { p_supplier_id: supplierId as number, p_lines: lines })
+    setSaving(null)
+    if (error) {
+      setSaveErr(error.message)
+      return
+    }
+    await refresh()
+    setSaved(name)
+    setTimeout(() => setSaved(null), 2000)
+  }
+
   if (data.shortItems.length === 0 && data.zeroItems.length === 0) {
     return <div className="placeholder">✅ Nothing needs ordering — no short or zero-stock items.</div>
   }
@@ -53,6 +71,8 @@ export default function OrderList({ onOpenJob }: { onOpenJob: (id: number) => vo
         </span>
       </div>
 
+      {saveErr && <div className="login-error">{saveErr}</div>}
+
       {data.supplierGroups.map((g) => {
         const name = g.supplier?.name ?? 'Unassigned — no supplier set'
         const all = [...g.short, ...g.zero]
@@ -65,8 +85,16 @@ export default function OrderList({ onOpenJob }: { onOpenJob: (id: number) => vo
                   <button className="btn btn-gray" onClick={() => copyGroup(name, g.short)}>
                     {copied === name ? '✓ Copied' : '📋 Copy parts list'}
                   </button>
+                  <button
+                    className="btn btn-primary"
+                    disabled={saving === name}
+                    onClick={() => savePo(name, g.supplier?.id ?? null, g.short)}
+                    title="Creates a trackable Purchase Order record"
+                  >
+                    {saved === name ? '✓ Saved' : saving === name ? 'Saving…' : '💾 Save PO'}
+                  </button>
                   <button className="btn btn-gray" onClick={() => printGroupPo(name, g.short)}>
-                    🖨 Print / save PO
+                    🖨 Print PO
                   </button>
                 </>
               )}

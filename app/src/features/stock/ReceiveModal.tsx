@@ -27,7 +27,7 @@ interface ReviewLine {
 const PROMPT = `"Read this invoice and give me JSON with supplier, invoiceRef, invoiceDate, and a lines array of {name, qty, unitCost} for each part."`
 
 export default function ReceiveModal({ onClose }: { onClose: () => void }) {
-  const { stocks, suppliers, refresh, receipts } = useData()
+  const { stocks, suppliers, refresh, purchaseOrders } = useData()
   const [raw, setRaw] = useState('')
   const [err, setErr] = useState<string | null>(null)
   const [supplierId, setSupplierId] = useState<string>('')
@@ -35,7 +35,7 @@ export default function ReceiveModal({ onClose }: { onClose: () => void }) {
   const [occurredAt, setOccurredAt] = useState(todayISO())
   const [review, setReview] = useState<ReviewLine[] | null>(null)
 
-  const recent = useMemo(() => receipts.slice(0, 5), [receipts])
+  const recent = useMemo(() => purchaseOrders.slice(0, 5), [purchaseOrders])
 
   function parse() {
     setErr(null)

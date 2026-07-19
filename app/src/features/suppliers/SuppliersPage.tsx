@@ -6,7 +6,7 @@ import { fmtDate } from '../../lib/format'
 
 export default function SuppliersPage() {
   const { isAdmin } = useAuth()
-  const { suppliers, receipts, refresh } = useData()
+  const { suppliers, purchaseOrders, refresh } = useData()
   const [err, setErr] = useState<string | null>(null)
   const [newName, setNewName] = useState('')
 
@@ -118,7 +118,7 @@ export default function SuppliersPage() {
             </tr>
           </thead>
           <tbody>
-            {receipts.map((r) => (
+            {purchaseOrders.map((r) => (
               <tr key={r.id}>
                 <td style={{ textAlign: 'left' }}>{fmtDate(r.occurred_at)}</td>
                 <td style={{ textAlign: 'left' }}>{suppliers.find((sp) => sp.id === r.supplier_id)?.name ?? 'No supplier'}</td>
@@ -127,7 +127,7 @@ export default function SuppliersPage() {
                 <td>{r.total_units}</td>
               </tr>
             ))}
-            {receipts.length === 0 && (
+            {purchaseOrders.length === 0 && (
               <tr>
                 <td colSpan={5} className="mutedtext">
                   No receipts yet.

@@ -484,13 +484,61 @@ export type Database = {
         }
         Relationships: []
       }
-      receipts: {
+      purchase_order_items: {
+        Row: {
+          cost: number
+          created_at: string
+          id: number
+          purchase_order_id: number
+          qty_ordered: number
+          qty_received: number
+          stock_id: number
+        }
+        Insert: {
+          cost?: number
+          created_at?: string
+          id?: number
+          purchase_order_id: number
+          qty_ordered: number
+          qty_received?: number
+          stock_id: number
+        }
+        Update: {
+          cost?: number
+          created_at?: string
+          id?: number
+          purchase_order_id?: number
+          qty_ordered?: number
+          qty_received?: number
+          stock_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_items_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_items_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_orders: {
         Row: {
           created_at: string
           id: number
           invoice_ref: string
           item_count: number
           occurred_at: string
+          po_amount: number
+          po_ref: string
+          po_status: Database["public"]["Enums"]["po_status"]
           supplier_id: number | null
           total_units: number
         }
@@ -500,6 +548,9 @@ export type Database = {
           invoice_ref?: string
           item_count?: number
           occurred_at?: string
+          po_amount?: number
+          po_ref?: string
+          po_status?: Database["public"]["Enums"]["po_status"]
           supplier_id?: number | null
           total_units?: number
         }
@@ -509,6 +560,9 @@ export type Database = {
           invoice_ref?: string
           item_count?: number
           occurred_at?: string
+          po_amount?: number
+          po_ref?: string
+          po_status?: Database["public"]["Enums"]["po_status"]
           supplier_id?: number | null
           total_units?: number
         }
@@ -646,6 +700,27 @@ export type Database = {
         }
       }
       apply_pending_bom_now: { Args: { p_job_id: number }; Returns: number }
+      create_purchase_order: {
+        Args: { p_lines: Json; p_supplier_id: number }
+        Returns: {
+          created_at: string
+          id: number
+          invoice_ref: string
+          item_count: number
+          occurred_at: string
+          po_amount: number
+          po_ref: string
+          po_status: Database["public"]["Enums"]["po_status"]
+          supplier_id: number | null
+          total_units: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "purchase_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       move_job_back: {
         Args: { p_expected_version: number; p_job_id: number }
         Returns: {
@@ -691,12 +766,15 @@ export type Database = {
           invoice_ref: string
           item_count: number
           occurred_at: string
+          po_amount: number
+          po_ref: string
+          po_status: Database["public"]["Enums"]["po_status"]
           supplier_id: number | null
           total_units: number
         }
         SetofOptions: {
           from: "*"
-          to: "receipts"
+          to: "purchase_orders"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -742,6 +820,7 @@ export type Database = {
       ces_category: "battery" | "inverter" | "panel" | "other"
       job_stock_item_status: "pending" | "assigned" | "consumed"
       job_type: "install" | "service"
+      po_status: "sent" | "partially_received" | "closed"
       user_role: "admin" | "installer"
     }
     CompositeTypes: {
@@ -873,6 +952,7 @@ export const Constants = {
       ces_category: ["battery", "inverter", "panel", "other"],
       job_stock_item_status: ["pending", "assigned", "consumed"],
       job_type: ["install", "service"],
+      po_status: ["sent", "partially_received", "closed"],
       user_role: ["admin", "installer"],
     },
   },

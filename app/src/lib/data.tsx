@@ -9,7 +9,8 @@ export type Customer = Tables<'customers'>
 export type InstallationRequest = Tables<'installation_requests'>
 export type Stock = Tables<'stocks'>
 export type Supplier = Tables<'suppliers'>
-export type Receipt = Tables<'receipts'>
+export type PurchaseOrder = Tables<'purchase_orders'>
+export type PurchaseOrderItem = Tables<'purchase_order_items'>
 export type JobStockItem = Tables<'job_stock_items'>
 export type Profile = Tables<'profiles'>
 export type Assumptions = Tables<'assumptions'>
@@ -40,7 +41,8 @@ interface DataState {
   installationRequests: InstallationRequest[]
   stocks: Stock[]
   suppliers: Supplier[]
-  receipts: Receipt[]
+  purchaseOrders: PurchaseOrder[]
+  purchaseOrderItems: PurchaseOrderItem[]
   items: JobStockItem[]
   profiles: Profile[]
   assumptions: Assumptions | null
@@ -54,7 +56,8 @@ const DataContext = createContext<DataState>({
   installationRequests: [],
   stocks: [],
   suppliers: [],
-  receipts: [],
+  purchaseOrders: [],
+  purchaseOrderItems: [],
   items: [],
   profiles: [],
   assumptions: null,
@@ -70,7 +73,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     installationRequests: [],
     stocks: [],
     suppliers: [],
-    receipts: [],
+    purchaseOrders: [],
+    purchaseOrderItems: [],
     items: [],
     profiles: [],
     assumptions: null,
@@ -81,14 +85,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     // RLS scopes every query: admins see everything, installers see
     // their jobs plus the shared reference tables.
-    const [jobs, customers, installationRequests, stocks, suppliers, receipts, items, profiles, assumptions] =
+    const [jobs, customers, installationRequests, stocks, suppliers, purchaseOrders, purchaseOrderItems, items, profiles, assumptions] =
       await Promise.all([
         supabase.from('jobs').select('*').order('id', { ascending: false }),
         supabase.from('customers').select('*').order('name'),
         supabase.from('installation_requests').select('*'),
         supabase.from('stocks').select('*').order('name'),
         supabase.from('suppliers').select('*').order('name'),
-        supabase.from('receipts').select('*').order('occurred_at', { ascending: false }),
+        supabase.from('purchase_orders').select('*').order('created_at', { ascending: false }),
+        supabase.from('purchase_order_items').select('*'),
         supabase.from('job_stock_items').select('*'),
         supabase.from('profiles').select('*'),
         supabase.from('assumptions').select('*').eq('id', 1).maybeSingle(),
@@ -99,7 +104,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       installationRequests: installationRequests.data ?? [],
       stocks: stocks.data ?? [],
       suppliers: suppliers.data ?? [],
-      receipts: receipts.data ?? [],
+      purchaseOrders: purchaseOrders.data ?? [],
+      purchaseOrderItems: purchaseOrderItems.data ?? [],
       items: items.data ?? [],
       profiles: profiles.data ?? [],
       assumptions: assumptions.data ?? null,

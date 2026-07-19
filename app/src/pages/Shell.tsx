@@ -9,6 +9,7 @@ import CustomerJobsPage from './CustomerJobsPage'
 import CustomersPage from './CustomersPage'
 import StubPage from './StubPage'
 import DailyLoadProfilePage from './DailyLoadProfilePage'
+import PurchaseOrdersPage from './PurchaseOrdersPage'
 
 type Page =
   | 'pipeline'
@@ -16,6 +17,7 @@ type Page =
   | 'customers'
   | 'stock'
   | 'orders'
+  | 'purchase-orders'
   | 'suppliers'
   | 'qd-quick-estimate'
   | 'qd-system-calc'
@@ -39,7 +41,7 @@ function ShellInner() {
   const [page, setPage]               = useState<Page>('pipeline')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [orderJobId, setOrderJobId]   = useState<number | null>(null)
-  const { jobs, customers, stocks, suppliers, receipts, items, installationRequests } = useData()
+  const { jobs, customers, stocks, suppliers, purchaseOrders, items, installationRequests } = useData()
 
   // Backup export — denormalises customers + installation_requests back to
   // the old app's flat JSON shape so the file stays importable if ever needed.
@@ -99,7 +101,7 @@ function ShellInner() {
       }),
       stocks: stocks.map((s) => ({ id: s.id, name: s.name, qty: s.qty, ...(s.preferred_supplier_id ? { supplierId: s.preferred_supplier_id } : {}) })),
       suppliers: suppliers.map((sp) => ({ id: sp.id, name: sp.name, phone: sp.phone, email: sp.email, notes: sp.notes })),
-      receipts: receipts.map((r) => ({
+      receipts: purchaseOrders.map((r) => ({
         id: r.id,
         date: r.occurred_at,
         supplier: suppliers.find((sp) => sp.id === r.supplier_id)?.name ?? '',
@@ -110,7 +112,7 @@ function ShellInner() {
       nextId: Math.max(0, ...jobs.map((j) => j.id)) + 1,
       stockNextId: Math.max(0, ...stocks.map((s) => s.id)) + 1,
       supplierNextId: Math.max(0, ...suppliers.map((sp) => sp.id)) + 1,
-      receiptNextId: Math.max(0, ...receipts.map((r) => r.id)) + 1,
+      receiptNextId: Math.max(0, ...purchaseOrders.map((r) => r.id)) + 1,
       exportedAt: new Date().toISOString(),
       version: 'stock-1.2',
     }
@@ -178,6 +180,7 @@ function ShellInner() {
                 <div className="sidebar-section">{sidebarOpen ? 'Inventory' : '·'}</div>
                 <NavItem p="stock"         icon="📦" label="Stock" />
                 <NavItem p="orders"        icon="🛒" label="Order List" />
+                <NavItem p="purchase-orders" icon="🧾" label="Purchase Orders" />
                 <NavItem p="suppliers"     icon="🚚" label="Suppliers" />
                 <div className="sidebar-section">{sidebarOpen ? 'Quote Designer' : '·'}</div>
                 <NavItem p="qd-quick-estimate" icon="🏠" label="Quick Estimate" />
@@ -205,6 +208,7 @@ function ShellInner() {
           {isAdmin && page === 'customers'     && <CustomersPage />}
           {isAdmin && page === 'stock'         && <StockPage />}
           {isAdmin && page === 'orders'        && <OrderList onOpenJob={handleOpenJob} />}
+          {isAdmin && page === 'purchase-orders' && <PurchaseOrdersPage />}
           {isAdmin && page === 'suppliers'     && <SuppliersPage />}
           {isAdmin && page === 'qd-quick-estimate' && <StubPage icon="🏠" title="Quick Estimate" note="Bedroom/occupant-based system sizing — not ported yet." />}
           {isAdmin && page === 'qd-system-calc'    && <StubPage icon="📐" title="System Calculator" note="Full panel + battery + inverter quoting calculator — not ported yet." />}
