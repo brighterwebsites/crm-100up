@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "100up-crm",
+  "name": "crm-100up",
   // Set to the date this file was created; bump only deliberately.
   "compatibility_date": "2026-07-19",
   "assets": {
