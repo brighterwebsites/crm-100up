@@ -1,7 +1,10 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "crm-100up",
-  "pages_build_output_dir": "./dist",
   // Set to the date this file was created; bump only deliberately.
-  "compatibility_date": "2026-07-19"
+  "compatibility_date": "2026-07-19",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
 }
