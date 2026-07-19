@@ -1,0 +1,246 @@
+/* 100UP CRM — design tokens ported from 100UP_suite_V46.html for visual
+   continuity (DM Sans, stage palette, dark nav). Mobile-first: installers
+   use this on phones. */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap');
+
+:root {
+  --bg: #f5f6f8;
+  --card: #ffffff;
+  --ink: #1a1f27;
+  --muted: #7d8590;
+  --line: #e4e7ec;
+  --nav-bg: #0e1420;
+  --nav-ink: #e8ebf0;
+  --badge-bg: #1c2333;
+  --badge-ink: #7d8590;
+  --primary: #1d9e75;
+  --primary-ink: #ffffff;
+  --danger: #b3261e;
+  --stage-1: #1d9e75;
+  --stage-1-light: #e1f5ee;
+  --stage-1-text: #085041;
+  --stage-2: #534ab7;
+  --stage-2-light: #eeedfe;
+  --stage-2-text: #3c3489;
+  --stage-3: #993c1d;
+  --stage-3-light: #faece7;
+  --stage-3-text: #712b13;
+  --stage-4: #854f0b;
+  --stage-4-light: #faeeda;
+  --stage-4-text: #633806;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* ── buttons ─────────────────────────────────────────── */
+.btn {
+  border: none;
+  border-radius: 7px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-ink);
+}
+
+.btn-gray {
+  background: #e9ecf0;
+  color: #3a4150;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 4px;
+}
+
+/* ── login ───────────────────────────────────────────── */
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 28px 26px;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 8px 30px rgba(10, 15, 30, 0.06);
+}
+
+.login-brand {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  margin-bottom: 4px;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--badge-bg);
+  color: var(--badge-ink);
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}
+
+.login-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.login-card input {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 7px;
+}
+
+.login-card input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.login-error {
+  background: #fdecea;
+  color: var(--danger);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.login-ok {
+  background: var(--stage-1-light);
+  color: var(--stage-1-text);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+/* ── shell ───────────────────────────────────────────── */
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav {
+  background: var(--nav-bg);
+  color: var(--nav-ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.nav-brand {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-user {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.role-pill {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.role-admin {
+  background: var(--stage-2-light);
+  color: var(--stage-2-text);
+}
+
+.role-installer {
+  background: var(--stage-1-light);
+  color: var(--stage-1-text);
+}
+
+.main {
+  flex: 1;
+  padding: 18px 16px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.placeholder {
+  background: var(--card);
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  padding: 34px 26px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.placeholder h2 {
+  color: var(--ink);
+  margin: 0 0 8px;
+}
