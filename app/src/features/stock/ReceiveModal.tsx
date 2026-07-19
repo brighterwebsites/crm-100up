@@ -88,9 +88,9 @@ export default function ReceiveModal({ onClose }: { onClose: () => void }) {
       return
     }
     const { error } = await supabase.rpc('receive_stock', {
-      p_supplier_id: supplierId ? Number(supplierId) : null,
+      p_supplier_id: (supplierId ? Number(supplierId) : null) as number,
       p_invoice_ref: invoiceRef,
-      p_occurred_at: occurredAt || null,
+      p_occurred_at: (occurredAt || null) as string,
       p_lines: lines,
     })
     if (error) {

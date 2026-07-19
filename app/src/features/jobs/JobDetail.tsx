@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../lib/auth'
 import { useData } from '../../lib/data'
-import type { Job } from '../../lib/data'
+import type { Customer, Job } from '../../lib/data'
 import { PIPELINE, isClosed, nextStepNeedsDate, stepLabel } from '../../lib/pipeline'
 import { bookedInstalls, computeJobShortfalls } from '../../lib/stockCalc'
 import { fmtDate, todayISO } from '../../lib/format'
@@ -19,7 +19,7 @@ import { CesModal, JobOrderModal, LinkQuoteModal, printJobPo } from './modals'
 
 export default function JobDetail({ job, onClose }: { job: Job; onClose: () => void }) {
   const { isAdmin } = useAuth()
-  const { items, stocks, suppliers, cesSpecs, profiles, refresh, jobs } = useData()
+  const { items, stocks, suppliers, cesSpecs, profiles, refresh, jobs, customers, installationRequests } = useData()
   const [err, setErr] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [dateAsk, setDateAsk] = useState<null | { field: string; label: string }>(null)
@@ -29,27 +29,33 @@ export default function JobDetail({ job, onClose }: { job: Job; onClose: () => v
   const [showLink, setShowLink] = useState(false)
   const [reschedule, setReschedule] = useState(false)
 
-  // Editable form state (admin: detail fields; installer: notes/fixes only)
-  const [form, setForm] = useState({
-    name: job.name,
+  const customer: Customer | undefined = customers.find((c) => c.id === job.customer_id)
+  const existingIR = installationRequests.find((ir) => ir.job_id === job.id) ?? null
+
+  // ── Job form state (non-customer fields) ──
+  const [jobForm, setJobForm] = useState({
     location: job.location,
     system_description: job.system_description,
     value: String(job.value ?? 0),
-    email: job.email,
-    phone: job.phone,
     job_type: job.job_type,
     assigned_installer_id: job.assigned_installer_id ?? '',
     notes: job.notes,
     fixes_needed: job.fixes_needed,
   })
+  // ── Customer form state (admin-editable contact fields) ──
+  const [custForm, setCustForm] = useState({
+    name: customer?.name ?? '',
+    phone: customer?.phone ?? '',
+    email: customer?.email ?? '',
+    contact_method: customer?.contact_method ?? 'Email',
+    address: customer?.address ?? '',
+  })
+
   useEffect(() => {
-    setForm({
-      name: job.name,
+    setJobForm({
       location: job.location,
       system_description: job.system_description,
       value: String(job.value ?? 0),
-      email: job.email,
-      phone: job.phone,
       job_type: job.job_type,
       assigned_installer_id: job.assigned_installer_id ?? '',
       notes: job.notes,
@@ -57,13 +63,26 @@ export default function JobDetail({ job, onClose }: { job: Job; onClose: () => v
     })
   }, [job])
 
+  useEffect(() => {
+    setCustForm({
+      name: customer?.name ?? '',
+      phone: customer?.phone ?? '',
+      email: customer?.email ?? '',
+      contact_method: customer?.contact_method ?? 'Email',
+      address: customer?.address ?? '',
+    })
+  }, [customer])
+
   const jobItems = useMemo(() => items.filter((i) => i.job_id === job.id), [items, job.id])
   const pending = jobItems.filter((i) => i.status === 'pending')
   const assigned = jobItems.filter((i) => i.status === 'assigned')
   const consumed = jobItems.filter((i) => i.status === 'consumed')
   const shortMap = useMemo(
-    () => (job.date_booked || job.install_date ? computeJobShortfalls(jobs, items, stocks)[job.id] ?? {} : {}),
-    [jobs, items, stocks, job]
+    () =>
+      job.planned_install_date || job.install_completion_date
+        ? computeJobShortfalls(jobs, items, stocks)[job.id] ?? {}
+        : {},
+    [jobs, items, stocks, job],
   )
 
   const stage = PIPELINE[job.stage]
@@ -95,7 +114,11 @@ export default function JobDetail({ job, onClose }: { job: Job; onClose: () => v
       setDateAsk({
         field: need,
         label:
-          need === 'date_booked' ? 'Install booking date' : need === 'install_start' ? 'Install start date' : 'Install completion date',
+          need === 'planned_install_date'
+            ? 'Install booking date'
+            : need === 'install_start_date'
+              ? 'Install start date'
+              : 'Install completion date',
       })
       return
     }
@@ -106,21 +129,35 @@ export default function JobDetail({ job, onClose }: { job: Job; onClose: () => v
   const clashOnDate = clashes.filter((c) => c.date === dateVal)
 
   async function saveDetails() {
-    const patch = isAdmin
+    const jobPatch = isAdmin
       ? {
-          name: form.name,
-          location: form.location,
-          system_description: form.system_description,
-          value: Number(form.value) || 0,
-          email: form.email,
-          phone: form.phone,
-          job_type: form.job_type,
-          assigned_installer_id: form.assigned_installer_id || null,
-          notes: form.notes,
-          fixes_needed: form.fixes_needed,
+          location: jobForm.location,
+          system_description: jobForm.system_description,
+          value: Number(jobForm.value) || 0,
+          job_type: jobForm.job_type,
+          assigned_installer_id: jobForm.assigned_installer_id || null,
+          notes: jobForm.notes,
+          fixes_needed: jobForm.fixes_needed,
         }
-      : { notes: form.notes, fixes_needed: form.fixes_needed }
-    await run(() => updateJob(job, patch), 'Saved')
+      : { notes: jobForm.notes, fixes_needed: jobForm.fixes_needed }
+
+    await run(async () => {
+      await updateJob(job, jobPatch)
+      if (isAdmin && customer) {
+        const { error } = await supabase
+          .from('customers')
+          .update({
+            name: custForm.name,
+            phone: custForm.phone,
+            email: custForm.email,
+            contact_method: custForm.contact_method,
+            address: custForm.address,
+          })
+          .eq('id', customer.id)
+          .eq('version', customer.version)
+        if (error) throw new Error(error.message)
+      }
+    }, 'Saved')
   }
 
   async function addStock(stockId: number, qty: number) {
@@ -148,13 +185,13 @@ export default function JobDetail({ job, onClose }: { job: Job; onClose: () => v
     }, 'Removed')
   }
 
-  const canCes = job.stage === 4 || (job.stage === 3 && !!job.date_booked)
+  const canCes = job.stage === 4 || (job.stage === 3 && !!job.planned_install_date)
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <strong>{job.name}</strong>
+          <strong>{customer?.name ?? `Job #${job.id}`}</strong>
           <span className="stage-chip" style={{ background: stage.light, color: stage.text }}>
             {stage.short} › {stepLabel(job.stage, job.step)}
           </span>
@@ -180,16 +217,16 @@ export default function JobDetail({ job, onClose }: { job: Job; onClose: () => v
                 ← Move back
               </button>
             )}
-            {isAdmin && job.date_booked && !job.install_date && (
+            {isAdmin && job.planned_install_date && !job.install_completion_date && (
               <button className="btn btn-gray" onClick={() => setReschedule(!reschedule)}>
                 📅 Reschedule booking
               </button>
             )}
           </div>
           <div className="date-strip">
-            {job.date_booked && <span>📅 Booked {fmtDate(job.date_booked)}</span>}
-            {job.install_start && <span>🔧 Started {fmtDate(job.install_start)}</span>}
-            {job.install_date && <span>✅ Installed {fmtDate(job.install_date)}</span>}
+            {job.planned_install_date && <span>📅 Booked {fmtDate(job.planned_install_date)}</span>}
+            {job.install_start_date && <span>🔧 Started {fmtDate(job.install_start_date)}</span>}
+            {job.install_completion_date && <span>✅ Installed {fmtDate(job.install_completion_date)}</span>}
             {job.ces_submitted && <span>📋 CES sub {fmtDate(job.ces_submitted)}</span>}
             {job.ces_received && <span>📋 CES rec {fmtDate(job.ces_received)}</span>}
             {job.rebate_submitted && <span>💰 Rebate sub {fmtDate(job.rebate_submitted)}</span>}
@@ -214,8 +251,8 @@ export default function JobDetail({ job, onClose }: { job: Job; onClose: () => v
               label={dateAsk.label}
               value={dateVal}
               onChange={setDateVal}
-              clashes={dateAsk.field === 'date_booked' ? clashOnDate : []}
-              allBooked={dateAsk.field === 'date_booked' ? clashes : []}
+              clashes={dateAsk.field === 'planned_install_date' ? clashOnDate : []}
+              allBooked={dateAsk.field === 'planned_install_date' ? clashes : []}
               onConfirm={() => {
                 setDateAsk(null)
                 run(() => advanceJob(job, dateVal), 'Job advanced')
@@ -230,39 +267,60 @@ export default function JobDetail({ job, onClose }: { job: Job; onClose: () => v
           <div className="section-title">Details</div>
           <div className="form-grid">
             <label>
-              Customer
-              <input disabled={!isAdmin} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              Customer name
+              <input
+                disabled={!isAdmin}
+                value={custForm.name}
+                onChange={(e) => setCustForm({ ...custForm, name: e.target.value })}
+              />
             </label>
             <label>
               Location
-              <input disabled={!isAdmin} value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+              <input
+                disabled={!isAdmin}
+                value={jobForm.location}
+                onChange={(e) => setJobForm({ ...jobForm, location: e.target.value })}
+              />
             </label>
             <label>
               Phone
-              <input disabled={!isAdmin} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+              <input
+                disabled={!isAdmin}
+                value={custForm.phone}
+                onChange={(e) => setCustForm({ ...custForm, phone: e.target.value })}
+              />
             </label>
             <label>
               Email
-              <input disabled={!isAdmin} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <input
+                disabled={!isAdmin}
+                value={custForm.email}
+                onChange={(e) => setCustForm({ ...custForm, email: e.target.value })}
+              />
             </label>
             <label>
               System
               <input
                 disabled={!isAdmin}
-                value={form.system_description}
-                onChange={(e) => setForm({ ...form, system_description: e.target.value })}
+                value={jobForm.system_description}
+                onChange={(e) => setJobForm({ ...jobForm, system_description: e.target.value })}
               />
             </label>
             <label>
               Value (AUD)
-              <input disabled={!isAdmin} type="number" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} />
+              <input
+                disabled={!isAdmin}
+                type="number"
+                value={jobForm.value}
+                onChange={(e) => setJobForm({ ...jobForm, value: e.target.value })}
+              />
             </label>
             <label>
               Job type
               <select
                 disabled={!isAdmin}
-                value={form.job_type}
-                onChange={(e) => setForm({ ...form, job_type: e.target.value as 'install' | 'service' })}
+                value={jobForm.job_type}
+                onChange={(e) => setJobForm({ ...jobForm, job_type: e.target.value as 'install' | 'service' })}
               >
                 <option value="install">🔧 New install</option>
                 <option value="service">🛠 Service / upgrade</option>
@@ -272,8 +330,8 @@ export default function JobDetail({ job, onClose }: { job: Job; onClose: () => v
               Assigned installer
               <select
                 disabled={!isAdmin}
-                value={form.assigned_installer_id}
-                onChange={(e) => setForm({ ...form, assigned_installer_id: e.target.value })}
+                value={jobForm.assigned_installer_id}
+                onChange={(e) => setJobForm({ ...jobForm, assigned_installer_id: e.target.value })}
               >
                 <option value="">— unassigned —</option>
                 {profiles
@@ -288,13 +346,13 @@ export default function JobDetail({ job, onClose }: { job: Job; onClose: () => v
           </div>
           <label className="notes-label">
             Notes
-            <textarea rows={4} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+            <textarea rows={4} value={jobForm.notes} onChange={(e) => setJobForm({ ...jobForm, notes: e.target.value })} />
           </label>
           <label className="check-label">
             <input
               type="checkbox"
-              checked={form.fixes_needed}
-              onChange={(e) => setForm({ ...form, fixes_needed: e.target.checked })}
+              checked={jobForm.fixes_needed}
+              onChange={(e) => setJobForm({ ...jobForm, fixes_needed: e.target.checked })}
             />
             Fixes needed
           </label>
@@ -365,7 +423,8 @@ export default function JobDetail({ job, onClose }: { job: Job; onClose: () => v
             <button
               className="btn btn-gray"
               onClick={async () => {
-                await copyText(jobDetailsText(job, items, stocks))
+                if (!customer) return
+                await copyText(jobDetailsText(job, customer, items, stocks))
                 note('📋 Copied — paste into email or SMS!')
               }}
             >
@@ -381,7 +440,12 @@ export default function JobDetail({ job, onClose }: { job: Job; onClose: () => v
                 <button className="btn btn-gray" onClick={() => setShowJo(true)}>
                   📄 Job order
                 </button>
-                <button className="btn btn-gray" onClick={() => printJobPo(job, assigned.length ? assigned : pending, stocks, suppliers)}>
+                <button
+                  className="btn btn-gray"
+                  onClick={() =>
+                    printJobPo(job, customer?.name ?? `Job #${job.id}`, assigned.length ? assigned : pending, stocks, suppliers)
+                  }
+                >
                   🖨 Purchase order
                 </button>
                 <button className="btn btn-gray" onClick={() => setShowLink(true)}>
@@ -392,8 +456,24 @@ export default function JobDetail({ job, onClose }: { job: Job; onClose: () => v
           </div>
         </section>
 
-        {showCes && <CesModal job={job} items={items} stocks={stocks} cesSpecs={cesSpecs} onClose={() => setShowCes(false)} />}
-        {showJo && <JobOrderModal job={job} onClose={() => setShowJo(false)} onSaved={() => refresh()} />}
+        {showCes && customer && (
+          <CesModal
+            job={job}
+            customer={customer}
+            items={items}
+            stocks={stocks}
+            cesSpecs={cesSpecs}
+            onClose={() => setShowCes(false)}
+          />
+        )}
+        {showJo && (
+          <JobOrderModal
+            job={job}
+            existingIR={existingIR}
+            onClose={() => setShowJo(false)}
+            onSaved={() => refresh()}
+          />
+        )}
         {showLink && (
           <LinkQuoteModal
             job={job}
@@ -427,6 +507,8 @@ function DatePick(props: {
   onConfirm: () => void
   onCancel: () => void
 }) {
+  const { customers } = useData()
+  const customerName = (j: Job) => customers.find((c) => c.id === j.customer_id)?.name ?? `Job #${j.id}`
   return (
     <div className="datepick">
       <label>
@@ -435,12 +517,12 @@ function DatePick(props: {
       </label>
       {props.clashes.length > 0 && (
         <div className="clash-warn">
-          ⚠ Same-day clash: {props.clashes.map((c) => c.job.name).join(', ')} already booked on this date.
+          ⚠ Same-day clash: {props.clashes.map((c) => customerName(c.job)).join(', ')} already booked on this date.
         </div>
       )}
       {props.allBooked.length > 0 && (
         <div className="booked-list">
-          Booked installs: {props.allBooked.map((c) => `${fmtDate(c.date)} — ${c.job.name}`).join(' · ')}
+          Booked installs: {props.allBooked.map((c) => `${fmtDate(c.date)} — ${customerName(c.job)}`).join(' · ')}
         </div>
       )}
       <div className="row">

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useAuth } from '../../lib/auth'
 import { useData } from '../../lib/data'
-import type { Job } from '../../lib/data'
+import type { Customer, Job } from '../../lib/data'
 import { PIPELINE, isClosed, stepLabel, stepOrdinal, TOTAL_STEPS } from '../../lib/pipeline'
 import { computeJobShortfalls } from '../../lib/stockCalc'
 import { fmtDate, fmtMoney } from '../../lib/format'
@@ -12,7 +12,7 @@ type Filter = 'all' | 'active' | '1' | '2' | '3' | '4' | 'service' | 'closed'
 
 export default function JobsBoard() {
   const { isAdmin } = useAuth()
-  const { jobs, items, stocks, refresh, loading } = useData()
+  const { jobs, customers, items, stocks, refresh, loading } = useData()
   const [filter, setFilter] = useState<Filter>('active')
   const [openId, setOpenId] = useState<number | null>(null)
   const [creating, setCreating] = useState(false)
@@ -91,9 +91,10 @@ export default function JobsBoard() {
       )}
 
       <div className="job-grid">
-        {list.map((j) => (
-          <JobCard key={j.id} job={j} short={!!shortfalls[j.id]} onOpen={() => setOpenId(j.id)} />
-        ))}
+        {list.map((j) => {
+          const cust = customers.find((c) => c.id === j.customer_id)
+          return <JobCard key={j.id} job={j} customer={cust} short={!!shortfalls[j.id]} onOpen={() => setOpenId(j.id)} />
+        })}
         {list.length === 0 && <div className="placeholder">No jobs match this filter.</div>}
       </div>
 
@@ -102,7 +103,7 @@ export default function JobsBoard() {
   )
 }
 
-function JobCard({ job, short, onOpen }: { job: Job; short: boolean; onOpen: () => void }) {
+function JobCard({ job, customer, short, onOpen }: { job: Job; customer: Customer | undefined; short: boolean; onOpen: () => void }) {
   const stage = PIPELINE[job.stage]
   const closed = isClosed(job.stage, job.step)
   const pct = Math.round(((stepOrdinal(job.stage, job.step) + 1) / TOTAL_STEPS) * 100)
@@ -110,7 +111,7 @@ function JobCard({ job, short, onOpen }: { job: Job; short: boolean; onOpen: () 
     <button className={`job-card ${closed ? 'job-closed' : ''}`} onClick={onOpen}>
       <div className="job-card-top">
         <span className="job-name">
-          {job.name}
+          {customer?.name ?? `Job #${job.id}`}
           {closed && <span className="job-done"> ✓</span>}
         </span>
         {job.job_type === 'service' && <span className="type-pill">🛠 service</span>}
@@ -121,7 +122,9 @@ function JobCard({ job, short, onOpen }: { job: Job; short: boolean; onOpen: () 
         <span className="stage-chip" style={{ background: stage.light, color: stage.text }}>
           {stage.short} › {stepLabel(job.stage, job.step)}
         </span>
-        {job.date_booked && !job.install_date && <span className="job-date">📅 {fmtDate(job.date_booked)}</span>}
+        {job.planned_install_date && !job.install_completion_date && (
+          <span className="job-date">📅 {fmtDate(job.planned_install_date)}</span>
+        )}
         {job.value > 0 && <span className="job-value">{fmtMoney(job.value)}</span>}
       </div>
       <div className="job-progress">

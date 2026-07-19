@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      customers: {
+        Row: {
+          address: string
+          contact_method: string
+          created_at: string
+          email: string
+          id: number
+          name: string
+          phone: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          address?: string
+          contact_method?: string
+          created_at?: string
+          email?: string
+          id?: number
+          name: string
+          phone?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          address?: string
+          contact_method?: string
+          created_at?: string
+          email?: string
+          id?: number
+          name?: string
+          phone?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      installation_requests: {
+        Row: {
+          additional_notes: string
+          created_at: string
+          custom_items: Json
+          issued_date: string | null
+          job_id: number
+          job_order_ref: string
+          site_access_notes: string
+          special_instructions: string
+          updated_at: string
+          vehicle: string
+          version: number
+        }
+        Insert: {
+          additional_notes?: string
+          created_at?: string
+          custom_items?: Json
+          issued_date?: string | null
+          job_id: number
+          job_order_ref?: string
+          site_access_notes?: string
+          special_instructions?: string
+          updated_at?: string
+          vehicle?: string
+          version?: number
+        }
+        Update: {
+          additional_notes?: string
+          created_at?: string
+          custom_items?: Json
+          issued_date?: string | null
+          job_id?: number
+          job_order_ref?: string
+          site_access_notes?: string
+          special_instructions?: string
+          updated_at?: string
+          vehicle?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installation_requests_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_events: {
         Row: {
           actor: string | null
@@ -105,20 +191,16 @@ export type Database = {
           assigned_installer_id: string | null
           ces_received: string | null
           ces_submitted: string | null
-          contact_method: string
           created_at: string
-          date_booked: string | null
-          email: string
+          customer_id: number
           fixes_needed: boolean
           id: number
-          install_date: string | null
-          install_start: string | null
-          job_order: Json | null
+          install_completion_date: string | null
+          install_start_date: string | null
           job_type: Database["public"]["Enums"]["job_type"]
           location: string
-          name: string
           notes: string
-          phone: string
+          planned_install_date: string | null
           rebate_received: string | null
           rebate_submitted: string | null
           stage: number
@@ -132,20 +214,16 @@ export type Database = {
           assigned_installer_id?: string | null
           ces_received?: string | null
           ces_submitted?: string | null
-          contact_method?: string
           created_at?: string
-          date_booked?: string | null
-          email?: string
+          customer_id: number
           fixes_needed?: boolean
           id?: number
-          install_date?: string | null
-          install_start?: string | null
-          job_order?: Json | null
+          install_completion_date?: string | null
+          install_start_date?: string | null
           job_type?: Database["public"]["Enums"]["job_type"]
           location?: string
-          name: string
           notes?: string
-          phone?: string
+          planned_install_date?: string | null
           rebate_received?: string | null
           rebate_submitted?: string | null
           stage?: number
@@ -159,20 +237,16 @@ export type Database = {
           assigned_installer_id?: string | null
           ces_received?: string | null
           ces_submitted?: string | null
-          contact_method?: string
           created_at?: string
-          date_booked?: string | null
-          email?: string
+          customer_id?: number
           fixes_needed?: boolean
           id?: number
-          install_date?: string | null
-          install_start?: string | null
-          job_order?: Json | null
+          install_completion_date?: string | null
+          install_start_date?: string | null
           job_type?: Database["public"]["Enums"]["job_type"]
           location?: string
-          name?: string
           notes?: string
-          phone?: string
+          planned_install_date?: string | null
           rebate_received?: string | null
           rebate_submitted?: string | null
           stage?: number
@@ -188,6 +262,13 @@ export type Database = {
             columns: ["assigned_installer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
@@ -228,18 +309,24 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+          notification_email: string | null
+          notification_phone: string | null
           role: Database["public"]["Enums"]["user_role"]
         }
         Insert: {
           created_at?: string
           full_name?: string
           id: string
+          notification_email?: string | null
+          notification_phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
         }
         Update: {
           created_at?: string
           full_name?: string
           id?: string
+          notification_email?: string | null
+          notification_phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
         }
         Relationships: []
@@ -392,21 +479,73 @@ export type Database = {
           p_override_stage?: number
           p_override_step?: number
         }
-        Returns: Database["public"]["Tables"]["jobs"]["Row"]
+        Returns: {
+          assigned_installer_id: string | null
+          ces_received: string | null
+          ces_submitted: string | null
+          created_at: string
+          customer_id: number
+          fixes_needed: boolean
+          id: number
+          install_completion_date: string | null
+          install_start_date: string | null
+          job_type: Database["public"]["Enums"]["job_type"]
+          location: string
+          notes: string
+          planned_install_date: string | null
+          rebate_received: string | null
+          rebate_submitted: string | null
+          stage: number
+          step: number
+          system_description: string
+          updated_at: string
+          value: number
+          version: number
+        }
       }
       apply_pending_bom_now: { Args: { p_job_id: number }; Returns: number }
       move_job_back: {
         Args: { p_expected_version: number; p_job_id: number }
-        Returns: Database["public"]["Tables"]["jobs"]["Row"]
+        Returns: {
+          assigned_installer_id: string | null
+          ces_received: string | null
+          ces_submitted: string | null
+          created_at: string
+          customer_id: number
+          fixes_needed: boolean
+          id: number
+          install_completion_date: string | null
+          install_start_date: string | null
+          job_type: Database["public"]["Enums"]["job_type"]
+          location: string
+          notes: string
+          planned_install_date: string | null
+          rebate_received: string | null
+          rebate_submitted: string | null
+          stage: number
+          step: number
+          system_description: string
+          updated_at: string
+          value: number
+          version: number
+        }
       }
       receive_stock: {
         Args: {
           p_invoice_ref: string
           p_lines: Json
-          p_occurred_at: string | null
-          p_supplier_id: number | null
+          p_occurred_at: string
+          p_supplier_id: number
         }
-        Returns: Database["public"]["Tables"]["receipts"]["Row"]
+        Returns: {
+          created_at: string
+          id: number
+          invoice_ref: string
+          item_count: number
+          occurred_at: string
+          supplier_id: number | null
+          total_units: number
+        }
       }
       reschedule_booking: {
         Args: {
@@ -414,7 +553,29 @@ export type Database = {
           p_job_id: number
           p_new_date: string
         }
-        Returns: Database["public"]["Tables"]["jobs"]["Row"]
+        Returns: {
+          assigned_installer_id: string | null
+          ces_received: string | null
+          ces_submitted: string | null
+          created_at: string
+          customer_id: number
+          fixes_needed: boolean
+          id: number
+          install_completion_date: string | null
+          install_start_date: string | null
+          job_type: Database["public"]["Enums"]["job_type"]
+          location: string
+          notes: string
+          planned_install_date: string | null
+          rebate_received: string | null
+          rebate_submitted: string | null
+          stage: number
+          step: number
+          system_description: string
+          updated_at: string
+          value: number
+          version: number
+        }
       }
     }
     Enums: {
@@ -429,16 +590,122 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database["public"]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-export type Tables<T extends keyof DefaultSchema["Tables"]> =
-  DefaultSchema["Tables"][T]["Row"]
-export type TablesInsert<T extends keyof DefaultSchema["Tables"]> =
-  DefaultSchema["Tables"][T]["Insert"]
-export type TablesUpdate<T extends keyof DefaultSchema["Tables"]> =
-  DefaultSchema["Tables"][T]["Update"]
-export type Enums<T extends keyof DefaultSchema["Enums"]> =
-  DefaultSchema["Enums"][T]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
 export const Constants = {
   public: {

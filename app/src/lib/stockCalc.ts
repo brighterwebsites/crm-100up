@@ -38,7 +38,7 @@ export function allocatedMap(jobs: Job[], items: JobStockItem[]): Record<number,
 
 /** Priority date for "oldest commitments claim stock first". */
 function commitDate(j: Job): string {
-  return j.date_booked ?? j.install_date ?? j.created_at
+  return j.planned_install_date ?? j.install_completion_date ?? j.created_at
 }
 
 /** Per-job shortfall attribution: {jobId: {stockId: shortQty}}. */
@@ -153,7 +153,7 @@ export function computeOrderData(
  * bookedInstalls, line 7331 — cross-job, same-day granularity). */
 export function bookedInstalls(jobs: Job[], excludeId?: number): { date: string; job: Job }[] {
   return jobs
-    .filter((j) => j.date_booked && !j.install_date && j.id !== excludeId)
-    .map((j) => ({ date: j.date_booked!, job: j }))
+    .filter((j) => j.planned_install_date && !j.install_completion_date && j.id !== excludeId)
+    .map((j) => ({ date: j.planned_install_date!, job: j }))
     .sort((a, b) => a.date.localeCompare(b.date))
 }

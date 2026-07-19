@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabaseClient'
-import type { CesSpec, Job, JobStockItem, Stock } from '../../lib/data'
+import type { CesSpec, Customer, Job, JobStockItem, Stock } from '../../lib/data'
 import { PIPELINE, stepLabel } from '../../lib/pipeline'
 import { fmtDate } from '../../lib/format'
 
@@ -54,29 +54,37 @@ export async function updateJob(job: Job, patch: Partial<Job>): Promise<Job> {
   return data[0]
 }
 
+/** Create a customer then the job linked to it. Returns the new job. */
 export async function createJob(name: string): Promise<Job> {
-  const { data, error } = await supabase
-    .from('jobs')
-    .insert({ name: name.trim() || 'New customer' })
+  const trimmed = name.trim() || 'New customer'
+  const { data: cust, error: custErr } = await supabase
+    .from('customers')
+    .insert({ name: trimmed })
     .select()
     .single()
-  if (error) throw new Error(error.message)
-  return data
+  if (custErr) throw new Error(custErr.message)
+  const { data: job, error: jobErr } = await supabase
+    .from('jobs')
+    .insert({ customer_id: cust.id })
+    .select()
+    .single()
+  if (jobErr) throw new Error(jobErr.message)
+  return job
 }
 
 /** Port of copyJobDetails (line 7553) — plain text for email/SMS. */
-export function jobDetailsText(job: Job, items: JobStockItem[], stocks: Stock[]): string {
+export function jobDetailsText(job: Job, customer: Customer, items: JobStockItem[], stocks: Stock[]): string {
   const lines: string[] = []
-  lines.push(`JOB SUMMARY — ${job.name}`)
+  lines.push(`JOB SUMMARY — ${customer.name}`)
   lines.push('─'.repeat(36))
   if (job.location) lines.push(`📍 ${job.location}`)
-  if (job.phone) lines.push(`📱 ${job.phone}`)
-  if (job.email) lines.push(`✉  ${job.email}`)
+  if (customer.phone) lines.push(`📱 ${customer.phone}`)
+  if (customer.email) lines.push(`✉  ${customer.email}`)
   if (job.system_description) lines.push(`\n🔧 System: ${job.system_description}`)
-  if (job.date_booked || job.install_date) {
+  if (job.planned_install_date || job.install_completion_date) {
     lines.push('')
-    if (job.date_booked) lines.push(`📅 Install booked: ${fmtDate(job.date_booked)}`)
-    if (job.install_date) lines.push(`✅ Install complete: ${fmtDate(job.install_date)}`)
+    if (job.planned_install_date) lines.push(`📅 Install booked: ${fmtDate(job.planned_install_date)}`)
+    if (job.install_completion_date) lines.push(`✅ Install complete: ${fmtDate(job.install_completion_date)}`)
   }
   const assigned = items.filter((i) => i.job_id === job.id && i.status === 'assigned')
   if (assigned.length) {
@@ -112,6 +120,7 @@ export interface CesResult {
 
 export function buildCes(
   job: Job,
+  customer: Customer,
   items: JobStockItem[],
   stocks: Stock[],
   cesSpecs: CesSpec[]
@@ -172,12 +181,12 @@ export function buildCes(
     }
   }
   const locLines: string[] = []
-  if (job.name) locLines.push(job.name)
+  if (customer.name) locLines.push(customer.name)
   if (job.location) locLines.push(job.location)
-  if (job.email) locLines.push('Email: ' + job.email)
-  locLines.push('Phone:' + (job.phone ? ' ' + job.phone : ''))
+  if (customer.email) locLines.push('Email: ' + customer.email)
+  locLines.push('Phone:' + (customer.phone ? ' ' + customer.phone : ''))
   rows += `<tr><td style="${th}">install location</td><td style="${th}">Total rated capacity kW</td><td style="${th}">Installation date</td>${EH}${EH}</tr>`
-  rows += `<tr><td style="${tdC};text-align:left;vertical-align:top">${locLines.map(esc).join('<br>')}</td><td style="${tdC}">${groups.panel.length ? totalKw : ''}</td><td style="${tdC}">${fmtCesDate(job.install_date || job.date_booked)}</td>${E}${E}</tr>`
+  rows += `<tr><td style="${tdC};text-align:left;vertical-align:top">${locLines.map(esc).join('<br>')}</td><td style="${tdC}">${groups.panel.length ? totalKw : ''}</td><td style="${tdC}">${fmtCesDate(job.install_completion_date || job.planned_install_date)}</td>${E}${E}</tr>`
 
   const empty = !groups.battery.length && !groups.inverter.length && !groups.panel.length
   const warnings: string[] = []

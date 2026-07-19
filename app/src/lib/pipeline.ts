@@ -65,7 +65,10 @@ export function isClosed(stage: number, step: number): boolean {
 
 /** Steps whose Advance action needs a date from the user (mirrors the old
  * pendingAdvance date-picker behavior: booked, install start, install done). */
-export function nextStepNeedsDate(stage: number, step: number): 'date_booked' | 'install_start' | 'install_date' | null {
+export function nextStepNeedsDate(
+  stage: number,
+  step: number,
+): 'planned_install_date' | 'install_start_date' | 'install_completion_date' | null {
   const maxStep = (PIPELINE[stage]?.steps.length ?? 0) - 1
   let ns = stage
   let np = step + 1
@@ -74,8 +77,8 @@ export function nextStepNeedsDate(stage: number, step: number): 'date_booked' | 
     ns = stage + 1
     np = 0
   }
-  if (ns === 3 && np === 1) return 'date_booked'
-  if (ns === 3 && np === 3) return 'install_start'
-  if (ns === 3 && np === 4) return 'install_date'
+  if (ns === 3 && np === 1) return 'planned_install_date'
+  if (ns === 3 && np === 3) return 'install_start_date'
+  if (ns === 3 && np === 4) return 'install_completion_date'
   return null
 }

@@ -12,7 +12,7 @@ import { copyPartsList } from '../jobs/modals'
 // lines 5969-6120): priority-attributed shortfalls, short + zero-stock
 // cards, per-supplier grouping with PO + copy-parts actions.
 export default function OrderList({ onOpenJob }: { onOpenJob: (id: number) => void }) {
-  const { jobs, items, stocks, suppliers, refresh } = useData()
+  const { jobs, customers, items, stocks, suppliers, refresh } = useData()
   const [copied, setCopied] = useState<string | null>(null)
 
   const data = useMemo(() => computeOrderData(jobs, items, stocks, suppliers), [jobs, items, stocks, suppliers])
@@ -96,11 +96,12 @@ export default function OrderList({ onOpenJob }: { onOpenJob: (id: number) => vo
                 </div>
                 {card.allocJobs.length ? (
                   card.allocJobs.map(({ job, qty }) => {
-                    const dt = job.date_booked || job.install_date
+                    const dt = job.planned_install_date || job.install_completion_date
+                    const custName = customers.find((c) => c.id === job.customer_id)?.name ?? `Job #${job.id}`
                     return (
                       <div key={job.id} className="order-cust-row">
                         <button className="btn-link-name" onClick={() => onOpenJob(job.id)}>
-                          {job.name}
+                          {custName}
                         </button>
                         <span>{card.kind === 'short' ? `⚠ ${qty} short` : `×${qty} needed`}</span>
                         <span className="mutedtext">

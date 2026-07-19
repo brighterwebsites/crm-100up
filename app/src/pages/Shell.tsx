@@ -21,11 +21,11 @@ function ShellInner() {
   const { session, profile, isAdmin, signOut } = useAuth()
   const [tab, setTab] = useState<Tab>('jobs')
   const [orderJobId, setOrderJobId] = useState<number | null>(null)
-  const { jobs, stocks, suppliers, receipts, items } = useData()
+  const { jobs, customers, stocks, suppliers, receipts, items, installationRequests } = useData()
 
-  // Backup export in the old app's exact JSON shape (date-stamped filename,
-  // same top-level keys) so Fred keeps his file-in-hand backup habit — and
-  // the file remains importable by the old HTML app if ever needed.
+  // Backup export — denormalises customers + installation_requests back to
+  // the old app's flat JSON shape so the file stays importable by the old
+  // HTML app if ever needed. Field names match the legacy camelCase keys.
   function exportJson() {
     const byJob = (jobId: number, status: string) =>
       items
@@ -37,33 +37,50 @@ function ShellInner() {
           ...(i.notes ? { notes: i.notes } : {}),
         }))
     const data = {
-      jobs: jobs.map((j) => ({
-        id: j.id,
-        name: j.name,
-        loc: j.location,
-        system: j.system_description,
-        value: j.value,
-        email: j.email,
-        phone: j.phone,
-        contact: j.contact_method,
-        jobType: j.job_type,
-        stage: j.stage,
-        step: j.step,
-        notes: j.notes,
-        created: new Date(j.created_at).getTime(),
-        stockItems: byJob(j.id, 'assigned'),
-        stockConsumed: byJob(j.id, 'consumed'),
-        pendingBom: byJob(j.id, 'pending').length ? byJob(j.id, 'pending') : null,
-        jobOrder: j.job_order ?? undefined,
-        dateBooked: j.date_booked ?? '',
-        installStart: j.install_start ?? '',
-        installDate: j.install_date ?? '',
-        cesSubmitted: j.ces_submitted ?? '',
-        cesReceived: j.ces_received ?? '',
-        rebateSubmitted: j.rebate_submitted ?? '',
-        rebateReceived: j.rebate_received ?? '',
-        fixesNeeded: j.fixes_needed,
-      })),
+      jobs: jobs.map((j) => {
+        const cust = customers.find((c) => c.id === j.customer_id)
+        const ir = installationRequests.find((r) => r.job_id === j.id)
+        // Reconstruct the legacy job_order jsonb shape from installation_request
+        const jobOrder = ir
+          ? {
+              ref: ir.job_order_ref,
+              issued: ir.issued_date ?? '',
+              vehicle: ir.vehicle,
+              siteAccess: ir.site_access_notes,
+              specialInstructions: ir.special_instructions,
+              extraNotes: ir.additional_notes,
+              customItems: ir.custom_items,
+              savedAt: new Date(ir.updated_at).getTime(),
+            }
+          : undefined
+        return {
+          id: j.id,
+          name: cust?.name ?? '',
+          loc: j.location,
+          system: j.system_description,
+          value: j.value,
+          email: cust?.email ?? '',
+          phone: cust?.phone ?? '',
+          contact: cust?.contact_method ?? 'Email',
+          jobType: j.job_type,
+          stage: j.stage,
+          step: j.step,
+          notes: j.notes,
+          created: new Date(j.created_at).getTime(),
+          stockItems: byJob(j.id, 'assigned'),
+          stockConsumed: byJob(j.id, 'consumed'),
+          pendingBom: byJob(j.id, 'pending').length ? byJob(j.id, 'pending') : null,
+          jobOrder,
+          dateBooked: j.planned_install_date ?? '',
+          installStart: j.install_start_date ?? '',
+          installDate: j.install_completion_date ?? '',
+          cesSubmitted: j.ces_submitted ?? '',
+          cesReceived: j.ces_received ?? '',
+          rebateSubmitted: j.rebate_submitted ?? '',
+          rebateReceived: j.rebate_received ?? '',
+          fixesNeeded: j.fixes_needed,
+        }
+      }),
       stocks: stocks.map((s) => ({ id: s.id, name: s.name, qty: s.qty, ...(s.supplier_id ? { supplierId: s.supplier_id } : {}) })),
       suppliers: suppliers.map((sp) => ({ id: sp.id, name: sp.name, phone: sp.phone, email: sp.email, notes: sp.notes })),
       receipts: receipts.map((r) => ({

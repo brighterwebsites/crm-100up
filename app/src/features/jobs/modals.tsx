@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { CesSpec, Job, JobStockItem, Stock, Supplier } from '../../lib/data'
+import type { CesSpec, Customer, InstallationRequest, Job, JobStockItem, Stock, Supplier } from '../../lib/data'
 import { supabase } from '../../lib/supabaseClient'
 import { copyHtml, copyText } from '../../lib/clipboard'
 import { matchStock, normalizePart } from '../../lib/normalizePart'
@@ -9,18 +9,23 @@ import { buildCes, buildPoHtml, openPrintWindow, updateJob } from './actions'
 
 export function CesModal({
   job,
+  customer,
   items,
   stocks,
   cesSpecs,
   onClose,
 }: {
   job: Job
+  customer: Customer
   items: JobStockItem[]
   stocks: Stock[]
   cesSpecs: CesSpec[]
   onClose: () => void
 }) {
-  const { html, warnings } = useMemo(() => buildCes(job, items, stocks, cesSpecs), [job, items, stocks, cesSpecs])
+  const { html, warnings } = useMemo(
+    () => buildCes(job, customer, items, stocks, cesSpecs),
+    [job, customer, items, stocks, cesSpecs],
+  )
   const [copied, setCopied] = useState(false)
 
   async function copy() {
@@ -35,7 +40,7 @@ export function CesModal({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal modal-narrow" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <strong>📋 CES summary — {job.name}</strong>
+          <strong>📋 CES summary — {customer.name}</strong>
           <button className="btn btn-gray" style={{ marginLeft: 'auto' }} onClick={onClose}>
             Close
           </button>
@@ -58,43 +63,48 @@ export function CesModal({
   )
 }
 
-/* ── Job order modal (persists to jobs.job_order jsonb) ───────── */
+/* ── Job order modal (persists to installation_requests table) ── */
 
-interface JobOrderDoc {
-  ref?: string
-  issued?: string
-  installer?: string
-  vehicle?: string
-  siteAccess?: string
-  specialInstructions?: string
-  systemDesc?: string
-  extraNotes?: string
-  savedAt?: number
-  customItems?: { name: string; qty: number; notes: string }[]
-}
-
-export function JobOrderModal({ job, onClose, onSaved }: { job: Job; onClose: () => void; onSaved: () => void }) {
-  const existing = (job.job_order ?? {}) as JobOrderDoc
-  const [doc, setDoc] = useState<JobOrderDoc>({
-    ref: existing.ref ?? `JO-${String(job.id).padStart(4, '0')}-${new Date().getFullYear()}`,
-    issued: existing.issued ?? new Date().toLocaleDateString('en-CA'),
-    installer: existing.installer ?? '',
-    vehicle: existing.vehicle ?? '',
-    siteAccess: existing.siteAccess ?? '',
-    specialInstructions: existing.specialInstructions ?? '',
-    systemDesc: existing.systemDesc ?? job.system_description,
-    extraNotes: existing.extraNotes ?? '',
-    customItems: existing.customItems ?? [],
+export function JobOrderModal({
+  job,
+  existingIR,
+  onClose,
+  onSaved,
+}: {
+  job: Job
+  existingIR: InstallationRequest | null
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const defaultRef = `JO-${String(job.id).padStart(4, '0')}-${new Date().getFullYear()}`
+  const [doc, setDoc] = useState({
+    ref: existingIR?.job_order_ref || defaultRef,
+    issued: existingIR?.issued_date || new Date().toLocaleDateString('en-CA'),
+    vehicle: existingIR?.vehicle || '',
+    siteAccess: existingIR?.site_access_notes || '',
+    specialInstructions: existingIR?.special_instructions || '',
+    extraNotes: existingIR?.additional_notes || '',
   })
   const [err, setErr] = useState<string | null>(null)
 
-  // Note: unlike V46's saveJobOrder, this deliberately has NO booking-date
-  // input — booking dates change only via Advance / Reschedule (the DB
-  // guard trigger would reject the write anyway).
+  // Note: no booking-date input — booking dates change only via Advance /
+  // Reschedule; the DB guard trigger would reject the write anyway.
   async function save() {
     setErr(null)
     try {
-      await updateJob(job, { job_order: { ...doc, savedAt: Date.now() } })
+      const { error } = await supabase.from('installation_requests').upsert(
+        {
+          job_id: job.id,
+          job_order_ref: doc.ref,
+          issued_date: doc.issued || null,
+          vehicle: doc.vehicle,
+          site_access_notes: doc.siteAccess,
+          special_instructions: doc.specialInstructions,
+          additional_notes: doc.extraNotes,
+        },
+        { onConflict: 'job_id' },
+      )
+      if (error) throw new Error(error.message)
       onSaved()
       onClose()
     } catch (e) {
@@ -102,7 +112,7 @@ export function JobOrderModal({ job, onClose, onSaved }: { job: Job; onClose: ()
     }
   }
 
-  const set = (k: keyof JobOrderDoc) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const set = (k: keyof typeof doc) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setDoc({ ...doc, [k]: e.target.value })
 
   return (
@@ -117,8 +127,12 @@ export function JobOrderModal({ job, onClose, onSaved }: { job: Job; onClose: ()
         {err && <div className="login-error">{err}</div>}
         <div className="form-grid">
           <label>
-            Installer
-            <input value={doc.installer} onChange={set('installer')} />
+            Job order ref
+            <input value={doc.ref} onChange={set('ref')} />
+          </label>
+          <label>
+            Issued date
+            <input type="date" value={doc.issued} onChange={set('issued')} />
           </label>
           <label>
             Vehicle
@@ -128,17 +142,13 @@ export function JobOrderModal({ job, onClose, onSaved }: { job: Job; onClose: ()
             Site access
             <input value={doc.siteAccess} onChange={set('siteAccess')} />
           </label>
-          <label>
-            System
-            <input value={doc.systemDesc} onChange={set('systemDesc')} />
-          </label>
         </div>
         <label className="notes-label">
           Special instructions
           <textarea rows={3} value={doc.specialInstructions} onChange={set('specialInstructions')} />
         </label>
         <label className="notes-label">
-          Extra notes
+          Additional notes
           <textarea rows={2} value={doc.extraNotes} onChange={set('extraNotes')} />
         </label>
         <div className="row">
@@ -153,7 +163,7 @@ export function JobOrderModal({ job, onClose, onSaved }: { job: Job; onClose: ()
 
 /* ── Purchase order print (derived only, no persistence) ──────── */
 
-export function printJobPo(job: Job, lines: JobStockItem[], stocks: Stock[], suppliers: Supplier[]) {
+export function printJobPo(job: Job, customerName: string, lines: JobStockItem[], stocks: Stock[], suppliers: Supplier[]) {
   const ref = `PO-${String(job.id).padStart(4, '0')}-${new Date().getFullYear()}`
   const parts = lines.map((l) => ({
     name: stocks.find((s) => s.id === l.stock_id)?.name ?? `stock #${l.stock_id}`,
@@ -161,7 +171,7 @@ export function printJobPo(job: Job, lines: JobStockItem[], stocks: Stock[], sup
   }))
   const supIds = new Set(lines.map((l) => stocks.find((s) => s.id === l.stock_id)?.supplier_id).filter(Boolean))
   const supplierName = supIds.size === 1 ? suppliers.find((sp) => sp.id === [...supIds][0])?.name ?? null : null
-  openPrintWindow(buildPoHtml(`Purchase Order — ${job.name}`, ref, supplierName, parts))
+  openPrintWindow(buildPoHtml(`Purchase Order — ${customerName}`, ref, supplierName, parts))
 }
 
 /* ── Link calculator quote (paste-JSON bridge, port of openLinkQuote/
@@ -218,8 +228,8 @@ export function LinkQuoteModal({
     try {
       // Same rule as applyLinkQuote: booked jobs get stock assigned
       // immediately; unbooked jobs get a pending BOM that auto-assigns at
-      // the Date-booked step.
-      const status = job.date_booked ? 'assigned' : 'pending'
+      // the planned-install step.
+      const status = job.planned_install_date ? 'assigned' : 'pending'
       for (const m of mapped) {
         if (!m.stock) continue // unmatched lines are reported, not silently created
         const { data: existing } = await supabase
@@ -266,7 +276,7 @@ export function LinkQuoteModal({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal modal-narrow" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <strong>🔗 Link calculator quote — {job.name}</strong>
+          <strong>🔗 Link calculator quote — #{job.id}</strong>
           <button className="btn btn-gray" style={{ marginLeft: 'auto' }} onClick={onClose}>
             Close
           </button>
