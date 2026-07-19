@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabaseClient'
-import type { CesSpec, Customer, Job, JobStockItem, Stock } from '../../lib/data'
+import type { Customer, Job, JobStockItem, Stock } from '../../lib/data'
 import { PIPELINE, stepLabel } from '../../lib/pipeline'
 import { fmtDate } from '../../lib/format'
 
@@ -122,16 +122,15 @@ export function buildCes(
   job: Job,
   customer: Customer,
   items: JobStockItem[],
-  stocks: Stock[],
-  cesSpecs: CesSpec[]
+  stocks: Stock[]
 ): CesResult {
   // Prefer what was actually consumed at install; fall back to assigned.
   const jobItems = items.filter((i) => i.job_id === job.id)
   const consumed = jobItems.filter((i) => i.status === 'consumed')
   const use = consumed.length > 0 ? consumed : jobItems.filter((i) => i.status === 'assigned')
 
-  const specById = new Map(cesSpecs.map((c) => [c.stock_id, c]))
-  const groups: Record<'battery' | 'inverter' | 'panel', { c: CesSpec; qty: number }[]> = {
+  const stockById = new Map(stocks.map((s) => [s.id, s]))
+  const groups: Record<'battery' | 'inverter' | 'panel', { c: Stock; qty: number }[]> = {
     battery: [],
     inverter: [],
     panel: [],
@@ -140,13 +139,12 @@ export function buildCes(
   const verify = new Set<string>()
 
   for (const it of use) {
-    const c = specById.get(it.stock_id)
-    const stockName = stocks.find((s) => s.id === it.stock_id)?.name ?? `stock #${it.stock_id}`
-    if (!c) {
-      unknown.push(stockName)
+    const c = stockById.get(it.stock_id)
+    const stockName = c?.name ?? `stock #${it.stock_id}`
+    if (!c || c.category === 'other') {
+      if (!c) unknown.push(stockName)
       continue
     }
-    if (c.category === 'other') continue
     if (!c.verified) verify.add(c.model)
     groups[c.category].push({ c, qty: it.qty })
   }

@@ -29,7 +29,8 @@ crm-100up\docs\pipeline-layout.md
 
 - Inventory
 -- 📦 Stock (current leave as is)
--- Orders  (current leave as is)
+-- Order List  (current things to be ordered - leave as is)
+-- Purchase Orders (saved PO from Orders list, with status waiting to receive(sent), partially receoved, closed (received in full) (need table for PO + stock ordered lines?)
 -- Suppliers (current leave as is)
 
 - Quote Designer   

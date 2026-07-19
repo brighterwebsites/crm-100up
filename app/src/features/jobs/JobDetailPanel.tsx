@@ -24,7 +24,7 @@ interface Props {
 
 export default function JobDetailPanel({ jobId, onClose }: Props) {
   const { isAdmin } = useAuth()
-  const { jobs, customers, items, stocks, suppliers, cesSpecs, profiles, installationRequests, refresh } = useData()
+  const { jobs, customers, items, stocks, suppliers, profiles, installationRequests, refresh } = useData()
 
   const job = jobs.find((j) => j.id === jobId)
   const customer: Customer | undefined = job ? customers.find((c) => c.id === job.customer_id) : undefined
@@ -507,7 +507,7 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
       </div>
 
       {showCes && customer && (
-        <CesModal job={job} customer={customer} items={items} stocks={stocks} cesSpecs={cesSpecs} onClose={() => setShowCes(false)} />
+        <CesModal job={job} customer={customer} items={items} stocks={stocks} onClose={() => setShowCes(false)} />
       )}
       {showLink && (
         <LinkQuoteModal

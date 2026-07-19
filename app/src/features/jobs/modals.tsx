@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { CesSpec, Customer, InstallationRequest, Job, JobStockItem, Stock, Supplier } from '../../lib/data'
+import type { Customer, InstallationRequest, Job, JobStockItem, Stock, Supplier } from '../../lib/data'
 import { supabase } from '../../lib/supabaseClient'
 import { copyHtml, copyText } from '../../lib/clipboard'
 import { matchStock, normalizePart } from '../../lib/normalizePart'
@@ -12,19 +12,17 @@ export function CesModal({
   customer,
   items,
   stocks,
-  cesSpecs,
   onClose,
 }: {
   job: Job
   customer: Customer
   items: JobStockItem[]
   stocks: Stock[]
-  cesSpecs: CesSpec[]
   onClose: () => void
 }) {
   const { html, warnings } = useMemo(
-    () => buildCes(job, customer, items, stocks, cesSpecs),
-    [job, customer, items, stocks, cesSpecs],
+    () => buildCes(job, customer, items, stocks),
+    [job, customer, items, stocks],
   )
   const [copied, setCopied] = useState(false)
 
@@ -169,7 +167,7 @@ export function printJobPo(job: Job, customerName: string, lines: JobStockItem[]
     name: stocks.find((s) => s.id === l.stock_id)?.name ?? `stock #${l.stock_id}`,
     qty: l.qty,
   }))
-  const supIds = new Set(lines.map((l) => stocks.find((s) => s.id === l.stock_id)?.supplier_id).filter(Boolean))
+  const supIds = new Set(lines.map((l) => stocks.find((s) => s.id === l.stock_id)?.preferred_supplier_id).filter(Boolean))
   const supplierName = supIds.size === 1 ? suppliers.find((sp) => sp.id === [...supIds][0])?.name ?? null : null
   openPrintWindow(buildPoHtml(`Purchase Order — ${customerName}`, ref, supplierName, parts))
 }

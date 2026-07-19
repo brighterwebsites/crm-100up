@@ -97,7 +97,7 @@ function ShellInner() {
           fixesNeeded: j.fixes_needed,
         }
       }),
-      stocks: stocks.map((s) => ({ id: s.id, name: s.name, qty: s.qty, ...(s.supplier_id ? { supplierId: s.supplier_id } : {}) })),
+      stocks: stocks.map((s) => ({ id: s.id, name: s.name, qty: s.qty, ...(s.preferred_supplier_id ? { supplierId: s.preferred_supplier_id } : {}) })),
       suppliers: suppliers.map((sp) => ({ id: sp.id, name: sp.name, phone: sp.phone, email: sp.email, notes: sp.notes })),
       receipts: receipts.map((r) => ({
         id: r.id,

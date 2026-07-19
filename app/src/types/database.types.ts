@@ -522,73 +522,56 @@ export type Database = {
           },
         ]
       }
-      stock_ces_specs: {
+      stocks: {
         Row: {
           category: Database["public"]["Enums"]["ces_category"]
+          id: number
           kva: number | null
           kw: number | null
           kwh: number | null
+          last_cost: number
           manufacturer: string
           model: string
-          stock_id: number
+          name: string
+          preferred_supplier_id: number | null
+          qty: number
           verified: boolean
           watts: number | null
         }
         Insert: {
-          category: Database["public"]["Enums"]["ces_category"]
+          category?: Database["public"]["Enums"]["ces_category"]
+          id?: number
           kva?: number | null
           kw?: number | null
           kwh?: number | null
+          last_cost?: number
           manufacturer?: string
           model?: string
-          stock_id: number
+          name: string
+          preferred_supplier_id?: number | null
+          qty?: number
           verified?: boolean
           watts?: number | null
         }
         Update: {
           category?: Database["public"]["Enums"]["ces_category"]
+          id?: number
           kva?: number | null
           kw?: number | null
           kwh?: number | null
+          last_cost?: number
           manufacturer?: string
           model?: string
-          stock_id?: number
+          name?: string
+          preferred_supplier_id?: number | null
+          qty?: number
           verified?: boolean
           watts?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "stock_ces_specs_stock_id_fkey"
-            columns: ["stock_id"]
-            isOneToOne: true
-            referencedRelation: "stocks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      stocks: {
-        Row: {
-          id: number
-          name: string
-          qty: number
-          supplier_id: number | null
-        }
-        Insert: {
-          id?: number
-          name: string
-          qty?: number
-          supplier_id?: number | null
-        }
-        Update: {
-          id?: number
-          name?: string
-          qty?: number
-          supplier_id?: number | null
-        }
-        Relationships: [
-          {
             foreignKeyName: "stocks_supplier_id_fkey"
-            columns: ["supplier_id"]
+            columns: ["preferred_supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
             referencedColumns: ["id"]

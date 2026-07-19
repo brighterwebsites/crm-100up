@@ -127,7 +127,7 @@ export function computeOrderData(
 
   const groups = new Map<number | null, SupplierGroup>()
   for (const card of [...shortItems, ...zeroItems]) {
-    const key = card.stock.supplier_id
+    const key = card.stock.preferred_supplier_id
     const g = groups.get(key) ?? {
       supplier: suppliers.find((sp) => sp.id === key) ?? null,
       short: [],

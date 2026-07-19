@@ -11,7 +11,6 @@ export type Stock = Tables<'stocks'>
 export type Supplier = Tables<'suppliers'>
 export type Receipt = Tables<'receipts'>
 export type JobStockItem = Tables<'job_stock_items'>
-export type CesSpec = Tables<'stock_ces_specs'>
 export type Profile = Tables<'profiles'>
 export type Assumptions = Tables<'assumptions'>
 
@@ -43,7 +42,6 @@ interface DataState {
   suppliers: Supplier[]
   receipts: Receipt[]
   items: JobStockItem[]
-  cesSpecs: CesSpec[]
   profiles: Profile[]
   assumptions: Assumptions | null
   loading: boolean
@@ -58,7 +56,6 @@ const DataContext = createContext<DataState>({
   suppliers: [],
   receipts: [],
   items: [],
-  cesSpecs: [],
   profiles: [],
   assumptions: null,
   loading: true,
@@ -75,7 +72,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     suppliers: [],
     receipts: [],
     items: [],
-    cesSpecs: [],
     profiles: [],
     assumptions: null,
     loading: true,
@@ -85,7 +81,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     // RLS scopes every query: admins see everything, installers see
     // their jobs plus the shared reference tables.
-    const [jobs, customers, installationRequests, stocks, suppliers, receipts, items, cesSpecs, profiles, assumptions] =
+    const [jobs, customers, installationRequests, stocks, suppliers, receipts, items, profiles, assumptions] =
       await Promise.all([
         supabase.from('jobs').select('*').order('id', { ascending: false }),
         supabase.from('customers').select('*').order('name'),
@@ -94,7 +90,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         supabase.from('suppliers').select('*').order('name'),
         supabase.from('receipts').select('*').order('occurred_at', { ascending: false }),
         supabase.from('job_stock_items').select('*'),
-        supabase.from('stock_ces_specs').select('*'),
         supabase.from('profiles').select('*'),
         supabase.from('assumptions').select('*').eq('id', 1).maybeSingle(),
       ])
@@ -106,7 +101,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
       suppliers: suppliers.data ?? [],
       receipts: receipts.data ?? [],
       items: items.data ?? [],
-      cesSpecs: cesSpecs.data ?? [],
       profiles: profiles.data ?? [],
       assumptions: assumptions.data ?? null,
       loading: false,

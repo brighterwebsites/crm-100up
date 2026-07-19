@@ -18,7 +18,7 @@ export default function OrderList({ onOpenJob }: { onOpenJob: (id: number) => vo
   const data = useMemo(() => computeOrderData(jobs, items, stocks, suppliers), [jobs, items, stocks, suppliers])
 
   async function setStockSupplier(stockId: number, supplierId: number | null) {
-    await supabase.from('stocks').update({ supplier_id: supplierId }).eq('id', stockId)
+    await supabase.from('stocks').update({ preferred_supplier_id: supplierId }).eq('id', stockId)
     await refresh()
   }
 
@@ -82,7 +82,7 @@ export default function OrderList({ onOpenJob }: { onOpenJob: (id: number) => vo
                     {card.kind === 'short' ? `ORDER ${card.toOrder} unit${card.toOrder !== 1 ? 's' : ''}` : 'ZERO STOCK'}
                   </span>
                   <select
-                    value={card.stock.supplier_id ?? ''}
+                    value={card.stock.preferred_supplier_id ?? ''}
                     onChange={(e) => setStockSupplier(card.stock.id, e.target.value ? Number(e.target.value) : null)}
                     title="Assign supplier — remembered for next time"
                   >
