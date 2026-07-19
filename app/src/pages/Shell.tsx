@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { useAuth } from '../lib/auth'
 import { DataProvider, useData } from '../lib/data'
-import JobsBoard from '../features/jobs/JobsBoard'
-import JobDetail from '../features/jobs/JobDetail'
 import StockPage from '../features/stock/StockPage'
 import OrderList from '../features/stock/OrderList'
 import SuppliersPage from '../features/suppliers/SuppliersPage'
+import PipelinePage from './PipelinePage'
+import CustomerJobsPage from './CustomerJobsPage'
+import CustomersPage from './CustomersPage'
 
-type Tab = 'jobs' | 'stock' | 'orders' | 'suppliers'
+type Page = 'pipeline' | 'customer-jobs' | 'customers' | 'stock' | 'orders' | 'suppliers'
 
 export default function Shell() {
   return (
@@ -19,13 +20,13 @@ export default function Shell() {
 
 function ShellInner() {
   const { session, profile, isAdmin, signOut } = useAuth()
-  const [tab, setTab] = useState<Tab>('jobs')
-  const [orderJobId, setOrderJobId] = useState<number | null>(null)
+  const [page, setPage]               = useState<Page>('pipeline')
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [orderJobId, setOrderJobId]   = useState<number | null>(null)
   const { jobs, customers, stocks, suppliers, receipts, items, installationRequests } = useData()
 
   // Backup export — denormalises customers + installation_requests back to
-  // the old app's flat JSON shape so the file stays importable by the old
-  // HTML app if ever needed. Field names match the legacy camelCase keys.
+  // the old app's flat JSON shape so the file stays importable if ever needed.
   function exportJson() {
     const byJob = (jobId: number, status: string) =>
       items
@@ -40,7 +41,6 @@ function ShellInner() {
       jobs: jobs.map((j) => {
         const cust = customers.find((c) => c.id === j.customer_id)
         const ir = installationRequests.find((r) => r.job_id === j.id)
-        // Reconstruct the legacy job_order jsonb shape from installation_request
         const jobOrder = ir
           ? {
               ref: ir.job_order_ref,
@@ -106,35 +106,38 @@ function ShellInner() {
     URL.revokeObjectURL(a.href)
   }
 
-  const orderJob = orderJobId != null ? jobs.find((j) => j.id === orderJobId) ?? null : null
+  // When OrderList wants to open a job, jump to Customer Jobs page with it selected
+  function handleOpenJob(id: number) {
+    setOrderJobId(id)
+    setPage('customer-jobs')
+  }
+
+  function NavItem({ p, icon, label }: { p: Page; icon: string; label: string }) {
+    return (
+      <button
+        className={`sidebar-item ${page === p ? 'sidebar-item-on' : ''}`}
+        onClick={() => setPage(p)}
+        title={sidebarOpen ? undefined : label}
+      >
+        <span className="sidebar-icon">{icon}</span>
+        {sidebarOpen && <span className="sidebar-label">{label}</span>}
+      </button>
+    )
+  }
 
   return (
-    <div className="shell">
-      <nav className="nav">
-        <div className="nav-brand">
-          100UP <span className="badge">CRM</span>
-        </div>
-        <div className="nav-tabs">
-          <button className={`nav-tab ${tab === 'jobs' ? 'on' : ''}`} onClick={() => setTab('jobs')}>
-            🗂 Jobs
+    <div className="shell-layout">
+      {/* ── Top header ── */}
+      <header className="app-header">
+        <div className="header-left">
+          <button className="sidebar-toggle-btn" onClick={() => setSidebarOpen(!sidebarOpen)} title="Toggle sidebar">
+            ☰
           </button>
-          {isAdmin && (
-            <>
-              <button className={`nav-tab ${tab === 'stock' ? 'on' : ''}`} onClick={() => setTab('stock')}>
-                📦 Stock
-              </button>
-              <button className={`nav-tab ${tab === 'orders' ? 'on' : ''}`} onClick={() => setTab('orders')}>
-                🛒 Order list
-              </button>
-              <button className={`nav-tab ${tab === 'suppliers' ? 'on' : ''}`} onClick={() => setTab('suppliers')}>
-                🚚 Suppliers
-              </button>
-            </>
-          )}
+          <span className="nav-brand">100UP <span className="badge">CRM</span></span>
         </div>
-        <div className="nav-right">
+        <div className="header-right">
           {isAdmin && (
-            <button className="btn btn-gray" onClick={exportJson} title="Download a JSON backup (old-app-compatible format)">
+            <button className="btn btn-gray" style={{ fontSize: 12 }} onClick={exportJson} title="Download JSON backup">
               ⬇ Backup
             </button>
           )}
@@ -142,18 +145,46 @@ function ShellInner() {
             {profile?.full_name || session?.user.email}
             <span className={`role-pill ${isAdmin ? 'role-admin' : 'role-installer'}`}>{profile?.role ?? '…'}</span>
           </span>
-          <button className="btn btn-gray" onClick={signOut}>
-            Sign out
-          </button>
+          <button className="btn btn-gray" style={{ fontSize: 12 }} onClick={signOut}>Sign out</button>
         </div>
-      </nav>
-      <main className="main">
-        {tab === 'jobs' && <JobsBoard />}
-        {tab === 'stock' && isAdmin && <StockPage />}
-        {tab === 'orders' && isAdmin && <OrderList onOpenJob={setOrderJobId} />}
-        {tab === 'suppliers' && isAdmin && <SuppliersPage />}
-      </main>
-      {orderJob && <JobDetail job={orderJob} onClose={() => setOrderJobId(null)} />}
+      </header>
+
+      {/* ── Sidebar + main ── */}
+      <div style={{ display: 'contents' }}>
+        <aside className={`sidebar${sidebarOpen ? '' : ' sidebar-collapsed'}`}>
+          <nav className="sidebar-nav">
+            {isAdmin ? (
+              <>
+                <NavItem p="pipeline"      icon="◉"  label="Pipeline" />
+                <NavItem p="customer-jobs" icon="📋" label="Customer Jobs" />
+                <div className="sidebar-section">{sidebarOpen ? 'CRM' : '·'}</div>
+                <NavItem p="customers"     icon="👥" label="Customers" />
+                <div className="sidebar-section">{sidebarOpen ? 'Inventory' : '·'}</div>
+                <NavItem p="stock"         icon="📦" label="Stock" />
+                <NavItem p="orders"        icon="🛒" label="Order List" />
+                <NavItem p="suppliers"     icon="🚚" label="Suppliers" />
+              </>
+            ) : (
+              /* Installer: only their assigned jobs */
+              <NavItem p="customer-jobs" icon="🔧" label="My Jobs" />
+            )}
+          </nav>
+        </aside>
+
+        <main className="app-main">
+          {isAdmin && page === 'pipeline'      && <PipelinePage />}
+          {isAdmin && page === 'customer-jobs' && (
+            <CustomerJobsPage initialJobId={orderJobId} key={orderJobId ?? 'cj'} />
+          )}
+          {isAdmin && page === 'customers'     && <CustomersPage />}
+          {isAdmin && page === 'stock'         && <StockPage />}
+          {isAdmin && page === 'orders'        && <OrderList onOpenJob={handleOpenJob} />}
+          {isAdmin && page === 'suppliers'     && <SuppliersPage />}
+          {!isAdmin && (
+            <CustomerJobsPage installerOnly />
+          )}
+        </main>
+      </div>
     </div>
   )
 }
