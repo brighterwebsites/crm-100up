@@ -13,6 +13,21 @@ export type Receipt = Tables<'receipts'>
 export type JobStockItem = Tables<'job_stock_items'>
 export type CesSpec = Tables<'stock_ces_specs'>
 export type Profile = Tables<'profiles'>
+export type Assumptions = Tables<'assumptions'>
+
+/** The 24-hour relative-weight load shape lives in assumptions.load_profile
+ * as jsonb — parse defensively since Postgres returns it untyped `Json`. */
+export function loadProfileArray(a: Assumptions | null | undefined): number[] {
+  const p = a?.load_profile
+  if (Array.isArray(p) && p.length === 24 && p.every((x) => typeof x === 'number')) {
+    return p as number[]
+  }
+  return DEFAULT_LOAD_PROFILE
+}
+
+export const DEFAULT_LOAD_PROFILE: number[] = [
+  2, 1.5, 1.5, 1.5, 2, 3, 5, 7, 6.5, 5, 3.5, 3, 3.5, 3, 3, 3, 4, 6, 8, 8, 6.5, 5, 3.5, 2.5,
+]
 
 /** A job row with its customer eagerly joined. Available throughout the app
  * wherever customer contact details are needed alongside job pipeline state. */
@@ -30,6 +45,7 @@ interface DataState {
   items: JobStockItem[]
   cesSpecs: CesSpec[]
   profiles: Profile[]
+  assumptions: Assumptions | null
   loading: boolean
   refresh: () => Promise<void>
 }
@@ -44,6 +60,7 @@ const DataContext = createContext<DataState>({
   items: [],
   cesSpecs: [],
   profiles: [],
+  assumptions: null,
   loading: true,
   refresh: async () => {},
 })
@@ -60,6 +77,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     items: [],
     cesSpecs: [],
     profiles: [],
+    assumptions: null,
     loading: true,
   })
   const timer = useRef<ReturnType<typeof setTimeout>>(null)
@@ -67,7 +85,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     // RLS scopes every query: admins see everything, installers see
     // their jobs plus the shared reference tables.
-    const [jobs, customers, installationRequests, stocks, suppliers, receipts, items, cesSpecs, profiles] =
+    const [jobs, customers, installationRequests, stocks, suppliers, receipts, items, cesSpecs, profiles, assumptions] =
       await Promise.all([
         supabase.from('jobs').select('*').order('id', { ascending: false }),
         supabase.from('customers').select('*').order('name'),
@@ -78,6 +96,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         supabase.from('job_stock_items').select('*'),
         supabase.from('stock_ces_specs').select('*'),
         supabase.from('profiles').select('*'),
+        supabase.from('assumptions').select('*').eq('id', 1).maybeSingle(),
       ])
     setState({
       jobs: jobs.data ?? [],
@@ -89,6 +108,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       items: items.data ?? [],
       cesSpecs: cesSpecs.data ?? [],
       profiles: profiles.data ?? [],
+      assumptions: assumptions.data ?? null,
       loading: false,
     })
   }, [])

@@ -32,7 +32,15 @@ crm-100up\docs\pipeline-layout.md
 -- Orders  (current leave as is)
 -- Suppliers (current leave as is)
 
-- Quote Designer  (stub coming later)
+- Quote Designer   
+-- Quick Estimate (stub)
+-- System Calculator (stub)
+-- 3 Phase System  (stub)
+-- Ground Mount BOM (stub)
+-- Tools
+--- Assumptions (stub)
+--- Simulation 
+--- Daily Load Profile
 
 - Settings  (not sure but probably need this stub for now)
 

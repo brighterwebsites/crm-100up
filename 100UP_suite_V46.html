@@ -4230,10 +4230,19 @@ function simFill(panels, kwh){
 }
 
 function runSimTrace(){
-  const daily    = Number(document.getElementById('simLoad')?.value)    || 20;
-  const panels   = Math.max(1, Math.floor(Number(document.getElementById('simPanels')?.value)  || 30));
-  const battKwh  = Math.max(0.1, Number(document.getElementById('simBattKwh')?.value) || 27);
-  const standbyW = Math.max(0, Number(document.getElementById('simStandbyW')?.value) || 0);
+  // Use a proper finite-number check instead of `|| default` — `||` treats
+  // an explicit 0 as falsy and silently swaps in the default, so zeroing a
+  // field never actually reached the engine (see docs/bugs.md #1). Only an
+  // empty/missing field falls back to the default; 0 is respected.
+  const numOr = (val, dflt) => {
+    if (val === '' || val === null || val === undefined) return dflt;
+    const n = Number(val);
+    return Number.isFinite(n) ? n : dflt;
+  };
+  const daily    = numOr(document.getElementById('simLoad')?.value, 20);
+  const panels   = Math.max(1, Math.floor(numOr(document.getElementById('simPanels')?.value, 30)));
+  const battKwh  = Math.max(0.1, numOr(document.getElementById('simBattKwh')?.value, 27));
+  const standbyW = Math.max(0, numOr(document.getElementById('simStandbyW')?.value, 0));
   const solarKw  = panels * A.panelW / 1000;
   const battCap  = battKwh;
   const standbyWh = standbyW; // Wh per hour (constant)

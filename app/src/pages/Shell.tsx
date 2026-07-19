@@ -7,8 +7,24 @@ import SuppliersPage from '../features/suppliers/SuppliersPage'
 import PipelinePage from './PipelinePage'
 import CustomerJobsPage from './CustomerJobsPage'
 import CustomersPage from './CustomersPage'
+import StubPage from './StubPage'
+import DailyLoadProfilePage from './DailyLoadProfilePage'
 
-type Page = 'pipeline' | 'customer-jobs' | 'customers' | 'stock' | 'orders' | 'suppliers'
+type Page =
+  | 'pipeline'
+  | 'customer-jobs'
+  | 'customers'
+  | 'stock'
+  | 'orders'
+  | 'suppliers'
+  | 'qd-quick-estimate'
+  | 'qd-system-calc'
+  | 'qd-3phase'
+  | 'qd-gm-bom'
+  | 'qd-assumptions'
+  | 'qd-simulation'
+  | 'qd-daily-load-profile'
+  | 'settings'
 
 export default function Shell() {
   return (
@@ -112,10 +128,10 @@ function ShellInner() {
     setPage('customer-jobs')
   }
 
-  function NavItem({ p, icon, label }: { p: Page; icon: string; label: string }) {
+  function NavItem({ p, icon, label, sub }: { p: Page; icon: string; label: string; sub?: boolean }) {
     return (
       <button
-        className={`sidebar-item ${page === p ? 'sidebar-item-on' : ''}`}
+        className={`sidebar-item ${sub ? 'sidebar-subitem' : ''} ${page === p ? 'sidebar-item-on' : ''}`}
         onClick={() => setPage(p)}
         title={sidebarOpen ? undefined : label}
       >
@@ -163,6 +179,16 @@ function ShellInner() {
                 <NavItem p="stock"         icon="📦" label="Stock" />
                 <NavItem p="orders"        icon="🛒" label="Order List" />
                 <NavItem p="suppliers"     icon="🚚" label="Suppliers" />
+                <div className="sidebar-section">{sidebarOpen ? 'Quote Designer' : '·'}</div>
+                <NavItem p="qd-quick-estimate" icon="🏠" label="Quick Estimate" />
+                <NavItem p="qd-system-calc"    icon="📐" label="System Calculator" />
+                <NavItem p="qd-3phase"         icon="🔌" label="3 Phase System" />
+                <NavItem p="qd-gm-bom"         icon="⛏️" label="Ground Mount BOM" />
+                <div className="sidebar-subheading">{sidebarOpen ? 'Tools' : ''}</div>
+                <NavItem p="qd-assumptions"        icon="⚙️" label="Assumptions" sub />
+                <NavItem p="qd-simulation"         icon="🔬" label="Simulation" sub />
+                <NavItem p="qd-daily-load-profile" icon="⏱️" label="Daily Load Profile" sub />
+                <NavItem p="settings" icon="🔧" label="Settings" />
               </>
             ) : (
               /* Installer: only their assigned jobs */
@@ -180,6 +206,14 @@ function ShellInner() {
           {isAdmin && page === 'stock'         && <StockPage />}
           {isAdmin && page === 'orders'        && <OrderList onOpenJob={handleOpenJob} />}
           {isAdmin && page === 'suppliers'     && <SuppliersPage />}
+          {isAdmin && page === 'qd-quick-estimate' && <StubPage icon="🏠" title="Quick Estimate" note="Bedroom/occupant-based system sizing — not ported yet." />}
+          {isAdmin && page === 'qd-system-calc'    && <StubPage icon="📐" title="System Calculator" note="Full panel + battery + inverter quoting calculator — not ported yet." />}
+          {isAdmin && page === 'qd-3phase'         && <StubPage icon="🔌" title="3 Phase System" note="Three-phase system sizing tool — not ported yet." />}
+          {isAdmin && page === 'qd-gm-bom'         && <StubPage icon="⛏️" title="Ground Mount BOM" note="Ground mount bill-of-materials generator — not ported yet." />}
+          {isAdmin && page === 'qd-assumptions'    && <StubPage icon="⚙️" title="Assumptions" note="Full editable assumptions table — not ported yet. Daily Load Profile below already reads/writes the live assumptions data." />}
+          {isAdmin && page === 'qd-simulation'     && <StubPage icon="🔬" title="Simulation" note="July hourly SOC trace engine — not ported yet." />}
+          {isAdmin && page === 'qd-daily-load-profile' && <DailyLoadProfilePage />}
+          {isAdmin && page === 'settings'          && <StubPage icon="🔧" title="Settings" />}
           {!isAdmin && (
             <CustomerJobsPage installerOnly />
           )}

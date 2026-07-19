@@ -14,6 +14,159 @@ export type Database = {
   }
   public: {
     Tables: {
+      assumptions: {
+        Row: {
+          battery_stc_price: number
+          battery_tier1: number
+          battery_tier2: number
+          battery_tier3: number
+          ces: number
+          created_at: string
+          deye_3ph_inverter_cost: number
+          deye_battery_cost: number
+          deye_battery_kwh: number
+          deye_bms_cost: number
+          deye_inverter_cost: number
+          deye_single_inverter_cost: number
+          deye_standby_w: number
+          gm_frame_per_panel: number
+          gm_labour_per_panel: number
+          gm_machinery_fixed: number
+          gst: number
+          id: number
+          installer_sign_off: number
+          labour_fixed: number
+          load_profile: Json
+          margin: number
+          max_batt_per_inverter: number
+          min_inverters: number
+          panel_cost: number
+          panel_frame: number
+          panel_install_per_w: number
+          panel_mfr: string
+          panel_model: string
+          panel_w: number
+          sig_3ph_15kw_cost: number
+          sig_3ph_20kw_cost: number
+          sig_3ph_30kw_cost: number
+          sig_3ph_gateway_cost: number
+          sig_battery_cost: number
+          sig_battery_kwh: number
+          sig_gateway_cost: number
+          sig_ground_kit_cost: number
+          sig_inverter_cost: number
+          sig_single_inverter_cost: number
+          sig_standby_w: number
+          small_parts: number
+          solar_oversize_3ph_percent: number
+          solar_oversize_percent: number
+          solar_stc_per_kw: number
+          solar_stc_price: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          battery_stc_price?: number
+          battery_tier1?: number
+          battery_tier2?: number
+          battery_tier3?: number
+          ces?: number
+          created_at?: string
+          deye_3ph_inverter_cost?: number
+          deye_battery_cost?: number
+          deye_battery_kwh?: number
+          deye_bms_cost?: number
+          deye_inverter_cost?: number
+          deye_single_inverter_cost?: number
+          deye_standby_w?: number
+          gm_frame_per_panel?: number
+          gm_labour_per_panel?: number
+          gm_machinery_fixed?: number
+          gst?: number
+          id?: number
+          installer_sign_off?: number
+          labour_fixed?: number
+          load_profile?: Json
+          margin?: number
+          max_batt_per_inverter?: number
+          min_inverters?: number
+          panel_cost?: number
+          panel_frame?: number
+          panel_install_per_w?: number
+          panel_mfr?: string
+          panel_model?: string
+          panel_w?: number
+          sig_3ph_15kw_cost?: number
+          sig_3ph_20kw_cost?: number
+          sig_3ph_30kw_cost?: number
+          sig_3ph_gateway_cost?: number
+          sig_battery_cost?: number
+          sig_battery_kwh?: number
+          sig_gateway_cost?: number
+          sig_ground_kit_cost?: number
+          sig_inverter_cost?: number
+          sig_single_inverter_cost?: number
+          sig_standby_w?: number
+          small_parts?: number
+          solar_oversize_3ph_percent?: number
+          solar_oversize_percent?: number
+          solar_stc_per_kw?: number
+          solar_stc_price?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          battery_stc_price?: number
+          battery_tier1?: number
+          battery_tier2?: number
+          battery_tier3?: number
+          ces?: number
+          created_at?: string
+          deye_3ph_inverter_cost?: number
+          deye_battery_cost?: number
+          deye_battery_kwh?: number
+          deye_bms_cost?: number
+          deye_inverter_cost?: number
+          deye_single_inverter_cost?: number
+          deye_standby_w?: number
+          gm_frame_per_panel?: number
+          gm_labour_per_panel?: number
+          gm_machinery_fixed?: number
+          gst?: number
+          id?: number
+          installer_sign_off?: number
+          labour_fixed?: number
+          load_profile?: Json
+          margin?: number
+          max_batt_per_inverter?: number
+          min_inverters?: number
+          panel_cost?: number
+          panel_frame?: number
+          panel_install_per_w?: number
+          panel_mfr?: string
+          panel_model?: string
+          panel_w?: number
+          sig_3ph_15kw_cost?: number
+          sig_3ph_20kw_cost?: number
+          sig_3ph_30kw_cost?: number
+          sig_3ph_gateway_cost?: number
+          sig_battery_cost?: number
+          sig_battery_kwh?: number
+          sig_gateway_cost?: number
+          sig_ground_kit_cost?: number
+          sig_inverter_cost?: number
+          sig_single_inverter_cost?: number
+          sig_standby_w?: number
+          small_parts?: number
+          solar_oversize_3ph_percent?: number
+          solar_oversize_percent?: number
+          solar_stc_per_kw?: number
+          solar_stc_price?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string
@@ -502,6 +655,12 @@ export type Database = {
           value: number
           version: number
         }
+        SetofOptions: {
+          from: "*"
+          to: "jobs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       apply_pending_bom_now: { Args: { p_job_id: number }; Returns: number }
       move_job_back: {
@@ -529,6 +688,12 @@ export type Database = {
           value: number
           version: number
         }
+        SetofOptions: {
+          from: "*"
+          to: "jobs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       receive_stock: {
         Args: {
@@ -545,6 +710,12 @@ export type Database = {
           occurred_at: string
           supplier_id: number | null
           total_units: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "receipts"
+          isOneToOne: true
+          isSetofReturn: false
         }
       }
       reschedule_booking: {
@@ -575,6 +746,12 @@ export type Database = {
           updated_at: string
           value: number
           version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "jobs"
+          isOneToOne: true
+          isSetofReturn: false
         }
       }
     }
