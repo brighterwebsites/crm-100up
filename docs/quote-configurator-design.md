@@ -661,28 +661,38 @@ even splitting across a naturally-derived count too, that is a **different
 rule** with a real trade-off (it would silently add batteries), and should be
 decided separately rather than assumed into the generalisation.
 
-**Deye "force large" on single phase — RESOLVED: remove the option.**
+**Deye "force large" on single phase — RESOLVED: add the missing product.**
 
-Worth being precise about what "fix" means here, because there are two
-candidates and only one is viable. The 10kW Deye is **not a naming typo** —
-it is a three-phase-only unit (`ASSUMPTION_META` for `deyeSingleInverterCost`
-says so outright). So:
+**This entry previously said the opposite** ("remove the option — the 10kW Deye
+is three-phase only"). That was wrong, and how it went wrong is worth keeping,
+because it is an argument for the whole design.
 
-- *Correct the part number to `10P3`* — makes the string match stock, but
-  produces a quote for hardware that cannot be installed on a single-phase
-  site. Worse than the current bug: it would match, allocate stock, and be
-  wrong on site.
-- *Remove the option from the 1φ Calculator* — Deye's single-phase range tops
-  out at 8kW, so there is no "large" tier to offer. **This is the fix.**
+`AI-W5.1-10P1-AU-B` is a real Australian product, stocked by multiple AU
+retailers. The mistaken claim came from the `ASSUMPTION_META` note on
+`deyeSingleInverterCost` — *"10kW exists only as three-phase"* — which is true
+of Deye's **EU** range (`AI-WS.1-*-EU-B`: single phase 3.6/5/6/7.6/8; three
+phase 5/6/8/10/12) and was generalised to the **AU** range, where a 1P 10kW
+does exist. The calculator was right; the catalogue and the note were wrong.
 
-In the new model this needs no special-casing: `system_config_inverters` tiers
-carry their own phase from the product, and a 1φ quote simply has no Deye tier
-above 8kW to select. The bug is structurally impossible once tiers are data.
+**Fix: add the product to `stocks`.** `normalizePart()` keys a row named
+`Deye AI-W5.1-10P1-AU-B` to `deye-inv-10p1`, which matches the generated string
+exactly, so the silent allocation failure resolves with a data change alone.
+The `ASSUMPTION_META` note should be corrected too, or the next person
+re-derives the same wrong conclusion from the same datasheet.
 
-**Check before closing:** whether any existing job was quoted via this path.
-It would have priced a $1,900 inverter that could not be installed, and the
-stock line would have silently failed to allocate (bug #9). Small dataset —
-18 jobs — so this is directly checkable, not a theoretical concern.
+**Open question for Fred:** `deyeSingleInverterCost` = $1,900 is documented as
+the *10P3* price and is currently applied to both. Confirm whether the 1P 10kW
+is the same price, or the single-phase calculator has been pricing off the
+three-phase unit.
+
+**What this episode actually demonstrates.** Establishing whether one product
+could legitimately be quoted required reading a naming template, a regex, an
+assumptions-metadata comment, and a manufacturer datasheet — and the answer
+that came back was still wrong. That is the architecture defect, not a product
+question. Under this design the same task is: create a product row, attach it
+as an inverter tier on the Deye config, done. No template, no regex, no note to
+misread. **Adding products Fred wants to sell should never require code
+archaeology** — that requirement is the whole justification for §2.1.
 
 ### D2a — `auto` runners-up: a development sanity-check table
 
