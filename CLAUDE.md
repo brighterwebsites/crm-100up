@@ -1,72 +1,124 @@
-# CLAUDE.md — 100UP Stock CRM
+# CLAUDE.md — 100UP CRM
 
 ## Project overview
 
-`100UP_stock-crm` is a custom CRM for **100UP Solar**, a solar installation business run by Fred (Melbourne, AU). It manages jobs, stock inventory, and compliance documentation for solar installs.
+Custom CRM + Quote Designer for **100UP Solar**, a solar installation business
+run by Fred (Melbourne, AU). Manages jobs, customers, stock, procurement, and
+compliance documentation for solar installs.
 
-The app is a **single self-contained HTML file** — inline JavaScript, inline CSS (CSS custom properties), no build step, no backend, no external database. All persistence is via browser `localStorage`. Font: DM Sans (Google Fonts).
+**The project is mid-migration between two codebases.** Both are in this repo
+and both are currently real:
 
-Current version: **V46** (latest working file: `100UP_suite_V46.html` — confirm the latest file in the repo before editing).
+| | Legacy | Current build |
+|---|---|---|
+| **What** | `100UP_suite_V46.html` — single self-contained HTML file, inline JS/CSS, `localStorage` only | `app/` — React + TypeScript + Vite, Supabase backend, deployed to Cloudflare |
+| **Holds** | The six Quote Designer calculators | The whole CRM half |
+| **Status** | Still the only way to produce a quote | Live, multi-user, hosted |
 
-> **Naming discrepancy, unresolved as of this note**: the filename says V46, but the in-app page title / version badge reads "V3" (title: "100UP — Quote Designer + CRM V3"). The filename and in-app version have drifted out of sync, breaking convention #1 below. Confirm with Fred which number is authoritative before assuming either is correct, and resync them as part of the next change.
->
-> Also note the file naming pattern itself changed from `100UP_stock-crm_VXX.html` to `100UP_suite_VXX.html` at some point — later references to the older pattern below describe the convention, not a literal filename to look for.
+Fred quotes in the old file, then pastes the result into the new app via the
+"Link quote" screen. **Do not treat either as dead.** The old file is the
+behavioural specification for the calculator rebuild and must not be broken;
+the new app is where all new work goes.
 
-## Core functionality
+Supabase project ref: `nmyczgnvjhwhgpgvwfdx`.
 
-### Job pipeline
-- Four stages: **1. Communication → 2. Quoting → 3. Installation → 4. Compliance & Close**, spread across 17 steps total.
-- Jobs advance stage-by-stage via the `doAdvance` path.
-- Install date scheduling with **clash detection**: booking an install date shows all booked dates and warns on same-day conflicts.
+## Read these before starting work
 
-### Stock & inventory
-- Stock items with allocation to jobs and **consumption on install completion** (triggered through `doAdvance`).
-- Short-stock alerts.
-- **Order List tab**: items needing procurement, with links to affected customers.
-- Stock item names are aligned to canonical part names from `100UP_calculators_GEN_v63.html`.
+| Doc | Why |
+|---|---|
+| `docs/2026-07-29_status-gap-and-decisions.md` | Current status, gap register, and the 37 open decision questions for Fred. **Start here.** |
+| `docs/bugs.md` | Defects in both codebases, what's fixed and what's carried forward |
+| `docs/quote-configurator-design.md` | Target design for Assumptions → product-driven configurator (proposed, not built) |
+| `docs/schema-restructure-proposal.md` | Phase 2 schema design — partly implemented; check migrations for what actually landed |
+| `supabase/migrations/*.sql` | **Ground truth for the schema.** Docs can be stale; migrations are not |
 
-### Documents & output
-- **Job Order modal**: auto-generated reference numbers, parts lists, custom line items, print-to-PDF.
-- **Purchase Order generation**: Print/Save PO in a new tab + "Copy parts list" to clipboard.
-- **CES summary**: "📋 CES summary" button on Stage 4 jobs (and Stage 3 jobs with an install date). Opens a popup modal with a formatted HTML table copyable into email (Gmail/Outlook) for electrical safety certificate submissions. Driven by `CES_CATALOG`, which maps stock IDs to CES-grade specifications.
-- **"Copy details"**: plain-text job info to clipboard for pasting into any comms app.
-- JSON data export with date-stamped filenames, e.g. `100UP_stock-crm_2026-06-25.json`.
+## What's built (new app)
 
-## Conventions & standing instructions
+Pipeline board (19 steps), Customer Jobs, Customers, Job detail, Stock, Order
+List, Purchase Orders (view-only), Suppliers, Receive Stock (paste-invoice),
+Settings (email service), Daily Load Profile.
 
-1. **Version every change.** Each update increments the version number, and the version must stay in sync in three places: the filename, the `<title>`, and the header badge (V8 → V9 → V10 → …). With git in play, commits now provide history, but the visible version badge convention should be kept unless Fred says otherwise — it's how he tracks which file is live in the browser.
-2. **Always base changes on the latest working file** — never on an older or stale in-session copy. In the repo, that means the file at HEAD on the main branch.
-3. **Minimal, targeted changes** are strongly preferred over broad rewrites. Don't refactor surrounding code unless asked.
-4. **Output for compliance/comms is clipboard-oriented**: rich HTML tables (for email) or plain text. Not file exports. New features in this area should follow the same pattern.
-5. **Features live inside the CRM** (buttons, modals) rather than as separate tools or scripts.
-6. Keep the app a **single HTML file** — no bundlers, no external JS dependencies beyond what's already there.
+Auth with two roles: **admin** (Fred — everything) and **installer** (assigned
+jobs only, can edit `notes` and `fixes_needed` only). Enforced by RLS, not UI.
 
-## Known issues / gotchas
+## What's not built
 
-- **Stock consumption inconsistency**: consumption runs via the `doAdvance` path. Setting the install date directly via the detail field **bypasses** consumption logic. Known and tolerated for now — be careful not to make it worse; a fix would need to unify both paths.
-- **CES catalog manufacturer names**: Deye and Jinko legal manufacturer names are **verified**. **Sigenergy and Trina entries are unconfirmed** and need checking against CEC listings before being treated as authoritative.
-- `localStorage` is the only data store — clearing browser data wipes everything. JSON export is the backup mechanism.
+All six Quote Designer tools — Quick Estimate, Calculator, 3 Phase,
+Assumptions, Ground Mount BOM, Simulation. They appear as `StubPage`
+placeholders in `Shell.tsx`. Assumptions data **is** in the database
+(`public.assumptions`, seeded) but has no editing screen, so cost changes must
+still be made in the old file.
 
-## Open items / roadmap
+Also open: receive-against-PO, real cost capture on receipt, notifications
+(email service exists, nothing sends), and `scripts/import_from_export.py` is
+out of date against the current schema — **a hard blocker on cutover**.
 
-- **Confirm Sigenergy and Trina legal manufacturer names** for `CES_CATALOG` accuracy (check CEC listings).
-- **Possible Supabase migration** for multi-device / multi-user access. Discussed, not committed. If pursued, the single-file constraint will need rethinking.
-- **Xero PO integration — unresolved.** CSV import was ruled out (Xero doesn't support CSV import for purchase orders). Two options on the table:
-  - Full Xero API/OAuth integration (heavier lift, conflicts with the no-backend model).
-  - A "Quick Entry" helper that pre-fills fields for manual copy-paste into Xero (lighter, fits existing clipboard-first patterns).
+## Conventions
+
+1. **Migrations are immutable history.** Never edit an applied migration file.
+   All schema changes land in a new numbered migration. Functions needing
+   changes must be fully redefined (`create or replace`) in the new file.
+2. **Check which migration last defined a function** before changing it —
+   e.g. `reschedule_booking` lives in migration 004, not 003.
+3. **Regenerate `app/src/types/database.types.ts`** after any migration.
+4. **Stage/step and pipeline-gate dates are RPC-only.** `advance_job_stage`,
+   `move_job_back`, `reschedule_booking` plus the `private.guard_jobs_update()`
+   trigger. This exists specifically to fix the old app's bug where setting a
+   date directly bypassed stock consumption — **do not weaken it.**
+5. **RLS discipline**: explicit `grant`, `enable row level security`, then one
+   policy per operation. `anon` gets nothing.
+6. **Clipboard-and-print for outputs** — CES summaries, job details, POs are
+   rich HTML tables or plain text for pasting, not file exports. New output
+   features follow the same pattern.
+7. **Minimal, targeted changes.** Don't refactor surrounding code unless asked.
+8. **Legacy file only**: if you must touch `100UP_suite_V46.html`, bump every
+   version string together. **They have all drifted apart** — you cannot tell
+   which build you're looking at from any single one:
+
+   | Where | Reads |
+   |---|---|
+   | Filename | `V46` |
+   | `<title>` (line 6) and nav badge (line 1052) | `V3` |
+   | Quote Designer pill (line 1066) | `v78` |
+   | Stock CRM header badge (line 1665) | `V17` |
+
+   Unresolved — confirm with Fred which is authoritative before assuming any
+   of them, and resync as part of the next change to that file.
+
+## Known gotchas
+
+- **Pricing/stock linkage is a regex.** The calculator generates part *names*
+  from templates, and `app/src/lib/normalizePart.ts` fuzzy-matches them against
+  `stocks.name`. It fails silently when it doesn't match. This is the central
+  problem `docs/quote-configurator-design.md` sets out to remove — read it
+  before touching anything in the quote → stock path.
+- **`last_cost` is hand-typed.** `receive_stock` captures no unit cost, so what
+  Fred paid is not what the system knows.
+- **Assumption costs and stock costs are unlinked** and drift silently
+  (`docs/bugs.md` #3).
+- **CES manufacturer names**: Deye and Jinko are verified against CEC listings.
+  **Sigenergy and Trina are not** — don't treat them as authoritative.
+- **The V46 cost breakdown double-counts** the mounting kit and Deye PDU/Base
+  in its itemised rows (`docs/bugs.md` #6). Base cost is correct; the display
+  isn't.
+- Fred tests against real data. Never change data schemas without a migration
+  plan.
 
 ## Reference files
 
 | File | Purpose |
 |---|---|
-| `100UP_calculators_GEN_v63.html` | Canonical part names for stock items |
-| `Book3.xlsx` | Verified CES example (Ann Schluter job) — ground truth for CES summary format |
-| `100UP_suite_VXX.html` (root) | The app itself — latest version at HEAD on `main` is the working base |
-| `archive/` | Superseded iterations, kept for history — never the source of truth |
+| `100UP_suite_V46.html` | Legacy app — behavioural spec for the calculator rebuild |
+| `100UP_assumptions_2026-06-20.json` | The 45 assumption values, as seeded into `public.assumptions` |
+| `100UP_stock-crm_2026-06-25.json` | Legacy data export — 18 jobs, 17 stock items, 3 suppliers |
+| `scripts/import_from_export.py` | Cutover importer — **out of date, needs rework** |
+| `archive/` | Superseded iterations — never the source of truth |
 
-## Working with this repo in Claude Code
+## Working in this repo
 
-- The latest `100UP_suite_V*.html` **in the repo root** (not `archive/`) is the source of truth. Verify which version is current before editing.
-- After any change: bump the version (filename + title + badge), commit with a short message describing the feature/fix.
-- Test by opening the file directly in a browser — there is no build or server step.
-- Fred typically tests with real `localStorage` data; never change the localStorage key names or data schema without an explicit migration plan, or existing data will appear "lost".
+- New app: `cd app && npm install && npm run dev`. Lint with `oxlint`.
+- Legacy file: open directly in a browser, no build step.
+- Local Supabase workflows via the `supabase` CLI; prefer testing locally
+  before applying to the remote project.
+- `.agents/skills/supabase-postgres-best-practices/` is vendored here — consult
+  it for RLS, indexing, and function-security patterns.
