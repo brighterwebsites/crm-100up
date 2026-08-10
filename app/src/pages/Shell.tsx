@@ -10,6 +10,7 @@ import CustomersPage from './CustomersPage'
 import StubPage from './StubPage'
 import DailyLoadProfilePage from './DailyLoadProfilePage'
 import PurchaseOrdersPage from './PurchaseOrdersPage'
+import SettingsPage from './SettingsPage'
 
 type Page =
   | 'pipeline'
@@ -217,7 +218,7 @@ function ShellInner() {
           {isAdmin && page === 'qd-assumptions'    && <StubPage icon="⚙️" title="Assumptions" note="Full editable assumptions table — not ported yet. Daily Load Profile below already reads/writes the live assumptions data." />}
           {isAdmin && page === 'qd-simulation'     && <StubPage icon="🔬" title="Simulation" note="July hourly SOC trace engine — not ported yet." />}
           {isAdmin && page === 'qd-daily-load-profile' && <DailyLoadProfilePage />}
-          {isAdmin && page === 'settings'          && <StubPage icon="🔧" title="Settings" />}
+          {isAdmin && page === 'settings'          && <SettingsPage />}
           {!isAdmin && (
             <CustomerJobsPage installerOnly />
           )}
