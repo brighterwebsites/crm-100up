@@ -58,6 +58,22 @@ out of date against the current schema — **a hard blocker on cutover**.
 1. **Migrations are immutable history.** Never edit an applied migration file.
    All schema changes land in a new numbered migration. Functions needing
    changes must be fully redefined (`create or replace`) in the new file.
+
+   **Apply them with `supabase db push`, not through an MCP/agent connection.**
+   This matters and has already bitten once. The MCP `apply_migration` tool
+   stamps the remote history with **a timestamp generated at apply time**, not
+   the local filename's — so the file and the history diverge the moment you
+   use it. Raw `execute_sql` is worse: it records nothing, leaving schema
+   changes with no history row at all. Both happened here; by 2026-08-11 not
+   one of nine local filenames matched a remote version and two migrations were
+   entirely unrecorded, which left `supabase db push` unable to run. Repaired
+   in commit `6e609a4` (see `supabase/migration-history-repair-rollback.sql`
+   for the prior state).
+
+   The CLI is **not currently installed on the dev machine** — install it
+   before the next migration, or the drift restarts on the first one.
+   If a migration ever does have to go through an agent connection, re-stamp
+   the history to the local filename version immediately afterwards.
 2. **Check which migration last defined a function** before changing it —
    e.g. `reschedule_booking` lives in migration 004, not 003.
 3. **Regenerate `app/src/types/database.types.ts`** after any migration.
