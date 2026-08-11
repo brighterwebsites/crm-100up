@@ -29,6 +29,7 @@ type Sizing = Tables<'sizing_rules'>
 type FixedCost = Tables<'fixed_site_costs'>
 type Panels = Tables<'panel_settings'>
 type GroundMount = Tables<'ground_mount_settings'>
+type Mfr = Tables<'manufacturers'>
 
 export default function AssumptionsPage() {
   const { isAdmin } = useAuth()
@@ -41,13 +42,14 @@ export default function AssumptionsPage() {
   const [fixed, setFixed] = useState<FixedCost[]>([])
   const [panels, setPanels] = useState<Panels | null>(null)
   const [gm, setGm] = useState<GroundMount | null>(null)
+  const [mfrs, setMfrs] = useState<Mfr[]>([])
 
   const [loading, setLoading] = useState(true)
   const [saved, setSaved] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    const [p, r, t, sz, f, pl, g] = await Promise.all([
+    const [p, r, t, sz, f, pl, g, m] = await Promise.all([
       supabase.from('pricing_settings').select('*').eq('id', 1).maybeSingle(),
       supabase.from('rebate_settings').select('*').eq('id', 1).maybeSingle(),
       supabase.from('battery_rebate_tiers').select('*').order('sort_order'),
@@ -55,9 +57,11 @@ export default function AssumptionsPage() {
       supabase.from('fixed_site_costs').select('*').order('sort_order'),
       supabase.from('panel_settings').select('*').eq('id', 1).maybeSingle(),
       supabase.from('ground_mount_settings').select('*').eq('id', 1).maybeSingle(),
+      supabase.from('manufacturers').select('*').order('brand'),
     ])
     setPricing(p.data); setRebates(r.data); setTiers(t.data ?? [])
     setSizing(sz.data); setFixed(f.data ?? []); setPanels(pl.data); setGm(g.data)
+    setMfrs(m.data ?? [])
     setLoading(false)
   }, [])
 
@@ -290,6 +294,66 @@ export default function AssumptionsPage() {
                 roof_frame_per_panel: panels.roof_frame_per_panel,
               }, 'Panel settings')} />
             </>
+          )}
+        </Card>
+
+        {/* ── Manufacturers ──
+            Editable here because these strings go onto CES submissions and two
+            of them are currently unverified. One brand can hold several legal
+            entities — Deye inverters and Deye batteries are separately listed
+            CEC entities — so brand and legal name are distinct fields. */}
+        <Card title="Manufacturers">
+          <div className="mutedtext" style={{ fontSize: 11, marginBottom: 8 }}>
+            The legal name is what a CES submission reports. Tick verified only
+            once you have checked it against the CEC listing.
+          </div>
+          <table className="table settings-table">
+            <thead><tr>
+              <th style={{ textAlign: 'left' }}>Brand</th>
+              <th style={{ textAlign: 'left' }}>CEC legal name</th>
+              <th>Verified</th><th />
+            </tr></thead>
+            <tbody>
+              {mfrs.map((m, i) => (
+                <tr key={m.id}>
+                  <td><input className="jdp-input" disabled={ro} value={m.brand}
+                    onChange={(e) => setMfrs(mfrs.map((x, j) => j === i ? { ...x, brand: e.target.value } : x))} /></td>
+                  <td><input className="jdp-input" disabled={ro} value={m.legal_name}
+                    onChange={(e) => setMfrs(mfrs.map((x, j) => j === i ? { ...x, legal_name: e.target.value } : x))} /></td>
+                  <td style={{ textAlign: 'center' }}>
+                    <input type="checkbox" disabled={ro} checked={m.cec_verified}
+                      onChange={(e) => setMfrs(mfrs.map((x, j) => j === i ? { ...x, cec_verified: e.target.checked } : x))} />
+                  </td>
+                  <td>{!ro && (
+                    <button className="icon-btn" title="Remove" onClick={async () => {
+                      setErr(null)
+                      const { error } = await supabase.from('manufacturers').delete().eq('id', m.id)
+                      // on delete restrict — a manufacturer with products cannot go.
+                      if (error) { setErr('Still used by products — reassign them first.'); return }
+                      await load()
+                    }}><Trash2 size={13} aria-hidden /></button>
+                  )}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {!ro && (
+            <div className="settings-actions">
+              <button className="btn btn-gray" onClick={async () => {
+                await supabase.from('manufacturers').insert({ brand: 'New brand', legal_name: '' })
+                await load()
+              }}><Plus size={13} aria-hidden /> Add manufacturer</button>
+              <button className="btn btn-primary" onClick={async () => {
+                setErr(null)
+                for (const m of mfrs) {
+                  const { error } = await supabase.from('manufacturers')
+                    .update({ brand: m.brand, legal_name: m.legal_name, cec_verified: m.cec_verified })
+                    .eq('id', m.id)
+                  if (error) { setErr(error.message); return }
+                }
+                await load(); flash('Manufacturers saved')
+              }}>Save manufacturers</button>
+            </div>
           )}
         </Card>
 

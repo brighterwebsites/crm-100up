@@ -51,10 +51,9 @@ Verified: the insert is rejected at the database.
 |---|---|---|---|
 | SigenStor BAT 10.0 | 10.24 | 9 | V46 `sig_battery_kwh` |
 | Deye AI-W5.1-B | 5.12 | 5.1 | V46 `deye_battery_kwh` |
-| SigenStor BAT 8.0 | 8.06 | 7.08 | **UNCONFIRMED** — derived from the BAT 10.0 ratio; never existed in V46. Needs Fred or a datasheet |
+| SigenStor BAT 8.0 | 8.06 | 7.8 | Confirmed by Fred, 2026-08-11 (superseding a derived 7.08) |
 
-**Still to confirm:** the BAT 8.0 usable figure. It is not blocking, since that
-product is not in any V46 scenario and so cannot affect the gate.
+All three figures are now confirmed. Nothing outstanding here.
 
 ---
 
@@ -104,7 +103,7 @@ shape of difference is a failure.
 |---|---|
 | **Price** | **Must match.** The product is priced $1,900, the same figure V46 used |
 | **BOM** | Differs. V46 emitted `Deye AI-W5.1-10P1-AU-B` as an unmatched name and allocated nothing; the rebuild emits a real `stock_id` |
-| **Watch** | If Fred later confirms the 1P 10kW costs something other than $1,900, this becomes a genuine price divergence and this row must be rewritten |
+| **Confirmed** | Fred, 2026-08-11: the 1P 10kW is $1,900, so no price divergence. Separately he confirmed the **3P** 10kW is $2,300 — V46 applied $1,900 to both, so the 10P3 product was carried $400 light and has been corrected (`20260811150001`). No parity impact: V46's three-phase Deye path prices the 12P3 and never selects the 10P3 |
 
 ### 2.4 Deye stack base split · totals identical
 

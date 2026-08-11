@@ -70,17 +70,30 @@ sequence. Do not re-plan these until Phase A lands.
 
 ## Still needed from Fred — none of it blocks Phase A
 
-1. **Deye 10kW single-phase price.** `deyeSingleInverterCost` = $1,900 is
-   documented as the *10P3* price and is applied to both. Confirm whether the
-   1P 10kW is the same, or single-phase quotes have been pricing off the
-   three-phase unit. Also correct the `ASSUMPTION_META` note that wrongly says
-   10kW is three-phase only (bug #9).
-2. **Whether any past job was quoted through optimise + ground with a force
-   setting selected.** Bug #8 means those priced the wrong configuration, and
-   the fix moves prices. 18 jobs — directly checkable.
-3. **Twenty minutes driving the app.** Nobody has used it as an admin. Per
-   `docs/notes.md` §4 this produces more real requirements than the 37
-   decision questions will, and it is now possible.
+**All cleared 2026-08-11 in session with Fred:**
+
+1. ~~Deye 10kW single-phase price~~ — 1P is $1,900 (already correct); 3P is
+   $2,300, so the 10P3 was $400 light and is corrected.
+2. ~~Whether any past job was underpriced by bug #8~~ — none were.
+3. ~~Twenty minutes driving the app~~ — done.
+
+**Raised during that session, still open:**
+
+- **Artefacts.** `100UP_suite_V46.html` plus the existing exports are all that
+  exist; there is no fresher CRM or assumptions export to collect. The 25 June
+  and 20 June copies in the repo are the current state.
+- **V46 freeze date** — not yet agreed. Until it is, the parity gate is
+  measuring against a moving target.
+- **Pipeline dot styling.** Fred prefers his V46 pulsing indicators. Cheap to
+  honour, but worth separating the styling from what the dot COMMUNICATES: if
+  it encodes time-in-stage, that is decision question 23 (the Alerts/Stale
+  rules that exist as filters and are never set by anything) and the threshold
+  should be captured.
+- **"Important stock" quick view.** Wants at-a-glance levels for key products.
+  Placement undecided — candidates are Pipeline, Stock and Order List. Worth
+  establishing first whether "important" means *quoted on every job* (which
+  the configurator will know by itself in Phase B, needing no flag) or *long
+  lead time* (which does need a manual flag).
 
 ## Open, decide at build time — not blocking
 
