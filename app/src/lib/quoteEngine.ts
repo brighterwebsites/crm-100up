@@ -43,7 +43,12 @@ export interface ConfigBundle {
   id: number
   label: string
   standby_w: number
-  inverters: { stock_id: number; oversize_percent: number | null; max_batteries: number | null }[]
+  inverters: {
+    stock_id: number
+    oversize_percent: number | null
+    max_batteries: number | null
+    size_class: 'small' | 'medium' | 'large' | null
+  }[]
   batteries: { stock_id: number; is_default: boolean }[]
   components: {
     stock_id: number
@@ -60,8 +65,11 @@ export interface QuoteInput {
   gmPanels: number
   batteryUnits: number
   batteryStockId?: number
-  /** null = auto-select the tier; a stock_id pins one. */
-  pinnedInverterId?: number | null
+  /** Force a size CLASS rather than a product. This is what keeps the two
+   *  brands comparable: V46's "Force 12/10kW" was one intent resolving to a
+   *  12kW Sigenergy and a 10kW Deye. Pinning a product instead would leave the
+   *  other brand with nothing to answer with. null = auto-select. */
+  forceSizeClass?: 'small' | 'medium' | 'large' | null
   /** Per-quote floor, for redundancy. V46's "dual" is exactly this — it only
    *  ever passed minInv = 2 (design doc D2). */
   minInverters?: number
@@ -206,7 +214,7 @@ export function priceSystem(
     .map((t) => ({ tier: t, s: byId.get(t.stock_id) }))
     .filter((c): c is { tier: typeof config.inverters[0]; s: Stock } =>
       !!c.s && c.s.active && c.s.phase === input.phase &&
-      (input.pinnedInverterId == null || c.s.id === input.pinnedInverterId))
+      (input.forceSizeClass == null || c.tier.size_class === input.forceSizeClass))
   if (!candidates.length) return null
 
   const evaluate = (tier: typeof config.inverters[0], inv: Stock) => {

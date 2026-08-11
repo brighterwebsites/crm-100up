@@ -17,8 +17,8 @@ const stocks = [
 const config: ConfigBundle = {
   id: 1, label: 'Sigenergy', standby_w: 150,
   inverters: [
-    { stock_id: 5, oversize_percent: null, max_batteries: null },
-    { stock_id: 1, oversize_percent: null, max_batteries: null },
+    { stock_id: 5, oversize_percent: null, max_batteries: null, size_class: 'small' },
+    { stock_id: 1, oversize_percent: null, max_batteries: null, size_class: 'large' },
   ],
   batteries: [{ stock_id: 13, is_default: true }],
   components: [

@@ -866,6 +866,7 @@ export type Database = {
           id: number
           max_batteries: number | null
           oversize_percent: number | null
+          size_class: Database["public"]["Enums"]["inverter_size_class"] | null
           sort_order: number
           stock_id: number
         }
@@ -874,6 +875,7 @@ export type Database = {
           id?: number
           max_batteries?: number | null
           oversize_percent?: number | null
+          size_class?: Database["public"]["Enums"]["inverter_size_class"] | null
           sort_order?: number
           stock_id: number
         }
@@ -882,6 +884,7 @@ export type Database = {
           id?: number
           max_batteries?: number | null
           oversize_percent?: number | null
+          size_class?: Database["public"]["Enums"]["inverter_size_class"] | null
           sort_order?: number
           stock_id?: number
         }
@@ -1092,6 +1095,7 @@ export type Database = {
     Enums: {
       ces_category: "battery" | "inverter" | "panel" | "other"
       electrical_phase: "single" | "three" | "na"
+      inverter_size_class: "small" | "medium" | "large"
       job_stock_item_status: "pending" | "assigned" | "consumed"
       job_type: "install" | "service"
       po_status: "sent" | "partially_received" | "closed"
@@ -1243,6 +1247,7 @@ export const Constants = {
     Enums: {
       ces_category: ["battery", "inverter", "panel", "other"],
       electrical_phase: ["single", "three", "na"],
+      inverter_size_class: ["small", "medium", "large"],
       job_stock_item_status: ["pending", "assigned", "consumed"],
       job_type: ["install", "service"],
       po_status: ["sent", "partially_received", "closed"],

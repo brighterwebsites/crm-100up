@@ -36,7 +36,8 @@ export default function CalculatorPage() {
   // V46 offered auto / force-large / dual-8kW. "Dual" only ever meant a
   // minimum of 2 inverters (design doc D2), so it decomposes into a pinned
   // tier plus a floor -- a strict superset of the three old modes.
-  const [pinnedInverterId, setPinnedInverterId] = useState<number | null>(null)
+  const [forceSizeClass, setForceSizeClass] =
+    useState<'small' | 'medium' | 'large' | null>(null)
   const [minInverters, setMinInverters] = useState(1)
 
   const load = useCallback(async () => {
@@ -75,11 +76,7 @@ export default function CalculatorPage() {
     if (!settings) return []
     const gm = mount === 'ground' ? gmPanels : 0
     return configs.map((cfg) => {
-      // A pinned tier is only meaningful for configs that actually own it.
-      const pin = cfg.inverters.some((i) => i.stock_id === pinnedInverterId)
-        ? pinnedInverterId
-        : null
-      const common = { phase: 'single' as const, minInverters, pinnedInverterId: pin }
+      const common = { phase: 'single' as const, minInverters, forceSizeClass }
 
       if (panelMode === 'optimise') {
         const r = optimisePanels(cfg, common, stocks, settings, {
@@ -102,13 +99,25 @@ export default function CalculatorPage() {
     })
   }, [configs, settings, stocks, panels, gmPanels, mount, panelMode, minPanels, maxPanels,
       panelStep, autoBattery, manualUnits, startUnits, maxUnits, dailyKwh, minInverters,
-      pinnedInverterId])
+      forceSizeClass])
 
-  // Tiers offered by any config, for the pin selector. Single-phase only here;
-  // the 3-phase page will filter the same list on phase instead.
-  const pinnable = useMemo(() => {
-    const ids = new Set(configs.flatMap((c) => c.inverters.map((i) => i.stock_id)))
-    return stocks.filter((s) => ids.has(s.id) && s.phase === 'single' && s.active)
+  /** Size classes present on this phase, labelled with what each brand
+   *  actually resolves to — so "larger" reads as "12 / 10 kW", the wording
+   *  Fred already knows from V46. */
+  const sizeOptions = useMemo(() => {
+    const byId = new Map(stocks.map((s) => [s.id, s]))
+    const out: { key: 'small' | 'medium' | 'large'; label: string }[] = []
+    for (const key of ['small', 'medium', 'large'] as const) {
+      const kws = configs
+        .flatMap((c) => c.inverters.filter((i) => i.size_class === key))
+        .map((i) => byId.get(i.stock_id))
+        .filter((s) => s && s.phase === 'single')
+        .map((s) => s!.kw)
+      if (!kws.length) continue
+      const uniq = [...new Set(kws)].sort((a, b) => (a ?? 0) - (b ?? 0))
+      out.push({ key, label: `Force ${key} (${uniq.join(' / ')} kW)` })
+    }
+    return out
   }, [configs, stocks])
 
   if (loading) return <div className="placeholder">Loading calculator…</div>
@@ -173,12 +182,16 @@ export default function CalculatorPage() {
                 onChange={(e) => setGmPanels(e.target.value === '' ? 0 : Number(e.target.value))} />
             </Field>
           )}
-          <Field label="Inverter">
-            <select className="jdp-input" value={pinnedInverterId ?? ''}
-              onChange={(e) => setPinnedInverterId(e.target.value ? Number(e.target.value) : null)}>
+          <Field
+            label="Inverter"
+            hint="Forces a size class, not a product, so both brands stay comparable. V46's Dual 8kW = force small with a minimum of 2."
+          >
+            <select className="jdp-input" value={forceSizeClass ?? ''}
+              onChange={(e) => setForceSizeClass(
+                (e.target.value || null) as 'small' | 'medium' | 'large' | null)}>
               <option value="">Auto -- fewest, then cheapest</option>
-              {pinnable.map((s) => (
-                <option key={s.id} value={s.id}>Force {s.name}</option>
+              {sizeOptions.map((o) => (
+                <option key={o.key} value={o.key}>{o.label}</option>
               ))}
             </select>
           </Field>
