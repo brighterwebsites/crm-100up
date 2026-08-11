@@ -578,6 +578,8 @@ export type Database = {
       }
       stocks: {
         Row: {
+          active: boolean
+          brand: string
           category: Database["public"]["Enums"]["ces_category"]
           id: number
           kva: number | null
@@ -587,12 +589,18 @@ export type Database = {
           manufacturer: string
           model: string
           name: string
+          phase: Database["public"]["Enums"]["electrical_phase"]
+          planning_cost: number
+          planning_cost_updated_at: string | null
           preferred_supplier_id: number | null
+          product_type: Database["public"]["Enums"]["product_type"]
           qty: number
           verified: boolean
           watts: number | null
         }
         Insert: {
+          active?: boolean
+          brand?: string
           category?: Database["public"]["Enums"]["ces_category"]
           id?: number
           kva?: number | null
@@ -602,12 +610,18 @@ export type Database = {
           manufacturer?: string
           model?: string
           name: string
+          phase?: Database["public"]["Enums"]["electrical_phase"]
+          planning_cost?: number
+          planning_cost_updated_at?: string | null
           preferred_supplier_id?: number | null
+          product_type?: Database["public"]["Enums"]["product_type"]
           qty?: number
           verified?: boolean
           watts?: number | null
         }
         Update: {
+          active?: boolean
+          brand?: string
           category?: Database["public"]["Enums"]["ces_category"]
           id?: number
           kva?: number | null
@@ -617,7 +631,11 @@ export type Database = {
           manufacturer?: string
           model?: string
           name?: string
+          phase?: Database["public"]["Enums"]["electrical_phase"]
+          planning_cost?: number
+          planning_cost_updated_at?: string | null
           preferred_supplier_id?: number | null
+          product_type?: Database["public"]["Enums"]["product_type"]
           qty?: number
           verified?: boolean
           watts?: number | null
@@ -818,9 +836,20 @@ export type Database = {
     }
     Enums: {
       ces_category: "battery" | "inverter" | "panel" | "other"
+      electrical_phase: "single" | "three" | "na"
       job_stock_item_status: "pending" | "assigned" | "consumed"
       job_type: "install" | "service"
       po_status: "sent" | "partially_received" | "closed"
+      product_type:
+        | "panel"
+        | "inverter"
+        | "battery"
+        | "gateway"
+        | "mounting"
+        | "bms"
+        | "gm_component"
+        | "consumable"
+        | "other"
       user_role: "admin" | "installer"
     }
     CompositeTypes: {
@@ -950,9 +979,21 @@ export const Constants = {
   public: {
     Enums: {
       ces_category: ["battery", "inverter", "panel", "other"],
+      electrical_phase: ["single", "three", "na"],
       job_stock_item_status: ["pending", "assigned", "consumed"],
       job_type: ["install", "service"],
       po_status: ["sent", "partially_received", "closed"],
+      product_type: [
+        "panel",
+        "inverter",
+        "battery",
+        "gateway",
+        "mounting",
+        "bms",
+        "gm_component",
+        "consumable",
+        "other",
+      ],
       user_role: ["admin", "installer"],
     },
   },
