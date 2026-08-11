@@ -63,7 +63,7 @@ export default function PurchaseOrdersPage() {
   }
 
   return (
-    <div className="master-detail">
+    <div className="master-detail page-flush">
       <div className="master-list">
         <div className="master-list-search">
           <input

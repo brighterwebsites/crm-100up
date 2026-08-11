@@ -1804,3 +1804,23 @@ textarea.jdp-input {
   padding: 12px 14px;
   font-size: 12px;
 }
+
+/* ── page gutters ────────────────────────────────────────
+   Pages get breathing room by default. The list/detail screens opt out with
+   .page-flush: they run edge-to-edge because the detail panel is flush to the
+   right and their internal columns already carry their own padding. Note that
+   .pipeline-page cannot be the discriminator — Stock and Assumptions use it
+   too and do want the gutter. */
+.app-main > div {
+  padding: 20px;
+}
+
+.app-main > .page-flush {
+  padding: 0;
+}
+
+@media (max-width: 640px) {
+  .app-main > div {
+    padding: 12px;
+  }
+}

@@ -84,7 +84,7 @@ export default function CustomerJobsPage({ installerOnly, initialJobId }: Props)
   }
 
   return (
-    <div className="master-detail">
+    <div className="master-detail page-flush">
       {/* Left list */}
       <div className="master-list">
         <div className="master-list-search">

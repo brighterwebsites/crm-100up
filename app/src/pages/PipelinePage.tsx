@@ -75,7 +75,7 @@ export default function PipelinePage() {
   ]
 
   return (
-    <div className="pipeline-page">
+    <div className="pipeline-page page-flush">
       {/* Stat cards */}
       <div className="stat-bar">
         {statItems.map(({ key, label, n, color }) => (

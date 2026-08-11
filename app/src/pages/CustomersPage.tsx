@@ -32,7 +32,7 @@ export default function CustomersPage() {
   const customerJobs = selectedId ? jobsForCustomer(selectedId) : []
 
   return (
-    <div className="master-detail">
+    <div className="master-detail page-flush">
       {/* Left list */}
       <div className="master-list">
         <div className="master-list-search">
