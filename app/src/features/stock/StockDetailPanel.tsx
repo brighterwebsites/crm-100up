@@ -31,7 +31,7 @@ interface Props {
 interface Form {
   name: string
   category: CesCategory
-  manufacturer: string
+  manufacturer_id: string
   model: string
   preferred_supplier_id: string
   last_cost: string
@@ -46,7 +46,7 @@ interface Form {
 const BLANK_FORM: Form = {
   name: '',
   category: 'other',
-  manufacturer: '',
+  manufacturer_id: '',
   model: '',
   preferred_supplier_id: '',
   last_cost: '0',
@@ -60,7 +60,7 @@ const BLANK_FORM: Form = {
 
 export default function StockDetailPanel({ stockId, onClose, onCreated }: Props) {
   const { isAdmin } = useAuth()
-  const { stocks, suppliers, jobs, items, refresh } = useData()
+  const { stocks, manufacturers, suppliers, jobs, items, refresh } = useData()
   const stock = stockId === 'new' ? undefined : stocks.find((s) => s.id === stockId)
 
   const [form, setForm] = useState<Form>(BLANK_FORM)
@@ -74,7 +74,7 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
       setForm({
         name: stock.name,
         category: stock.category,
-        manufacturer: stock.manufacturer,
+        manufacturer_id: stock.manufacturer_id != null ? String(stock.manufacturer_id) : '',
         model: stock.model,
         preferred_supplier_id: stock.preferred_supplier_id != null ? String(stock.preferred_supplier_id) : '',
         last_cost: String(stock.last_cost),
@@ -101,7 +101,7 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
     return {
       name: form.name.trim(),
       category: form.category,
-      manufacturer: form.manufacturer.trim(),
+      manufacturer_id: form.manufacturer_id ? Number(form.manufacturer_id) : null,
       model: form.model.trim(),
       preferred_supplier_id: form.preferred_supplier_id ? Number(form.preferred_supplier_id) : null,
       last_cost: Number(form.last_cost) || 0,
@@ -195,7 +195,24 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
             </select>
           </F>
           <F label="Manufacturer">
-            <input className="jdp-input" disabled={!isAdmin} value={form.manufacturer} onChange={(e) => setForm({ ...form, manufacturer: e.target.value })} />
+            {/* A real reference now, not free text — the old column had drifted
+                to three spellings of "Sigenergy", and these names go onto CES
+                submissions. Options show the CEC legal entity, since one brand
+                can have several (Deye inverters and Deye batteries are
+                different listed entities). */}
+            <select
+              className="jdp-input"
+              disabled={!isAdmin}
+              value={form.manufacturer_id}
+              onChange={(e) => setForm({ ...form, manufacturer_id: e.target.value })}
+            >
+              <option value="">—</option>
+              {manufacturers.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.brand}{m.legal_name ? ` — ${m.legal_name}` : ''}{m.cec_verified ? '' : ' (unverified)'}
+                </option>
+              ))}
+            </select>
           </F>
           <F label="Model">
             <input className="jdp-input" disabled={!isAdmin} value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} />

@@ -1,7 +1,7 @@
 import { Package } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useAuth } from '../../lib/auth'
-import { useData } from '../../lib/data'
+import { brandFor, useData } from '../../lib/data'
 import { allocatedMap } from '../../lib/stockCalc'
 import type { Enums } from '../../types/database.types'
 import ReceiveModal from './ReceiveModal'
@@ -19,7 +19,7 @@ const CATEGORY_LABEL: Record<CesCategory, string> = {
 
 export default function StockPage() {
   const { isAdmin } = useAuth()
-  const { stocks, suppliers, jobs, items } = useData()
+  const { stocks, manufacturers, suppliers, jobs, items } = useData()
   const [receiving, setReceiving] = useState(false)
   const [filter, setFilter] = useState<CatFilter>('all')
   const [search, setSearch] = useState('')
@@ -33,7 +33,7 @@ export default function StockPage() {
       if (filter === 'outofstock' && s.qty !== 0) return false
       if (filter !== 'all' && filter !== 'outofstock' && s.category !== filter) return false
       if (q) {
-        const hay = `${s.name} ${s.manufacturer} ${s.model} ${CATEGORY_LABEL[s.category]}`.toLowerCase()
+        const hay = `${s.name} ${brandFor(s, manufacturers)} ${s.model} ${CATEGORY_LABEL[s.category]}`.toLowerCase()
         if (!hay.includes(q)) return false
       }
       return true
@@ -107,9 +107,9 @@ export default function StockPage() {
                         onClick={() => setOpenId(isSelected ? null : s.id)}
                       >
                         <strong>{s.name}</strong>
-                        {(s.manufacturer || s.model) && (
+                        {(brandFor(s, manufacturers) || s.model) && (
                           <div className="mutedtext" style={{ fontSize: 11 }}>
-                            {[s.manufacturer, s.model].filter(Boolean).join(' ')}
+                            {[brandFor(s, manufacturers), s.model].filter(Boolean).join(' ')}
                           </div>
                         )}
                       </td>

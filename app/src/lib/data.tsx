@@ -8,6 +8,7 @@ export type Job = Tables<'jobs'>
 export type Customer = Tables<'customers'>
 export type InstallationRequest = Tables<'installation_requests'>
 export type Stock = Tables<'stocks'>
+export type Manufacturer = Tables<'manufacturers'>
 export type Supplier = Tables<'suppliers'>
 export type PurchaseOrder = Tables<'purchase_orders'>
 export type PurchaseOrderItem = Tables<'purchase_order_items'>
@@ -37,6 +38,7 @@ export interface JobWithCustomer extends Job {
 
 interface DataState {
   jobs: Job[]
+  manufacturers: Manufacturer[]
   customers: Customer[]
   installationRequests: InstallationRequest[]
   stocks: Stock[]
@@ -52,6 +54,7 @@ interface DataState {
 
 const DataContext = createContext<DataState>({
   jobs: [],
+  manufacturers: [],
   customers: [],
   installationRequests: [],
   stocks: [],
@@ -69,6 +72,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth()
   const [state, setState] = useState<Omit<DataState, 'refresh'>>({
     jobs: [],
+    manufacturers: [],
     customers: [],
     installationRequests: [],
     stocks: [],
@@ -85,12 +89,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     // RLS scopes every query: admins see everything, installers see
     // their jobs plus the shared reference tables.
-    const [jobs, customers, installationRequests, stocks, suppliers, purchaseOrders, purchaseOrderItems, items, profiles, assumptions] =
+    const [jobs, customers, installationRequests, stocks, manufacturers, suppliers, purchaseOrders, purchaseOrderItems, items, profiles, assumptions] =
       await Promise.all([
         supabase.from('jobs').select('*').order('id', { ascending: false }),
         supabase.from('customers').select('*').order('name'),
         supabase.from('installation_requests').select('*'),
         supabase.from('stocks').select('*').order('name'),
+        supabase.from('manufacturers').select('*').order('brand'),
         supabase.from('suppliers').select('*').order('name'),
         supabase.from('purchase_orders').select('*').order('created_at', { ascending: false }),
         supabase.from('purchase_order_items').select('*'),
@@ -103,6 +108,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       customers: customers.data ?? [],
       installationRequests: installationRequests.data ?? [],
       stocks: stocks.data ?? [],
+      manufacturers: manufacturers.data ?? [],
       suppliers: suppliers.data ?? [],
       purchaseOrders: purchaseOrders.data ?? [],
       purchaseOrderItems: purchaseOrderItems.data ?? [],
@@ -137,6 +143,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
 // eslint-disable-next-line react-refresh/only-export-components
 export function useData() {
   return useContext(DataContext)
+}
+
+/** CEC-listed legal entity name for a product — this is what a CES
+ * submission must carry, not the trading/brand name. Empty string when the
+ * product has no manufacturer linked (e.g. generic ground-mount hardware). */
+export function legalNameFor(
+  stock: { manufacturer_id: number | null } | undefined,
+  manufacturers: Manufacturer[]
+): string {
+  if (!stock?.manufacturer_id) return ''
+  return manufacturers.find((m) => m.id === stock.manufacturer_id)?.legal_name ?? ''
+}
+
+/** Trading name, for grouping and display. */
+export function brandFor(
+  stock: { manufacturer_id: number | null } | undefined,
+  manufacturers: Manufacturer[]
+): string {
+  if (!stock?.manufacturer_id) return ''
+  return manufacturers.find((m) => m.id === stock.manufacturer_id)?.brand ?? ''
 }
 
 /** Resolve the customer for a given job from the in-memory cache. */

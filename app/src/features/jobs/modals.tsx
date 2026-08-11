@@ -1,6 +1,6 @@
 import { ClipboardCheck, FileText, Link2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import type { Customer, InstallationRequest, Job, JobStockItem, Stock, Supplier } from '../../lib/data'
+import type { Customer, InstallationRequest, Job, JobStockItem, Manufacturer, Stock, Supplier } from '../../lib/data'
 import { supabase } from '../../lib/supabaseClient'
 import { copyHtml, copyText } from '../../lib/clipboard'
 import { matchStock, normalizePart } from '../../lib/normalizePart'
@@ -13,17 +13,19 @@ export function CesModal({
   customer,
   items,
   stocks,
+  manufacturers,
   onClose,
 }: {
   job: Job
   customer: Customer
   items: JobStockItem[]
   stocks: Stock[]
+  manufacturers: Manufacturer[]
   onClose: () => void
 }) {
   const { html, warnings } = useMemo(
-    () => buildCes(job, customer, items, stocks),
-    [job, customer, items, stocks],
+    () => buildCes(job, customer, items, stocks, manufacturers),
+    [job, customer, items, stocks, manufacturers],
   )
   const [copied, setCopied] = useState(false)
 

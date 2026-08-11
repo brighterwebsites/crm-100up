@@ -433,6 +433,33 @@ export type Database = {
           },
         ]
       }
+      manufacturers: {
+        Row: {
+          active: boolean
+          brand: string
+          cec_verified: boolean
+          created_at: string
+          id: number
+          legal_name: string
+        }
+        Insert: {
+          active?: boolean
+          brand: string
+          cec_verified?: boolean
+          created_at?: string
+          id?: number
+          legal_name?: string
+        }
+        Update: {
+          active?: boolean
+          brand?: string
+          cec_verified?: boolean
+          created_at?: string
+          id?: number
+          legal_name?: string
+        }
+        Relationships: []
+      }
       pipeline_steps: {
         Row: {
           ordinal: number
@@ -579,14 +606,13 @@ export type Database = {
       stocks: {
         Row: {
           active: boolean
-          brand: string
           category: Database["public"]["Enums"]["ces_category"]
           id: number
           kva: number | null
           kw: number | null
           kwh: number | null
           last_cost: number
-          manufacturer: string
+          manufacturer_id: number | null
           model: string
           name: string
           phase: Database["public"]["Enums"]["electrical_phase"]
@@ -600,14 +626,13 @@ export type Database = {
         }
         Insert: {
           active?: boolean
-          brand?: string
           category?: Database["public"]["Enums"]["ces_category"]
           id?: number
           kva?: number | null
           kw?: number | null
           kwh?: number | null
           last_cost?: number
-          manufacturer?: string
+          manufacturer_id?: number | null
           model?: string
           name: string
           phase?: Database["public"]["Enums"]["electrical_phase"]
@@ -621,14 +646,13 @@ export type Database = {
         }
         Update: {
           active?: boolean
-          brand?: string
           category?: Database["public"]["Enums"]["ces_category"]
           id?: number
           kva?: number | null
           kw?: number | null
           kwh?: number | null
           last_cost?: number
-          manufacturer?: string
+          manufacturer_id?: number | null
           model?: string
           name?: string
           phase?: Database["public"]["Enums"]["electrical_phase"]
@@ -641,6 +665,13 @@ export type Database = {
           watts?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "stocks_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "manufacturers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "stocks_supplier_id_fkey"
             columns: ["preferred_supplier_id"]

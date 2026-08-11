@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabaseClient'
-import type { Customer, Job, JobStockItem, Stock } from '../../lib/data'
+import type { Customer, Job, JobStockItem, Manufacturer, Stock } from '../../lib/data'
+import { legalNameFor } from '../../lib/data'
 import { PIPELINE, stepLabel } from '../../lib/pipeline'
 import { fmtDate } from '../../lib/format'
 
@@ -122,8 +123,15 @@ export function buildCes(
   job: Job,
   customer: Customer,
   items: JobStockItem[],
-  stocks: Stock[]
+  stocks: Stock[],
+  manufacturers: Manufacturer[]
 ): CesResult {
+  // A CES submission must carry the CEC-listed LEGAL entity name, not the
+  // trading name — and one brand can have several entities (Deye inverters
+  // are listed under Deye Inverter Technology, Deye batteries under Deye ESS).
+  // Resolved through manufacturer_id rather than the old free-text column,
+  // which had drifted to three different spellings of "Sigenergy".
+  const mfr = (st: Stock | undefined) => legalNameFor(st, manufacturers)
   // Prefer what was actually consumed at install; fall back to assigned.
   const jobItems = items.filter((i) => i.job_id === job.id)
   const consumed = jobItems.filter((i) => i.status === 'consumed')
@@ -163,19 +171,19 @@ export function buildCes(
   if (groups.battery.length) {
     rows += `<tr><td style="${th}">Battery system manufacture</td><td style="${th}">Battery Model</td><td style="${th}">nominal capacity kW</td><td style="${th}">Nominal storage capacity kWh</td><td style="${th}">Number of battery systems</td></tr>`
     for (const b of groups.battery) {
-      rows += `<tr><td style="${tdC}">${esc(b.c.manufacturer)}</td><td style="${tdC}">${esc(b.c.model)}</td><td style="${tdC}">${b.c.kw ?? ''}</td><td style="${tdC}">${b.c.kwh != null ? Math.round(b.c.kwh * b.qty * 100) / 100 : ''}</td><td style="${tdC}">${b.qty}</td></tr>`
+      rows += `<tr><td style="${tdC}">${esc(mfr(b.c))}</td><td style="${tdC}">${esc(b.c.model)}</td><td style="${tdC}">${b.c.kw ?? ''}</td><td style="${tdC}">${b.c.kwh != null ? Math.round(b.c.kwh * b.qty * 100) / 100 : ''}</td><td style="${tdC}">${b.qty}</td></tr>`
     }
   }
   if (groups.inverter.length) {
     rows += `<tr><td style="${th}">Inverter Manufacturer</td><td style="${th}">Inverter Model</td><td style="${th}">inverter capacity kVa</td><td style="${th}">Number of inverters installed</td>${EH}</tr>`
     for (const v of groups.inverter) {
-      rows += `<tr><td style="${tdC}">${esc(v.c.manufacturer)}</td><td style="${tdC}">${esc(v.c.model)}</td><td style="${tdC}">${v.c.kva ?? ''}</td><td style="${tdC}">${v.qty}</td>${E}</tr>`
+      rows += `<tr><td style="${tdC}">${esc(mfr(v.c))}</td><td style="${tdC}">${esc(v.c.model)}</td><td style="${tdC}">${v.c.kva ?? ''}</td><td style="${tdC}">${v.qty}</td>${E}</tr>`
     }
   }
   if (groups.panel.length) {
     rows += `<tr><td style="${th}">Solar panels manufacture</td><td style="${th}">Panels model</td><td style="${th}">Capacity W</td><td style="${th}">Number of panels</td>${EH}</tr>`
     for (const p of groups.panel) {
-      rows += `<tr><td style="${tdC}">${esc(p.c.manufacturer)}</td><td style="${tdC}">${esc(p.c.model)}</td><td style="${tdC}">${p.c.watts ?? ''}</td><td style="${tdC}">${p.qty}</td>${E}</tr>`
+      rows += `<tr><td style="${tdC}">${esc(mfr(p.c))}</td><td style="${tdC}">${esc(p.c.model)}</td><td style="${tdC}">${p.c.watts ?? ''}</td><td style="${tdC}">${p.qty}</td>${E}</tr>`
     }
   }
   const locLines: string[] = []
