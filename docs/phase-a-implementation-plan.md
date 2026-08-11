@@ -61,7 +61,7 @@ sequence. Do not re-plan these until Phase A lands.
 
 | Phase | Content | Gate |
 |---|---|---|
-| **B** | `system_configs` + inverters/batteries/components; `priceSystem()` engine; `[DEVELOPMENT SANITY CHECK]` parity panel | **Hard gate:** engine output matches V46 to the cent on ~6 known jobs — reproducing the *numbers*, not bugs #6/#8/#9. Needs an explicit expected-divergence list written before the gate can mean anything |
+| **B** | `system_configs` + inverters/batteries/components; `priceSystem()` engine; `[DEVELOPMENT SANITY CHECK]` parity panel | **Hard gate:** see `docs/phase-b-parity-gate.md` — written, with one BLOCKER to clear first (`stocks.kwh` is nominal, but the engine must size on usable; 10.24 vs 9 on the BAT 10.0) |
 | **C** | Calculator (1φ) → 3 Phase → GM BOM | Each a discrete deliverable |
 | **D** | `quotes` + `quote_lines` (snapshot costs, 18-month expiry, versioning); convert quote → job | Step 7 precedes step 8: the quote record is what creates the customer |
 | **E** | Quick Estimate, Simulation | |
