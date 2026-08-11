@@ -1,3 +1,4 @@
+import { RotateCcw } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../lib/auth'
 import { useData, DEFAULT_LOAD_PROFILE, loadProfileArray } from '../lib/data'
@@ -63,7 +64,7 @@ export default function DailyLoadProfilePage() {
   return (
     <div className="page-scroll">
       <div className="card" style={{ maxWidth: 900 }}>
-        <div className="card-title" style={{ fontSize: 15 }}>⏱️ Daily Load Profile</div>
+        <div className="card-title" style={{ fontSize: 15 }}>Daily Load Profile</div>
         <div className="card-sub" style={{ marginBottom: 14, color: 'var(--muted)', fontSize: 12 }}>
           How the daily load is spread across 24 hours. Values are <strong>relative weights</strong> (auto-normalised —
           they don't need to total 100). The Simulation engine uses this exact shape. Default is a twin-peak
@@ -71,7 +72,7 @@ export default function DailyLoadProfilePage() {
         </div>
 
         {err   && <div className="login-error" style={{ marginBottom: 10 }}>{err}</div>}
-        {saved && <div className="login-ok"    style={{ marginBottom: 10 }}>✓ Saved!</div>}
+        {saved && <div className="login-ok"    style={{ marginBottom: 10 }}>Saved!</div>}
 
         <LoadProfileChart pct={pct} />
 
@@ -110,10 +111,10 @@ export default function DailyLoadProfilePage() {
 
         {isAdmin && (
           <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-            <button className="btn btn-gray" onClick={reset} title="Restore the default twin-peak curve">↺ Reset load profile</button>
+            <button className="btn btn-gray" onClick={reset} title="Restore the default twin-peak curve"><RotateCcw size={13} aria-hidden /> Reset load profile</button>
             <button className="btn btn-gray" onClick={flatten} title="Set every hour equal (flat load)">▬ Flatten</button>
             <button className="btn btn-primary" disabled={!dirty || saving} onClick={save}>
-              {saving ? 'Saving…' : '💾 Save'}
+              {saving ? 'Saving…' : 'Save'}
             </button>
             {dirty && <span className="mutedtext">Unsaved changes</span>}
           </div>

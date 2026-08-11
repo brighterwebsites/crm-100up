@@ -1,3 +1,4 @@
+import { ClipboardCheck, FileText, Link2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { Customer, InstallationRequest, Job, JobStockItem, Stock, Supplier } from '../../lib/data'
 import { supabase } from '../../lib/supabaseClient'
@@ -38,7 +39,7 @@ export function CesModal({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal modal-narrow" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <strong>📋 CES summary — {customer.name}</strong>
+          <strong><ClipboardCheck size={14} aria-hidden /> CES summary — {customer.name}</strong>
           <button className="btn btn-gray" style={{ marginLeft: 'auto' }} onClick={onClose}>
             Close
           </button>
@@ -53,7 +54,7 @@ export function CesModal({
         <div className="ces-table-wrap" dangerouslySetInnerHTML={{ __html: html }} />
         <div className="row">
           <button className="btn btn-primary" onClick={copy}>
-            {copied ? '✓ Copied' : 'Copy table for email'}
+            {copied ? 'Copied' : 'Copy table for email'}
           </button>
         </div>
       </div>
@@ -117,7 +118,7 @@ export function JobOrderModal({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal modal-narrow" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <strong>📄 Job order — {doc.ref}</strong>
+          <strong><FileText size={14} aria-hidden /> Job order — {doc.ref}</strong>
           <button className="btn btn-gray" style={{ marginLeft: 'auto' }} onClick={onClose}>
             Close
           </button>
@@ -274,7 +275,7 @@ export function LinkQuoteModal({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal modal-narrow" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <strong>🔗 Link calculator quote — #{job.id}</strong>
+          <strong><Link2 size={14} aria-hidden /> Link calculator quote — #{job.id}</strong>
           <button className="btn btn-gray" style={{ marginLeft: 'auto' }} onClick={onClose}>
             Close
           </button>
@@ -306,7 +307,7 @@ export function LinkQuoteModal({
                 <div key={i} className="stock-line">
                   <span>
                     {m.line.name}
-                    {!m.stock && <span className="short-pill"> ⚠ no stock match</span>}
+                    {!m.stock && <span className="short-pill">no stock match</span>}
                   </span>
                   <span>× {m.line.qty}</span>
                 </div>

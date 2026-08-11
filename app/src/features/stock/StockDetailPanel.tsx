@@ -4,6 +4,7 @@
  * (stockId === 'new'), which drafts a row locally and inserts on save
  * instead of requiring a name up front.
  */
+import { Trash2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useAuth } from '../../lib/auth'
@@ -168,7 +169,7 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
           </span>
         </div>
         <button className="jdp-close" onClick={onClose} title="Close">
-          ✕
+          <X size={16} aria-hidden />
         </button>
       </div>
 
@@ -264,7 +265,7 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
           </button>
           {stockId !== 'new' && (
             <button className="btn btn-gray" style={{ fontSize: 12, padding: '7px 14px' }} onClick={remove}>
-              🗑 Delete item
+              <Trash2 size={13} aria-hidden /> Delete item
             </button>
           )}
         </div>

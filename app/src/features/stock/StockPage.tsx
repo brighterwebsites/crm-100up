@@ -1,3 +1,4 @@
+import { Package } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useAuth } from '../../lib/auth'
 import { useData } from '../../lib/data'
@@ -54,7 +55,7 @@ export default function StockPage() {
               + Add new
             </button>
             <button className="btn btn-primary" style={{ marginLeft: 'auto' }} onClick={() => setReceiving(true)}>
-              📦 Receive stock
+              <Package size={13} aria-hidden /> Receive stock
             </button>
           </>
         )}
@@ -64,11 +65,11 @@ export default function StockPage() {
         <span>Show:</span>
         {([
           ['all', 'All'],
-          ['battery', '🔋 Battery'],
-          ['inverter', '⚡ Inverter'],
-          ['panel', '☀ Panel'],
+          ['battery', 'Battery'],
+          ['inverter', 'Inverter'],
+          ['panel', 'Panel'],
           ['other', 'Other'],
-          ['outofstock', '⚠ Out of stock'],
+          ['outofstock', 'Out of stock'],
         ] as [CatFilter, string][]).map(([f, label]) => (
           <button key={f} className={`fbtn ${filter === f ? 'fbtn-on' : ''}`} onClick={() => setFilter(f)}>
             {label}
@@ -119,7 +120,7 @@ export default function StockPage() {
                       </td>
                       <td>{s.qty}</td>
                       <td>{a}</td>
-                      <td>{avail < 0 ? <strong>⚠ {avail}</strong> : avail}</td>
+                      <td>{avail < 0 ? <strong>{avail}</strong> : avail}</td>
                       <td>{s.last_cost > 0 ? `$${s.last_cost.toFixed(2)}` : '—'}</td>
                       <td style={{ textAlign: 'left' }}>
                         {suppliers.find((sp) => sp.id === s.preferred_supplier_id)?.name ?? '—'}

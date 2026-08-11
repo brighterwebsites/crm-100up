@@ -1,3 +1,4 @@
+import { Package, Printer } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useData } from '../../lib/data'
 import { supabase } from '../../lib/supabaseClient'
@@ -54,7 +55,7 @@ export default function OrderList({ onOpenJob }: { onOpenJob: (id: number) => vo
   }
 
   if (data.shortItems.length === 0 && data.zeroItems.length === 0) {
-    return <div className="placeholder">✅ Nothing needs ordering — no short or zero-stock items.</div>
+    return <div className="placeholder">Nothing needs ordering — no short or zero-stock items.</div>
   }
 
   return (
@@ -83,7 +84,7 @@ export default function OrderList({ onOpenJob }: { onOpenJob: (id: number) => vo
               {g.short.length > 0 && (
                 <>
                   <button className="btn btn-gray" onClick={() => copyGroup(name, g.short)}>
-                    {copied === name ? '✓ Copied' : '📋 Copy parts list'}
+                    {copied === name ? 'Copied' : 'Copy parts list'}
                   </button>
                   <button
                     className="btn btn-primary"
@@ -91,10 +92,10 @@ export default function OrderList({ onOpenJob }: { onOpenJob: (id: number) => vo
                     onClick={() => savePo(name, g.supplier?.id ?? null, g.short)}
                     title="Creates a trackable Purchase Order record"
                   >
-                    {saved === name ? '✓ Saved' : saving === name ? 'Saving…' : '💾 Save PO'}
+                    {saved === name ? 'Saved' : saving === name ? 'Saving…' : 'Save PO'}
                   </button>
                   <button className="btn btn-gray" onClick={() => printGroupPo(name, g.short)}>
-                    🖨 Print PO
+                    <Printer size={13} aria-hidden /> Print PO
                   </button>
                 </>
               )}
@@ -102,7 +103,7 @@ export default function OrderList({ onOpenJob }: { onOpenJob: (id: number) => vo
             {all.map((card) => (
               <div key={card.stock.id} className={`order-card ${card.kind === 'short' ? 'order-card-neg' : 'order-card-zero'}`}>
                 <div className="order-card-head">
-                  <span className="order-item-name">📦 {card.stock.name}</span>
+                  <span className="order-item-name"><Package size={12} aria-hidden /> {card.stock.name}</span>
                   <span className="mutedtext">
                     On hand: {card.stock.qty} | Allocated: {card.alloc}
                   </span>
@@ -131,9 +132,9 @@ export default function OrderList({ onOpenJob }: { onOpenJob: (id: number) => vo
                         <button className="btn-link-name" onClick={() => onOpenJob(job.id)}>
                           {custName}
                         </button>
-                        <span>{card.kind === 'short' ? `⚠ ${qty} short` : `×${qty} needed`}</span>
+                        <span>{card.kind === 'short' ? `${qty} short` : `×${qty} needed`}</span>
                         <span className="mutedtext">
-                          {isClosed(job.stage, job.step) ? '✓ Closed' : STAGE_NAMES_SHORT[job.stage]} ·{' '}
+                          {isClosed(job.stage, job.step) ? 'Closed' : STAGE_NAMES_SHORT[job.stage]} ·{' '}
                           {dt ? fmtDate(dt) : 'No date set'}
                         </span>
                       </div>

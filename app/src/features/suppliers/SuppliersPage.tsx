@@ -1,3 +1,4 @@
+import { X } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../../lib/auth'
 import { useData } from '../../lib/data'
@@ -95,7 +96,7 @@ export default function SuppliersPage() {
                 {isAdmin && (
                   <td>
                     <button className="btn-x" title="Delete supplier" onClick={() => remove(sp.id)}>
-                      ✕
+                      <X size={16} aria-hidden />
                     </button>
                   </td>
                 )}

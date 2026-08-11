@@ -5,6 +5,11 @@
  *
  * No modal wrapper — the parent decides how to frame it.
  */
+import {
+  ArrowLeft, ArrowRight, Calendar, ClipboardCheck, ClipboardList, CircleCheck,
+  DollarSign, Link2, Mail, MessageSquare, Package, Phone, Printer, TriangleAlert,
+  Wrench, X,
+} from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../lib/auth'
 import { useData } from '../../lib/data'
@@ -204,7 +209,7 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
         </div>
         {onClose && (
           <button className="jdp-close" onClick={onClose} title="Close">
-            ✕
+            <X size={16} aria-hidden />
           </button>
         )}
       </div>
@@ -218,29 +223,29 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
         <div className="jdp-pipeline-row">
           {!closed && (
             <button className="btn btn-primary" style={{ fontSize: 12, padding: '7px 12px' }} onClick={handleAdvance}>
-              Advance → {nextLabel(job)}
+              Advance <ArrowRight size={13} aria-hidden /> {nextLabel(job)}
             </button>
           )}
           {(job.stage > 1 || job.step > 0) && (
             <button className="btn btn-gray" style={{ fontSize: 12, padding: '7px 12px' }} onClick={() => run(() => moveJobBack(job), 'Moved back')}>
-              ← Move back
+              <ArrowLeft size={13} aria-hidden /> Move back
             </button>
           )}
           {isAdmin && job.planned_install_date && !job.install_completion_date && (
             <button className="btn btn-gray" style={{ fontSize: 12, padding: '7px 12px' }} onClick={() => setReschedule(!reschedule)}>
-              📅 Reschedule
+              <Calendar size={13} aria-hidden /> Reschedule
             </button>
           )}
         </div>
 
         <div className="jdp-date-strip">
-          {job.planned_install_date   && <span>📅 Booked {fmtDate(job.planned_install_date)}</span>}
-          {job.install_start_date     && <span>🔧 Started {fmtDate(job.install_start_date)}</span>}
-          {job.install_completion_date && <span>✅ Installed {fmtDate(job.install_completion_date)}</span>}
-          {job.ces_submitted           && <span>📋 CES sub {fmtDate(job.ces_submitted)}</span>}
-          {job.ces_received            && <span>📋 CES rec {fmtDate(job.ces_received)}</span>}
-          {job.rebate_submitted        && <span>💰 Rebate sub {fmtDate(job.rebate_submitted)}</span>}
-          {job.rebate_received         && <span>💰 Rebate rec {fmtDate(job.rebate_received)}</span>}
+          {job.planned_install_date   && <span><Calendar size={11} aria-hidden /> Booked {fmtDate(job.planned_install_date)}</span>}
+          {job.install_start_date     && <span><Wrench size={11} aria-hidden /> Started {fmtDate(job.install_start_date)}</span>}
+          {job.install_completion_date && <span><CircleCheck size={11} aria-hidden /> Installed {fmtDate(job.install_completion_date)}</span>}
+          {job.ces_submitted           && <span><ClipboardList size={11} aria-hidden /> CES sub {fmtDate(job.ces_submitted)}</span>}
+          {job.ces_received            && <span><ClipboardCheck size={11} aria-hidden /> CES rec {fmtDate(job.ces_received)}</span>}
+          {job.rebate_submitted        && <span><DollarSign size={11} aria-hidden /> Rebate sub {fmtDate(job.rebate_submitted)}</span>}
+          {job.rebate_received         && <span><DollarSign size={11} aria-hidden /> Rebate rec {fmtDate(job.rebate_received)}</span>}
         </div>
 
         {reschedule && (
@@ -274,9 +279,9 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
         <div className="jdp-section">
           <div className="jdp-section-title">Alerts</div>
           <div className="jdp-alerts">
-            {hasShortage  && <span className="alert-tag">📦 Stock short</span>}
-            {isOverdue    && <span className="alert-tag">📅 Install overdue</span>}
-            {job.fixes_needed && <span className="alert-tag alert-tag-info">🔧 Fixes needed</span>}
+            {hasShortage  && <span className="alert-tag"><Package size={11} aria-hidden /> Stock short</span>}
+            {isOverdue    && <span className="alert-tag"><Calendar size={11} aria-hidden /> Install overdue</span>}
+            {job.fixes_needed && <span className="alert-tag alert-tag-info"><Wrench size={11} aria-hidden /> Fixes needed</span>}
           </div>
         </div>
       )}
@@ -291,14 +296,14 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
           <F label="Phone">
             <div className="jdp-contact-row">
               <input className="jdp-input" disabled={!isAdmin} value={custForm.phone} onChange={(e) => setCustForm({ ...custForm, phone: e.target.value })} />
-              {custForm.phone && <a className="jdp-contact-link" href={`tel:${custForm.phone}`}>📞</a>}
-              {custForm.phone && <a className="jdp-contact-link" href={`sms:${custForm.phone}`}>💬</a>}
+              {custForm.phone && <a className="jdp-contact-link" href={`tel:${custForm.phone}`}><Phone size={13} aria-hidden /></a>}
+              {custForm.phone && <a className="jdp-contact-link" href={`sms:${custForm.phone}`}><MessageSquare size={13} aria-hidden /></a>}
             </div>
           </F>
           <F label="Email">
             <div className="jdp-contact-row">
               <input className="jdp-input" disabled={!isAdmin} value={custForm.email} onChange={(e) => setCustForm({ ...custForm, email: e.target.value })} />
-              {custForm.email && <a className="jdp-contact-link" href={`mailto:${custForm.email}`}>✉</a>}
+              {custForm.email && <a className="jdp-contact-link" href={`mailto:${custForm.email}`}><Mail size={13} aria-hidden /></a>}
             </div>
           </F>
           <F label="Address" full>
@@ -318,8 +323,8 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
               value={jobForm.job_type}
               onChange={(e) => setJobForm({ ...jobForm, job_type: e.target.value as 'install' | 'service' })}
             >
-              <option value="install">🔧 New install</option>
-              <option value="service">🛠 Service / upgrade</option>
+              <option value="install">New install</option>
+              <option value="service">Service / upgrade</option>
             </select>
           </F>
           <F label="Value (AUD)">
@@ -392,11 +397,11 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
             <div key={i.id} className="stock-line">
               <span>
                 {stockName(i.stock_id)}
-                {shortMap[i.stock_id] ? <span className="short-pill"> ⚠ {shortMap[i.stock_id]} short</span> : null}
+                {shortMap[i.stock_id] ? <span className="short-pill">{shortMap[i.stock_id]} short</span> : null}
               </span>
               <span>
                 × {i.qty}
-                {isAdmin && <button className="btn-x" title="Remove" onClick={() => removeStock(i.id)}>✕</button>}
+                {isAdmin && <button className="btn-x" title="Remove" onClick={() => removeStock(i.id)}><X size={13} aria-hidden /></button>}
               </span>
             </div>
           ))}
@@ -479,14 +484,14 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
             onClick={async () => {
               if (!customer) return
               await copyText(jobDetailsText(job, customer, items, stocks))
-              note('📋 Copied!')
+              note('Copied!')
             }}
           >
-            📋 Copy details
+            <ClipboardList size={13} aria-hidden /> Copy details
           </button>
           {canCes && (
             <button className="btn btn-gray" style={{ fontSize: 12 }} onClick={() => setShowCes(true)}>
-              📋 CES summary
+              <ClipboardCheck size={13} aria-hidden /> CES summary
             </button>
           )}
           {isAdmin && (
@@ -495,12 +500,12 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
               style={{ fontSize: 12 }}
               onClick={() => printJobPo(job, customer?.name ?? `Job #${job.id}`, assigned.length ? assigned : pending, stocks, suppliers)}
             >
-              🖨 Print PO
+              <Printer size={13} aria-hidden /> Print PO
             </button>
           )}
           {isAdmin && (
             <button className="btn btn-gray" style={{ fontSize: 12 }} onClick={() => setShowLink(true)}>
-              🔗 Link quote
+              <Link2 size={13} aria-hidden /> Link quote
             </button>
           )}
         </div>
@@ -582,7 +587,7 @@ function InlineDatePick(props: {
         <input type="date" value={props.value} onChange={(e) => props.onChange(e.target.value)} />
       </label>
       {props.clashes.length > 0 && (
-        <div className="clash-warn">⚠ Same-day clash: {props.clashes.map((c) => custName(c.job)).join(', ')}</div>
+        <div className="clash-warn"><TriangleAlert size={12} aria-hidden /> Same-day clash: {props.clashes.map((c) => custName(c.job)).join(', ')}</div>
       )}
       {props.allBooked.length > 0 && (
         <div className="booked-list">Booked: {props.allBooked.map((c) => `${fmtDate(c.date)} — ${custName(c.job)}`).join(' · ')}</div>

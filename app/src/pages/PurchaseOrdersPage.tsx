@@ -1,3 +1,4 @@
+import { Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useData } from '../lib/data'
 import type { PurchaseOrder } from '../lib/data'
@@ -109,7 +110,7 @@ export default function PurchaseOrdersPage() {
               </div>
               {selected.po_status === 'sent' && (
                 <button className="btn btn-gray" style={{ fontSize: 12 }} onClick={() => cancelPo(selected.id)}>
-                  ✕ Delete PO
+                  <Trash2 size={13} aria-hidden /> Delete PO
                 </button>
               )}
             </div>

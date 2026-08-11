@@ -1,4 +1,10 @@
 import { useState } from 'react'
+import {
+  Clock, ClipboardList, Download, FlaskConical, House, LayoutGrid, Menu, Package,
+  Pickaxe, Plug, ReceiptText, Ruler, Settings, ShoppingCart, SlidersHorizontal,
+  Truck, Users, Wrench,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { DataProvider, useData } from '../lib/data'
 import StockPage from '../features/stock/StockPage'
@@ -131,14 +137,16 @@ function ShellInner() {
     setPage('customer-jobs')
   }
 
-  function NavItem({ p, icon, label, sub }: { p: Page; icon: string; label: string; sub?: boolean }) {
+  function NavItem({ p, icon: Icon, label, sub }: { p: Page; icon: LucideIcon; label: string; sub?: boolean }) {
     return (
       <button
         className={`sidebar-item ${sub ? 'sidebar-subitem' : ''} ${page === p ? 'sidebar-item-on' : ''}`}
         onClick={() => setPage(p)}
         title={sidebarOpen ? undefined : label}
       >
-        <span className="sidebar-icon">{icon}</span>
+        <span className="sidebar-icon">
+          <Icon size={sub ? 15 : 17} strokeWidth={1.75} aria-hidden />
+        </span>
         {sidebarOpen && <span className="sidebar-label">{label}</span>}
       </button>
     )
@@ -150,14 +158,14 @@ function ShellInner() {
       <header className="app-header">
         <div className="header-left">
           <button className="sidebar-toggle-btn" onClick={() => setSidebarOpen(!sidebarOpen)} title="Toggle sidebar">
-            ☰
+            <Menu size={18} strokeWidth={1.75} aria-hidden />
           </button>
           <span className="nav-brand">100UP <span className="badge">CRM</span></span>
         </div>
         <div className="header-right">
           {isAdmin && (
-            <button className="btn btn-gray" style={{ fontSize: 12 }} onClick={exportJson} title="Download JSON backup">
-              ⬇ Backup
+            <button className="btn btn-gray btn-icon" style={{ fontSize: 12 }} onClick={exportJson} title="Download JSON backup">
+              <Download size={14} strokeWidth={2} aria-hidden /> Backup
             </button>
           )}
           <span className="nav-user">
@@ -174,29 +182,29 @@ function ShellInner() {
           <nav className="sidebar-nav">
             {isAdmin ? (
               <>
-                <NavItem p="pipeline"      icon="◉"  label="Pipeline" />
-                <NavItem p="customer-jobs" icon="📋" label="Customer Jobs" />
+                <NavItem p="pipeline"      icon={LayoutGrid}    label="Pipeline" />
+                <NavItem p="customer-jobs" icon={ClipboardList} label="Customer Jobs" />
                 <div className="sidebar-section">{sidebarOpen ? 'CRM' : '·'}</div>
-                <NavItem p="customers"     icon="👥" label="Customers" />
+                <NavItem p="customers"     icon={Users}         label="Customers" />
                 <div className="sidebar-section">{sidebarOpen ? 'Inventory' : '·'}</div>
-                <NavItem p="stock"         icon="📦" label="Stock" />
-                <NavItem p="orders"        icon="🛒" label="Order List" />
-                <NavItem p="purchase-orders" icon="🧾" label="Purchase Orders" />
-                <NavItem p="suppliers"     icon="🚚" label="Suppliers" />
+                <NavItem p="stock"         icon={Package}       label="Stock" />
+                <NavItem p="orders"        icon={ShoppingCart}  label="Order List" />
+                <NavItem p="purchase-orders" icon={ReceiptText} label="Purchase Orders" />
+                <NavItem p="suppliers"     icon={Truck}         label="Suppliers" />
                 <div className="sidebar-section">{sidebarOpen ? 'Quote Designer' : '·'}</div>
-                <NavItem p="qd-quick-estimate" icon="🏠" label="Quick Estimate" />
-                <NavItem p="qd-system-calc"    icon="📐" label="System Calculator" />
-                <NavItem p="qd-3phase"         icon="🔌" label="3 Phase System" />
-                <NavItem p="qd-gm-bom"         icon="⛏️" label="Ground Mount BOM" />
+                <NavItem p="qd-quick-estimate" icon={House}     label="Quick Estimate" />
+                <NavItem p="qd-system-calc"    icon={Ruler}     label="System Calculator" />
+                <NavItem p="qd-3phase"         icon={Plug}      label="3 Phase System" />
+                <NavItem p="qd-gm-bom"         icon={Pickaxe}   label="Ground Mount BOM" />
                 <div className="sidebar-subheading">{sidebarOpen ? 'Tools' : ''}</div>
-                <NavItem p="qd-assumptions"        icon="⚙️" label="Assumptions" sub />
-                <NavItem p="qd-simulation"         icon="🔬" label="Simulation" sub />
-                <NavItem p="qd-daily-load-profile" icon="⏱️" label="Daily Load Profile" sub />
-                <NavItem p="settings" icon="🔧" label="Settings" />
+                <NavItem p="qd-assumptions"        icon={SlidersHorizontal} label="Assumptions" sub />
+                <NavItem p="qd-simulation"         icon={FlaskConical}      label="Simulation" sub />
+                <NavItem p="qd-daily-load-profile" icon={Clock}             label="Daily Load Profile" sub />
+                <NavItem p="settings" icon={Settings} label="Settings" />
               </>
             ) : (
               /* Installer: only their assigned jobs */
-              <NavItem p="customer-jobs" icon="🔧" label="My Jobs" />
+              <NavItem p="customer-jobs" icon={Wrench} label="My Jobs" />
             )}
           </nav>
         </aside>
@@ -211,12 +219,12 @@ function ShellInner() {
           {isAdmin && page === 'orders'        && <OrderList onOpenJob={handleOpenJob} />}
           {isAdmin && page === 'purchase-orders' && <PurchaseOrdersPage />}
           {isAdmin && page === 'suppliers'     && <SuppliersPage />}
-          {isAdmin && page === 'qd-quick-estimate' && <StubPage icon="🏠" title="Quick Estimate" note="Bedroom/occupant-based system sizing — not ported yet." />}
-          {isAdmin && page === 'qd-system-calc'    && <StubPage icon="📐" title="System Calculator" note="Full panel + battery + inverter quoting calculator — not ported yet." />}
-          {isAdmin && page === 'qd-3phase'         && <StubPage icon="🔌" title="3 Phase System" note="Three-phase system sizing tool — not ported yet." />}
-          {isAdmin && page === 'qd-gm-bom'         && <StubPage icon="⛏️" title="Ground Mount BOM" note="Ground mount bill-of-materials generator — not ported yet." />}
-          {isAdmin && page === 'qd-assumptions'    && <StubPage icon="⚙️" title="Assumptions" note="Full editable assumptions table — not ported yet. Daily Load Profile below already reads/writes the live assumptions data." />}
-          {isAdmin && page === 'qd-simulation'     && <StubPage icon="🔬" title="Simulation" note="July hourly SOC trace engine — not ported yet." />}
+          {isAdmin && page === 'qd-quick-estimate' && <StubPage icon={House} title="Quick Estimate" note="Bedroom/occupant-based system sizing — not ported yet." />}
+          {isAdmin && page === 'qd-system-calc'    && <StubPage icon={Ruler} title="System Calculator" note="Full panel + battery + inverter quoting calculator — not ported yet." />}
+          {isAdmin && page === 'qd-3phase'         && <StubPage icon={Plug} title="3 Phase System" note="Three-phase system sizing tool — not ported yet." />}
+          {isAdmin && page === 'qd-gm-bom'         && <StubPage icon={Pickaxe} title="Ground Mount BOM" note="Ground mount bill-of-materials generator — not ported yet." />}
+          {isAdmin && page === 'qd-assumptions'    && <StubPage icon={SlidersHorizontal} title="Assumptions" note="Full editable assumptions table — not ported yet. Daily Load Profile below already reads/writes the live assumptions data." />}
+          {isAdmin && page === 'qd-simulation'     && <StubPage icon={FlaskConical} title="Simulation" note="July hourly SOC trace engine — not ported yet." />}
           {isAdmin && page === 'qd-daily-load-profile' && <DailyLoadProfilePage />}
           {isAdmin && page === 'settings'          && <SettingsPage />}
           {!isAdmin && (

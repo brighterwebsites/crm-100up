@@ -1,3 +1,4 @@
+import { Package } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useData } from '../../lib/data'
 import { supabase } from '../../lib/supabaseClient'
@@ -105,7 +106,7 @@ export default function ReceiveModal({ onClose }: { onClose: () => void }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal modal-narrow" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <strong>📦 Receive stock</strong>
+          <strong><Package size={14} aria-hidden /> Receive stock</strong>
           <button className="btn btn-gray" style={{ marginLeft: 'auto' }} onClick={onClose}>
             Close
           </button>

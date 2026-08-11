@@ -1,3 +1,4 @@
+import { ArrowLeft, Mail, Phone } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useData } from '../lib/data'
 import type { Customer } from '../lib/data'
@@ -52,8 +53,8 @@ export default function CustomersPage() {
                 onClick={() => { setSelectedId(c.id); setSelectedJobId(null) }}
               >
                 <div className="master-item-name">{c.name}</div>
-                {c.phone && <div className="master-item-sub">📞 {c.phone}</div>}
-                {c.email && <div className="master-item-sub" style={{ fontSize: 10 }}>✉ {c.email}</div>}
+                {c.phone && <div className="master-item-sub"><Phone size={11} aria-hidden /> {c.phone}</div>}
+                {c.email && <div className="master-item-sub" style={{ fontSize: 10 }}><Mail size={10} aria-hidden /> {c.email}</div>}
                 <div className="master-item-stage">
                   <span className="mutedtext">{cJobs.length} job{cJobs.length !== 1 ? 's' : ''}</span>
                   {openCount > 0 && (
@@ -88,7 +89,7 @@ export default function CustomersPage() {
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--line)', flexShrink: 0 }}>
               <button className="btn-link" onClick={() => setSelectedJobId(null)}>
-                ← Back to {selectedCustomer.name}
+                <ArrowLeft size={13} aria-hidden /> Back to {selectedCustomer.name}
               </button>
             </div>
             <div style={{ flex: 1, overflow: 'auto' }}>
@@ -203,15 +204,15 @@ function CustomerDetail({
                   {j.location || j.system_description || `Job #${j.id}`}
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--muted)' }}>
-                  {j.planned_install_date && `📅 ${j.planned_install_date}  `}
-                  {j.system_description && j.system_description}
+                  {j.planned_install_date && `${j.planned_install_date}  `}
+                  {j.system_description}
                 </div>
               </div>
               <span
                 className="stage-chip"
                 style={{ background: closed ? '#eef0f3' : s.light, color: closed ? 'var(--muted)' : s.text, fontSize: 10, flexShrink: 0 }}
               >
-                {closed ? '✓ Closed' : `${s.short} › ${stepLabel(j.stage, j.step)}`}
+                {closed ? 'Closed' : `${s.short} › ${stepLabel(j.stage, j.step)}`}
               </span>
               <span style={{ color: 'var(--muted)', fontSize: 14 }}>›</span>
             </button>

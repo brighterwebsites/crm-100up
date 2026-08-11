@@ -1,3 +1,4 @@
+import { Mail, Package, Phone, Wrench } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useData } from '../lib/data'
 import type { Customer, Job } from '../lib/data'
@@ -70,7 +71,7 @@ export default function PipelinePage() {
     { key: 'quoting', label: 'Quoting',       n: counts.quoting,    color: PIPELINE[2].color },
     { key: 'install', label: 'Installation',  n: counts.install,    color: PIPELINE[3].color },
     { key: 'compliance', label: 'Compliance', n: counts.compliance, color: PIPELINE[4].color },
-    { key: 'all',     label: '✓ Closed',      n: counts.closed,     color: '#3a4150' },
+    { key: 'all',     label: 'Closed',      n: counts.closed,     color: '#3a4150' },
   ]
 
   return (
@@ -94,11 +95,11 @@ export default function PipelinePage() {
         <span>Show:</span>
         {([
           ['active',  'All jobs'],
-          ['alerts',  '⚠ Alerts'],
-          ['stale',   '🕐 Stale'],
-          ['install', '🔧 New install'],
-          ['service', '🛠 Upgrades'],
-          ['stock',   '📦 Stock short'],
+          ['alerts',  'Alerts'],
+          ['stale',   'Stale'],
+          ['install', 'New install'],
+          ['service', 'Upgrades'],
+          ['stock',   'Stock short'],
         ] as [Filter, string][]).map(([f, label]) => (
           <button key={f} className={`fbtn ${filter === f ? 'fbtn-on' : ''}`} onClick={() => setFilter(f)}>
             {label}
@@ -166,14 +167,14 @@ export default function PipelinePage() {
                       {j.location && <div className="p-job-loc">{j.location}</div>}
                       {(cust?.phone || cust?.email) && (
                         <div className="p-job-contact">
-                          {cust.phone && <a href={`tel:${cust.phone}`} onClick={(e) => e.stopPropagation()}>📞 {cust.phone}</a>}
-                          {cust.email && <a href={`mailto:${cust.email}`} onClick={(e) => e.stopPropagation()}>✉</a>}
+                          {cust.phone && <a href={`tel:${cust.phone}`} onClick={(e) => e.stopPropagation()}><Phone size={11} aria-hidden /> {cust.phone}</a>}
+                          {cust.email && <a href={`mailto:${cust.email}`} onClick={(e) => e.stopPropagation()}><Mail size={11} aria-hidden /></a>}
                         </div>
                       )}
                       {(short || j.fixes_needed) && (
                         <div className="p-alerts">
-                          {short       && <span className="short-pill">📦 stock short</span>}
-                          {j.fixes_needed && <span className="short-pill short-pill-signal">🔧 fixes</span>}
+                          {short       && <span className="short-pill"><Package size={11} aria-hidden /> stock short</span>}
+                          {j.fixes_needed && <span className="short-pill short-pill-signal"><Wrench size={11} aria-hidden /> fixes</span>}
                         </div>
                       )}
                     </td>
