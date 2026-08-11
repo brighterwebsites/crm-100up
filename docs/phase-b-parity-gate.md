@@ -1,7 +1,7 @@
 # Phase B Parity Gate — Expected Divergence List
 
 **Date:** 11 August 2026
-**Status:** Ready. One blocker to clear before the gate can run (§1).
+**Status:** Ready. The §1 blocker is RESOLVED — migration `20260811140001_usable_kwh`.
 
 Phase B step 4 says the rebuilt engine must reproduce V46 "to the cent". That
 cannot be a plain equality check, because **V46 is wrong in places we already
@@ -15,10 +15,11 @@ any size, fails the gate. "Close enough" is not a result.
 
 ---
 
-## 1. BLOCKER — battery kWh is not what the engine sizes on
+## 1. RESOLVED — battery kWh is not what the engine sizes on
 
-**This must be resolved before the gate runs. It is not a divergence, it is a
-latent 14% error.**
+**Fixed in `20260811140001_usable_kwh`.** Kept here because the reasoning
+matters more than the fix: this was a latent 14% error that nothing in the app
+would have surfaced.
 
 | Battery | `stocks.kwh` (nominal) | V46 sizes on (usable) | Gap |
 |---|---|---|---|
@@ -36,13 +37,24 @@ Sigenergy battery bank 14% high, which flows into battery STCs, the rebate
 total, the final price and the July simulation. It would look plausible and be
 wrong everywhere.
 
-**Required before Phase B:** add `usable_kwh` to `stocks`, populated 9 / 5.1 /
-(BAT 8.0 to be confirmed with Fred). The engine sizes on `usable_kwh`; CES
-keeps reading `kwh`. Both stay visible and separately editable on the Products
-page, labelled so nobody "corrects" one to match the other — the same trap
-recorded in design doc D3a.
+**What was done.** `usable_kwh` added to `stocks` and populated with the exact
+figures V46 quotes with (9 and 5.1), so the gate compares like for like. The
+engine sizes on `usable_kwh`; CES keeps reading `kwh`. Both are visible and
+separately editable on the Products page, labelled for what they are, so nobody
+"corrects" one to match the other — the trap recorded in design doc D3a.
 
-This is exactly why the gate exists: nothing in the app would have surfaced it.
+A CHECK constraint makes a battery without a usable capacity impossible to
+save, so the bug cannot recur through a future product being added carelessly.
+Verified: the insert is rejected at the database.
+
+| Battery | Nominal | Usable | Source |
+|---|---|---|---|
+| SigenStor BAT 10.0 | 10.24 | 9 | V46 `sig_battery_kwh` |
+| Deye AI-W5.1-B | 5.12 | 5.1 | V46 `deye_battery_kwh` |
+| SigenStor BAT 8.0 | 8.06 | 7.08 | **UNCONFIRMED** — derived from the BAT 10.0 ratio; never existed in V46. Needs Fred or a datasheet |
+
+**Still to confirm:** the BAT 8.0 usable figure. It is not blocking, since that
+product is not in any V46 scenario and so cannot affect the gate.
 
 ---
 

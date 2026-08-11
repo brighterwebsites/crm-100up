@@ -45,6 +45,7 @@ interface Form {
   kva: string
   kw: string
   kwh: string
+  usable_kwh: string
   watts: string
   verified: boolean
 }
@@ -64,6 +65,7 @@ const BLANK_FORM: Form = {
   kva: '',
   kw: '',
   kwh: '',
+  usable_kwh: '',
   watts: '',
   verified: false,
 }
@@ -96,6 +98,7 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
         kva: stock.kva != null ? String(stock.kva) : '',
         kw: stock.kw != null ? String(stock.kw) : '',
         kwh: stock.kwh != null ? String(stock.kwh) : '',
+        usable_kwh: stock.usable_kwh != null ? String(stock.usable_kwh) : '',
         watts: stock.watts != null ? String(stock.watts) : '',
         verified: stock.verified,
       })
@@ -132,6 +135,7 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
       kva: form.kva ? Number(form.kva) : null,
       kw: form.kw ? Number(form.kw) : null,
       kwh: form.kwh ? Number(form.kwh) : null,
+      usable_kwh: form.usable_kwh ? Number(form.usable_kwh) : null,
       watts: form.watts ? Number(form.watts) : null,
       verified: form.verified,
     }
@@ -344,9 +348,25 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
           <F label="Nominal kW">
             <input className="jdp-input" disabled={!isAdmin} type="number" min={0} value={form.kw} onChange={(e) => setForm({ ...form, kw: e.target.value })} />
           </F>
-          <F label="Battery kWh">
-            <input className="jdp-input" disabled={!isAdmin} type="number" min={0} value={form.kwh} onChange={(e) => setForm({ ...form, kwh: e.target.value })} />
+          {/* Two capacities, deliberately. `kwh` is NOMINAL and is what a
+              CES submission reports; `usable_kwh` is what the pricing and
+              simulation engines size on. They differ by ~12% on a SigenStor
+              (10.24 vs 9). Do NOT reconcile them — sizing on nominal would
+              oversize every bank and quietly inflate rebates and price. */}
+          <F label="Battery kWh (nominal, for CES)">
+            <input className="jdp-input" disabled={!isAdmin} type="number" min={0} step="0.01" value={form.kwh} onChange={(e) => setForm({ ...form, kwh: e.target.value })} />
           </F>
+          <F label="Usable kWh (used for sizing)">
+            <input className="jdp-input" disabled={!isAdmin} type="number" min={0} step="0.01" value={form.usable_kwh} onChange={(e) => setForm({ ...form, usable_kwh: e.target.value })} />
+          </F>
+          {form.product_type === 'battery' && !form.usable_kwh && (
+            <F label="" full>
+              <div className="cost-drift">
+                A battery needs a usable capacity — quoting sizes on it, and the
+                database will reject the save without one.
+              </div>
+            </F>
+          )}
           <F label="Panel watts">
             <input className="jdp-input" disabled={!isAdmin} type="number" min={0} value={form.watts} onChange={(e) => setForm({ ...form, watts: e.target.value })} />
           </F>

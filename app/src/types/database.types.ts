@@ -689,6 +689,7 @@ export type Database = {
           preferred_supplier_id: number | null
           product_type: Database["public"]["Enums"]["product_type"]
           qty: number
+          usable_kwh: number | null
           verified: boolean
           watts: number | null
         }
@@ -709,6 +710,7 @@ export type Database = {
           preferred_supplier_id?: number | null
           product_type?: Database["public"]["Enums"]["product_type"]
           qty?: number
+          usable_kwh?: number | null
           verified?: boolean
           watts?: number | null
         }
@@ -729,6 +731,7 @@ export type Database = {
           preferred_supplier_id?: number | null
           product_type?: Database["public"]["Enums"]["product_type"]
           qty?: number
+          usable_kwh?: number | null
           verified?: boolean
           watts?: number | null
         }
