@@ -12,37 +12,46 @@ export interface StageDef {
   steps: string[]
 }
 
+// Colours are `var(--stage-N*)` references, not hex literals — these values
+// are consumed as inline `style={{ background: stage.light }}`, where a CSS
+// custom property resolves normally. The palette lives in one place only
+// (src/index.css), so a token change reaches the Pipeline board, and dark
+// mode later needs no change here at all.
+//
+// This previously duplicated the hex values, which is why the CSS
+// --stage-3/--stage-4 tokens had zero consumers and editing them changed
+// nothing on screen.
 export const PIPELINE: Record<number, StageDef> = {
   1: {
     name: 'Communication',
     short: 'Comms',
-    color: '#1D9E75',
-    light: '#E1F5EE',
-    text: '#085041',
+    color: 'var(--stage-1)',
+    light: 'var(--stage-1-light)',
+    text: 'var(--stage-1-text)',
     steps: ['First contact', 'Info collection', 'System proposals', 'Customer selects'],
   },
   2: {
     name: 'Quoting',
     short: 'Quote',
-    color: '#534AB7',
-    light: '#EEEDFE',
-    text: '#3C3489',
+    color: 'var(--stage-2)',
+    light: 'var(--stage-2-light)',
+    text: 'var(--stage-2-text)',
     steps: ['Quote in Xero', 'Send quote', 'Deposit received'],
   },
   3: {
     name: 'Installation',
     short: 'Install',
-    color: '#993C1D',
-    light: '#FAECE7',
-    text: '#712B13',
+    color: 'var(--stage-3)',
+    light: 'var(--stage-3-light)',
+    text: 'var(--stage-3-text)',
     steps: ['Job info to installer', 'Date booked', 'Parts ordered', 'Install in progress', 'Install complete'],
   },
   4: {
     name: 'Compliance & close',
     short: 'Compliance',
-    color: '#854F0B',
-    light: '#FAEEDA',
-    text: '#633806',
+    color: 'var(--stage-4)',
+    light: 'var(--stage-4-light)',
+    text: 'var(--stage-4-text)',
     steps: ['CES submitted', 'Inspector review', 'Fixes complete', 'CES received', 'Rebate submitted', 'Rebate received', 'Job closed'],
   },
 }

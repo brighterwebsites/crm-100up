@@ -459,13 +459,23 @@ button {
   padding: 2px 8px;
 }
 
+/* "Needs attention" pills — stock short, fixes needed. These are the first
+   real consumers of --signal (see the token block): a job that needs
+   attention is not an error, so it must not read as --danger. */
 .short-pill {
   font-size: 10px;
   font-weight: 700;
-  background: #fff2e5;
-  color: #7b3f00;
+  background: var(--stage-3-light);
+  color: var(--stage-3-text);
   border-radius: 999px;
   padding: 2px 8px;
+}
+
+/* Stronger variant — a solid signal fill for the one that needs to cut
+   through a board full of tinted chips. */
+.short-pill-signal {
+  background: var(--signal);
+  color: #ffffff;
 }
 
 .job-progress {

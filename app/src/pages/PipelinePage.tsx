@@ -173,7 +173,7 @@ export default function PipelinePage() {
                       {(short || j.fixes_needed) && (
                         <div className="p-alerts">
                           {short       && <span className="short-pill">📦 stock short</span>}
-                          {j.fixes_needed && <span className="short-pill" style={{ background: '#eeedfe', color: '#3c3489' }}>🔧 fixes</span>}
+                          {j.fixes_needed && <span className="short-pill short-pill-signal">🔧 fixes</span>}
                         </div>
                       )}
                     </td>

@@ -228,7 +228,7 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
             <input className="jdp-input" disabled value={alloc} />
           </F>
           <F label="Available">
-            <input className="jdp-input" disabled value={avail} style={avail < 0 ? { color: '#b3261e', fontWeight: 700 } : undefined} />
+            <input className="jdp-input" disabled value={avail} style={avail < 0 ? { color: 'var(--danger)', fontWeight: 700 } : undefined} />
           </F>
         </div>
       </div>
