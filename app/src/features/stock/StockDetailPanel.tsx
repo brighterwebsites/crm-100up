@@ -12,6 +12,8 @@ import { useData } from '../../lib/data'
 import { supabase } from '../../lib/supabaseClient'
 import { allocatedMap } from '../../lib/stockCalc'
 import type { Enums, TablesInsert } from '../../types/database.types'
+import { PHASE_LABEL, PRODUCT_TYPE_LABEL } from '../../lib/productTypes'
+import type { Phase, ProductType } from '../../lib/productTypes'
 
 type CesCategory = Enums<'ces_category'>
 
@@ -31,6 +33,10 @@ interface Props {
 interface Form {
   name: string
   category: CesCategory
+  product_type: ProductType
+  phase: Phase
+  active: boolean
+  planning_cost: string
   manufacturer_id: string
   model: string
   preferred_supplier_id: string
@@ -46,6 +52,10 @@ interface Form {
 const BLANK_FORM: Form = {
   name: '',
   category: 'other',
+  product_type: 'other',
+  phase: 'na',
+  active: true,
+  planning_cost: '0',
   manufacturer_id: '',
   model: '',
   preferred_supplier_id: '',
@@ -74,6 +84,10 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
       setForm({
         name: stock.name,
         category: stock.category,
+        product_type: stock.product_type,
+        phase: stock.phase,
+        active: stock.active,
+        planning_cost: String(stock.planning_cost),
         manufacturer_id: stock.manufacturer_id != null ? String(stock.manufacturer_id) : '',
         model: stock.model,
         preferred_supplier_id: stock.preferred_supplier_id != null ? String(stock.preferred_supplier_id) : '',
@@ -89,6 +103,11 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stockId, stock?.id])
 
+  const costsDiffer =
+    Number(form.last_cost) > 0 &&
+    Number(form.planning_cost) > 0 &&
+    Number(form.last_cost) !== Number(form.planning_cost)
+
   const alloc = stock ? allocatedMap(jobs, items)[stock.id] ?? 0 : 0
   const avail = stock ? stock.qty - alloc : Number(form.qty) || 0
 
@@ -101,6 +120,10 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
     return {
       name: form.name.trim(),
       category: form.category,
+      product_type: form.product_type,
+      phase: form.phase,
+      active: form.active,
+      planning_cost: Number(form.planning_cost) || 0,
       manufacturer_id: form.manufacturer_id ? Number(form.manufacturer_id) : null,
       model: form.model.trim(),
       preferred_supplier_id: form.preferred_supplier_id ? Number(form.preferred_supplier_id) : null,
@@ -182,7 +205,38 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
           <F label="Name" full>
             <input className="jdp-input" disabled={!isAdmin} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </F>
-          <F label="Category">
+          {/* Product type drives the configurator: pickers are scoped by
+              type + phase + active, which is what makes it structurally
+              impossible to select a three-phase inverter for a single-phase
+              system. Deliberately NOT the same as CES category below. */}
+          <F label="Product type">
+            <select
+              className="jdp-input"
+              disabled={!isAdmin}
+              value={form.product_type}
+              onChange={(e) => setForm({ ...form, product_type: e.target.value as ProductType })}
+            >
+              {(Object.keys(PRODUCT_TYPE_LABEL) as ProductType[]).map((t) => (
+                <option key={t} value={t}>{PRODUCT_TYPE_LABEL[t]}</option>
+              ))}
+            </select>
+          </F>
+          <F label="Phase">
+            <select
+              className="jdp-input"
+              disabled={!isAdmin}
+              value={form.phase}
+              onChange={(e) => setForm({ ...form, phase: e.target.value as Phase })}
+            >
+              {(Object.keys(PHASE_LABEL) as Phase[]).map((p) => (
+                <option key={p} value={p}>{PHASE_LABEL[p]}</option>
+              ))}
+            </select>
+          </F>
+          {/* CES category answers a different question from product type —
+              whether and how the item appears on a compliance form. A mounting
+              kit is category 'other' and product type 'mounting'. */}
+          <F label="CES category">
             <select
               className="jdp-input"
               disabled={!isAdmin}
@@ -236,9 +290,39 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
               ))}
             </select>
           </F>
+          {/* Two prices on purpose (design doc D3):
+                planning_cost — what quotes are costed at
+                last_cost     — what was actually paid
+              SigenStor BAT 8.0 is why: last_cost 0 because nothing was ever
+              received through the system, still actively sold at 2200. One
+              field would mean recording a purchase that never happened.
+              They sit together, with the gap called out, so the quoting price
+              cannot drift unnoticed — visible, not automatic. */}
+          <F label="Quote at (AUD)">
+            <input className="jdp-input" disabled={!isAdmin} type="number" min={0} step="0.01" value={form.planning_cost} onChange={(e) => setForm({ ...form, planning_cost: e.target.value })} />
+          </F>
           <F label="Last cost (AUD)">
             <input className="jdp-input" disabled={!isAdmin} type="number" min={0} step="0.01" value={form.last_cost} onChange={(e) => setForm({ ...form, last_cost: e.target.value })} />
           </F>
+          {costsDiffer && (
+            <F label="" full>
+              <div className="cost-drift">
+                <span>
+                  Quoting at ${Number(form.planning_cost).toFixed(2)} but last paid $
+                  {Number(form.last_cost).toFixed(2)}.
+                </span>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    className="btn-link"
+                    onClick={() => setForm({ ...form, planning_cost: form.last_cost })}
+                  >
+                    Use last cost
+                  </button>
+                )}
+              </div>
+            </F>
+          )}
           <F label="On hand">
             <input className="jdp-input" disabled={!isAdmin} type="number" min={0} value={form.qty} onChange={(e) => setForm({ ...form, qty: e.target.value })} />
           </F>
@@ -270,6 +354,16 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
             <label style={{ display: 'flex', gap: 7, alignItems: 'center', fontSize: 13, cursor: isAdmin ? 'pointer' : 'default' }}>
               <input type="checkbox" disabled={!isAdmin} checked={form.verified} onChange={(e) => setForm({ ...form, verified: e.target.checked })} />
               Verified against CEC listing
+            </label>
+          </F>
+          {/* Inactive products stay in the catalogue so historical quotes and
+              job stock lines keep resolving; they just drop out of the
+              configurator's pickers. This is how an EOL model is retired —
+              never by deleting it. */}
+          <F label="" full>
+            <label style={{ display: 'flex', gap: 7, alignItems: 'center', fontSize: 13, cursor: isAdmin ? 'pointer' : 'default' }}>
+              <input type="checkbox" disabled={!isAdmin} checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
+              Active — available to select when quoting
             </label>
           </F>
         </div>

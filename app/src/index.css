@@ -1710,3 +1710,24 @@ textarea.jdp-input {
     display: none !important;
   }
 }
+
+/* Planning price vs last paid — surfaced inline rather than on a separate
+   screen, because the decision (quote the old price on stock already bought,
+   or the new one) is a judgement call needing both numbers at once. */
+.cost-drift {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--stage-4-text);
+  background: var(--stage-4-light);
+  border-radius: 6px;
+  padding: 7px 10px;
+}
+
+.stale-dot {
+  color: var(--signal);
+  font-size: 10px;
+}
