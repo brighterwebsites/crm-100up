@@ -138,8 +138,14 @@ export default function PipelinePage() {
                 {COLUMNS.map(({ stage, step, stepName, stageDef }) => (
                   <th
                     key={`${stage}-${step}`}
-                    className="p-step-header"
-                    style={{ background: stageDef.light + '80' }}
+                    /* step 0 is the first column of a stage, so it carries the
+                       divider. Coloured to its own stage so the boundary ties
+                       back to the header band above it. */
+                    className={`p-step-header${step === 0 ? ' stage-start' : ''}`}
+                    style={{
+                      background: stageDef.light + '80',
+                      ...(step === 0 ? { borderLeftColor: stageDef.color } : null),
+                    }}
                   >
                     {stepName}
                   </th>
@@ -185,8 +191,11 @@ export default function PipelinePage() {
                       return (
                         <td
                           key={`${stage}-${step}`}
-                          className="p-dot-cell"
-                          style={{ background: colIdx < dotCol ? stageDef.light + '30' : undefined }}
+                          className={`p-dot-cell${step === 0 ? ' stage-start' : ''}`}
+                          style={{
+                            background: colIdx < dotCol ? stageDef.light + '30' : undefined,
+                            ...(step === 0 ? { borderLeftColor: PIPELINE[stage].color } : null),
+                          }}
                           onClick={() => isThisCol && setOpenId(isSelected ? null : j.id)}
                         >
                           {isThisCol && (

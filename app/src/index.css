@@ -1824,3 +1824,13 @@ textarea.jdp-input {
     padding: 12px;
   }
 }
+
+/* Stage boundaries on the pipeline board. The step columns are separated by a
+   hairline; the first column of each stage gets a heavier rule in that stage's
+   own colour, so the four stages read as blocks rather than nineteen equal
+   columns. Colour is set inline per stage — only the width lives here. */
+.p-step-header.stage-start,
+.p-dot-cell.stage-start {
+  border-left-width: 3px;
+  border-left-style: solid;
+}
