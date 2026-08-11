@@ -16,7 +16,7 @@
  * too — that is the point to promote them into shared state, not before.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Wrench } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { useData } from '../lib/data'
 import { supabase } from '../lib/supabaseClient'
@@ -291,6 +291,33 @@ export default function AssumptionsPage() {
               }, 'Panel settings')} />
             </>
           )}
+        </Card>
+
+        {/* ── System setup — not built yet ──
+            Panels get a product selector above because there is one panel
+            choice for the business: a singleton, so it belongs in settings.
+            Inverters, batteries and components are per SYSTEM OPTION — each
+            brand has its own tiers, and each component carries a quantity rule
+            (gateway one per <=3 inverters, mounting kit one per inverter). That
+            needs the system_configs tables, which is Phase B. Shown rather than
+            omitted so the gap reads as sequencing, not an oversight. */}
+        <Card title="System setup">
+          <div className="settings-pending">
+            <Wrench size={15} aria-hidden />
+            <div>
+              <strong>Not built yet — next up.</strong>
+              <div className="settings-hint" style={{ marginTop: 4 }}>
+                Choosing inverters, batteries and add-on components (gateway,
+                mounting kit, stack base) happens per system option, so it lives
+                in the configurator rather than here. Their costs and specs are
+                already on the <strong>Stock</strong> page and are edited there.
+              </div>
+              <div className="settings-hint" style={{ marginTop: 6 }}>
+                Standby draw moves here from the simulation settings at the same
+                time.
+              </div>
+            </div>
+          </div>
         </Card>
 
         {/* ── Ground mount ── */}

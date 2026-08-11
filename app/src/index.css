@@ -1791,3 +1791,16 @@ textarea.jdp-input {
   justify-content: flex-end;
   margin-top: 12px;
 }
+
+/* Placeholder inside the settings grid for a section that is sequenced later.
+   Distinct from StubPage, which stands in for a whole unbuilt screen. */
+.settings-pending {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--stage-2-light);
+  color: var(--stage-2-text);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 12px;
+}
