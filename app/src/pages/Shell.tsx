@@ -17,6 +17,7 @@ import StubPage from './StubPage'
 import DailyLoadProfilePage from './DailyLoadProfilePage'
 import PurchaseOrdersPage from './PurchaseOrdersPage'
 import SettingsPage from './SettingsPage'
+import AssumptionsPage from './AssumptionsPage'
 
 type Page =
   | 'pipeline'
@@ -223,7 +224,7 @@ function ShellInner() {
           {isAdmin && page === 'qd-system-calc'    && <StubPage icon={Ruler} title="System Calculator" note="Full panel + battery + inverter quoting calculator — not ported yet." />}
           {isAdmin && page === 'qd-3phase'         && <StubPage icon={Plug} title="3 Phase System" note="Three-phase system sizing tool — not ported yet." />}
           {isAdmin && page === 'qd-gm-bom'         && <StubPage icon={Pickaxe} title="Ground Mount BOM" note="Ground mount bill-of-materials generator — not ported yet." />}
-          {isAdmin && page === 'qd-assumptions'    && <StubPage icon={SlidersHorizontal} title="Assumptions" note="Full editable assumptions table — not ported yet. Daily Load Profile below already reads/writes the live assumptions data." />}
+          {isAdmin && page === 'qd-assumptions'    && <AssumptionsPage />}
           {isAdmin && page === 'qd-simulation'     && <StubPage icon={FlaskConical} title="Simulation" note="July hourly SOC trace engine — not ported yet." />}
           {isAdmin && page === 'qd-daily-load-profile' && <DailyLoadProfilePage />}
           {isAdmin && page === 'settings'          && <SettingsPage />}

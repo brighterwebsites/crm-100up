@@ -16,154 +16,55 @@ export type Database = {
     Tables: {
       assumptions: {
         Row: {
-          battery_stc_price: number
-          battery_tier1: number
-          battery_tier2: number
-          battery_tier3: number
-          ces: number
           created_at: string
-          deye_3ph_inverter_cost: number
-          deye_battery_cost: number
-          deye_battery_kwh: number
-          deye_bms_cost: number
-          deye_inverter_cost: number
-          deye_single_inverter_cost: number
           deye_standby_w: number
-          gm_frame_per_panel: number
-          gm_labour_per_panel: number
-          gm_machinery_fixed: number
-          gst: number
           id: number
-          installer_sign_off: number
-          labour_fixed: number
           load_profile: Json
-          margin: number
-          max_batt_per_inverter: number
-          min_inverters: number
-          panel_cost: number
-          panel_frame: number
-          panel_install_per_w: number
-          panel_mfr: string
-          panel_model: string
-          panel_w: number
-          sig_3ph_15kw_cost: number
-          sig_3ph_20kw_cost: number
-          sig_3ph_30kw_cost: number
-          sig_3ph_gateway_cost: number
-          sig_battery_cost: number
-          sig_battery_kwh: number
-          sig_gateway_cost: number
-          sig_ground_kit_cost: number
-          sig_inverter_cost: number
-          sig_single_inverter_cost: number
           sig_standby_w: number
-          small_parts: number
-          solar_oversize_3ph_percent: number
-          solar_oversize_percent: number
-          solar_stc_per_kw: number
-          solar_stc_price: number
           updated_at: string
           version: number
         }
         Insert: {
-          battery_stc_price?: number
-          battery_tier1?: number
-          battery_tier2?: number
-          battery_tier3?: number
-          ces?: number
           created_at?: string
-          deye_3ph_inverter_cost?: number
-          deye_battery_cost?: number
-          deye_battery_kwh?: number
-          deye_bms_cost?: number
-          deye_inverter_cost?: number
-          deye_single_inverter_cost?: number
           deye_standby_w?: number
-          gm_frame_per_panel?: number
-          gm_labour_per_panel?: number
-          gm_machinery_fixed?: number
-          gst?: number
           id?: number
-          installer_sign_off?: number
-          labour_fixed?: number
           load_profile?: Json
-          margin?: number
-          max_batt_per_inverter?: number
-          min_inverters?: number
-          panel_cost?: number
-          panel_frame?: number
-          panel_install_per_w?: number
-          panel_mfr?: string
-          panel_model?: string
-          panel_w?: number
-          sig_3ph_15kw_cost?: number
-          sig_3ph_20kw_cost?: number
-          sig_3ph_30kw_cost?: number
-          sig_3ph_gateway_cost?: number
-          sig_battery_cost?: number
-          sig_battery_kwh?: number
-          sig_gateway_cost?: number
-          sig_ground_kit_cost?: number
-          sig_inverter_cost?: number
-          sig_single_inverter_cost?: number
           sig_standby_w?: number
-          small_parts?: number
-          solar_oversize_3ph_percent?: number
-          solar_oversize_percent?: number
-          solar_stc_per_kw?: number
-          solar_stc_price?: number
           updated_at?: string
           version?: number
         }
         Update: {
-          battery_stc_price?: number
-          battery_tier1?: number
-          battery_tier2?: number
-          battery_tier3?: number
-          ces?: number
           created_at?: string
-          deye_3ph_inverter_cost?: number
-          deye_battery_cost?: number
-          deye_battery_kwh?: number
-          deye_bms_cost?: number
-          deye_inverter_cost?: number
-          deye_single_inverter_cost?: number
           deye_standby_w?: number
-          gm_frame_per_panel?: number
-          gm_labour_per_panel?: number
-          gm_machinery_fixed?: number
-          gst?: number
           id?: number
-          installer_sign_off?: number
-          labour_fixed?: number
           load_profile?: Json
-          margin?: number
-          max_batt_per_inverter?: number
-          min_inverters?: number
-          panel_cost?: number
-          panel_frame?: number
-          panel_install_per_w?: number
-          panel_mfr?: string
-          panel_model?: string
-          panel_w?: number
-          sig_3ph_15kw_cost?: number
-          sig_3ph_20kw_cost?: number
-          sig_3ph_30kw_cost?: number
-          sig_3ph_gateway_cost?: number
-          sig_battery_cost?: number
-          sig_battery_kwh?: number
-          sig_gateway_cost?: number
-          sig_ground_kit_cost?: number
-          sig_inverter_cost?: number
-          sig_single_inverter_cost?: number
           sig_standby_w?: number
-          small_parts?: number
-          solar_oversize_3ph_percent?: number
-          solar_oversize_percent?: number
-          solar_stc_per_kw?: number
-          solar_stc_price?: number
           updated_at?: string
           version?: number
+        }
+        Relationships: []
+      }
+      battery_rebate_tiers: {
+        Row: {
+          from_kwh: number
+          id: number
+          sort_order: number
+          stc_per_kwh: number
+          to_kwh: number | null
+        }
+        Insert: {
+          from_kwh: number
+          id?: number
+          sort_order?: number
+          stc_per_kwh: number
+          to_kwh?: number | null
+        }
+        Update: {
+          from_kwh?: number
+          id?: number
+          sort_order?: number
+          stc_per_kwh?: number
+          to_kwh?: number | null
         }
         Relationships: []
       }
@@ -198,6 +99,57 @@ export type Database = {
           id?: number
           name?: string
           phone?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      fixed_site_costs: {
+        Row: {
+          active: boolean
+          amount: number
+          id: number
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          amount?: number
+          id?: number
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          amount?: number
+          id?: number
+          label?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      ground_mount_settings: {
+        Row: {
+          ballpark_frame_per_panel: number
+          id: number
+          labour_per_panel: number
+          machinery_fixed: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          ballpark_frame_per_panel?: number
+          id?: number
+          labour_per_panel?: number
+          machinery_fixed?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          ballpark_frame_per_panel?: number
+          id?: number
+          labour_per_panel?: number
+          machinery_fixed?: number
           updated_at?: string
           version?: number
         }
@@ -460,6 +412,41 @@ export type Database = {
         }
         Relationships: []
       }
+      panel_settings: {
+        Row: {
+          id: number
+          install_cost_per_w: number
+          roof_frame_per_panel: number
+          stock_id: number | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          id?: number
+          install_cost_per_w?: number
+          roof_frame_per_panel?: number
+          stock_id?: number | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          id?: number
+          install_cost_per_w?: number
+          roof_frame_per_panel?: number
+          stock_id?: number | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "panel_settings_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pipeline_steps: {
         Row: {
           ordinal: number
@@ -481,6 +468,30 @@ export type Database = {
           stage_name?: string
           step?: number
           step_name?: string
+        }
+        Relationships: []
+      }
+      pricing_settings: {
+        Row: {
+          gst: number
+          id: number
+          margin: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          gst?: number
+          id?: number
+          margin?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          gst?: number
+          id?: number
+          margin?: number
+          updated_at?: string
+          version?: number
         }
         Relationships: []
       }
@@ -602,6 +613,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rebate_settings: {
+        Row: {
+          battery_stc_price: number
+          id: number
+          solar_stc_per_kw: number
+          solar_stc_price: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          battery_stc_price?: number
+          id?: number
+          solar_stc_per_kw?: number
+          solar_stc_price?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          battery_stc_price?: number
+          id?: number
+          solar_stc_per_kw?: number
+          solar_stc_price?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      sizing_rules: {
+        Row: {
+          id: number
+          max_batteries_per_inverter: number
+          min_inverters: number
+          solar_oversize_3ph_percent: number
+          solar_oversize_percent: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          id?: number
+          max_batteries_per_inverter?: number
+          min_inverters?: number
+          solar_oversize_3ph_percent?: number
+          solar_oversize_percent?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          id?: number
+          max_batteries_per_inverter?: number
+          min_inverters?: number
+          solar_oversize_3ph_percent?: number
+          solar_oversize_percent?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
       }
       stocks: {
         Row: {
