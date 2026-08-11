@@ -19,6 +19,7 @@ import PurchaseOrdersPage from './PurchaseOrdersPage'
 import SettingsPage from './SettingsPage'
 import AssumptionsPage from './AssumptionsPage'
 import CalculatorPage from './CalculatorPage'
+import SimulationPage from './SimulationPage'
 
 type Page =
   | 'pipeline'
@@ -226,7 +227,7 @@ function ShellInner() {
           {isAdmin && page === 'qd-3phase'         && <StubPage icon={Plug} title="3 Phase System" note="Three-phase system sizing tool — not ported yet." />}
           {isAdmin && page === 'qd-gm-bom'         && <StubPage icon={Pickaxe} title="Ground Mount BOM" note="Ground mount bill-of-materials generator — not ported yet." />}
           {isAdmin && page === 'qd-assumptions'    && <AssumptionsPage />}
-          {isAdmin && page === 'qd-simulation'     && <StubPage icon={FlaskConical} title="Simulation" note="July hourly SOC trace engine — not ported yet." />}
+          {isAdmin && page === 'qd-simulation'     && <SimulationPage />}
           {isAdmin && page === 'qd-daily-load-profile' && <DailyLoadProfilePage />}
           {isAdmin && page === 'settings'          && <SettingsPage />}
           {!isAdmin && (

@@ -6,11 +6,11 @@
  * this must reproduce against V46 before it is used for a real quote. Until
  * that is signed off the page says so, loudly, at the top.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { useData, loadProfileArray } from '../lib/data'
 import { supabase } from '../lib/supabaseClient'
 import { findMinUnits, optimisePanels, priceSystem } from '../lib/quoteEngine'
-import type { ConfigBundle, EngineSettings, QuoteResult } from '../lib/quoteEngine'
+import type { ConfigBundle, CostGroup, EngineSettings, QuoteResult } from '../lib/quoteEngine'
 import { fmtMoney, fmtMoneyExact } from '../lib/format'
 
 export default function CalculatorPage() {
@@ -263,28 +263,72 @@ export default function CalculatorPage() {
   )
 }
 
-/** Every line comes from the same array the base cost is summed from, so the
- *  itemisation cannot disagree with the total — which is the structural fix
- *  for bug #6, where V46 printed the mounting kit twice. */
+/** Sectioned, with a subtotal per block.
+ *
+ *  Every line still comes from the same array the base cost is summed from, so
+ *  the itemisation cannot disagree with the total (the structural fix for bug
+ *  #6, where V46 printed the mounting kit twice). Grouping is on top of that,
+ *  for a different reason: one flat column of a dozen figures hides a wrong
+ *  number, and subtotals give you somewhere to notice it.
+ *
+ *  Quantity and unit price get their own columns rather than being packed into
+ *  "3 × $2,500", so the numbers line up and can be scanned down. */
 function Breakdown({ r }: { r: QuoteResult }) {
+  const groups: { key: CostGroup; title: string; subtotal: string }[] = [
+    { key: 'panels', title: 'Solar panels', subtotal: 'Total panels' },
+    { key: 'system', title: 'System & install', subtotal: 'Total system & install' },
+    { key: 'ground', title: 'Ground mount', subtotal: 'Total ground mount' },
+  ]
   return (
-    <table className="table settings-table calc-breakdown">
+    <table className="table calc-breakdown">
+      <thead>
+        <tr>
+          <th style={{ textAlign: 'left' }}>Item</th>
+          <th className="num">Qty</th>
+          <th className="num">Unit</th>
+          <th className="num">Total</th>
+        </tr>
+      </thead>
       <tbody>
-        {r.lines.map((l, i) => (
-          <tr key={i}>
-            <td style={{ textAlign: 'left' }}>{l.label}</td>
-            <td className="num">{l.qty !== 1 ? `${l.qty} × ${fmtMoneyExact(l.unitCost)}` : ''}</td>
-            <td className="num">{fmtMoneyExact(l.total)}</td>
-          </tr>
-        ))}
+        {groups.map(({ key, title, subtotal }) => {
+          const lines = r.lines.filter((l) => l.group === key)
+          if (!lines.length) return null
+          const sum = lines.reduce((s, l) => s + l.total, 0)
+          return (
+            <Fragment key={key}>
+              <tr className="calc-section"><td colSpan={4}>{title}</td></tr>
+              {lines.map((l, i) => (
+                <tr key={i}>
+                  <td style={{ textAlign: 'left' }}>{l.label}</td>
+                  <td className="num">{l.qty}</td>
+                  <td className="num">{fmtMoneyExact(l.unitCost)}</td>
+                  <td className="num">{fmtMoneyExact(l.total)}</td>
+                </tr>
+              ))}
+              <tr className="calc-subtotal">
+                <td style={{ textAlign: 'left' }}>{subtotal}</td>
+                <td /><td />
+                <td className="num">{fmtMoneyExact(sum)}</td>
+              </tr>
+            </Fragment>
+          )
+        })}
+
+        <tr className="calc-section"><td colSpan={4}>Cost</td></tr>
         <Row label="Base cost" value={fmtMoneyExact(r.baseCost)} bold />
         <Row label="Margin" value={fmtMoneyExact(r.marginDollar)} />
         <Row label="Before GST" value={fmtMoneyExact(r.basePlusMargin)} />
         <Row label="GST" value={fmtMoneyExact(r.gstDollar)} />
         <Row label="Before rebates" value={fmtMoneyExact(r.afterMarginGst)} bold />
-        <Row label={`Solar rebate (${r.solarStcs.toFixed(1)} STCs)`} value={`–${fmtMoneyExact(r.solarRebate)}`} />
-        <Row label={`Battery rebate (${r.batteryStcs.toFixed(1)} STCs)`} value={`–${fmtMoneyExact(r.batteryRebate)}`} />
-        <Row label="Final price" value={fmtMoneyExact(r.finalPrice)} bold />
+
+        <tr className="calc-section"><td colSpan={4}>Rebates</td></tr>
+        <Row label={`Solar (${r.solarStcs.toFixed(1)} STCs)`} value={`-${fmtMoneyExact(r.solarRebate)}`} />
+        <Row label={`Battery (${r.batteryStcs.toFixed(1)} STCs)`} value={`-${fmtMoneyExact(r.batteryRebate)}`} />
+        <tr className="calc-final">
+          <td style={{ textAlign: 'left' }}>Final customer price</td>
+          <td /><td />
+          <td className="num">{fmtMoneyExact(r.finalPrice)}</td>
+        </tr>
       </tbody>
     </table>
   )
@@ -292,9 +336,9 @@ function Breakdown({ r }: { r: QuoteResult }) {
 
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
-    <tr style={bold ? { fontWeight: 700, borderTop: '1px solid var(--line)' } : undefined}>
+    <tr className={bold ? 'calc-subtotal' : undefined}>
       <td style={{ textAlign: 'left' }}>{label}</td>
-      <td />
+      <td /><td />
       <td className="num">{value}</td>
     </tr>
   )

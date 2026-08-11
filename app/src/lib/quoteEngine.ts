@@ -75,11 +75,17 @@ export interface QuoteInput {
   minInverters?: number
 }
 
+/** Which block of the breakdown a line belongs to. Grouping with subtotals
+ *  makes a wrong figure visible — a single flat column of a dozen numbers
+ *  hides errors, which is the main readability complaint about V46's. */
+export type CostGroup = 'panels' | 'system' | 'ground'
+
 export interface CostLine {
   label: string
   qty: number
   unitCost: number
   total: number
+  group: CostGroup
   stockId?: number
 }
 
@@ -247,21 +253,22 @@ export function priceSystem(
   const { inv, invKw, invCount } = best
 
   const lines: CostLine[] = []
-  const push = (label: string, qty: number, unitCost: number, stockId?: number) =>
-    lines.push({ label, qty, unitCost, total: qty * unitCost, stockId })
+  const push = (
+    group: CostGroup, label: string, qty: number, unitCost: number, stockId?: number
+  ) => lines.push({ group, label, qty, unitCost, total: qty * unitCost, stockId })
 
   // Panels. Ground-mounted panels install at half rate — they are at waist
   // height, not on a roof.
-  push(`${panel.name} — supply`, panelCount, panel.planning_cost, panel.id)
+  push('panels', `${panel.name} — supply`, panelCount, panel.planning_cost, panel.id)
   if (input.roofPanels > 0)
-    push('Panel install — roof', input.roofPanels, panelW * settings.panels.install_cost_per_w)
+    push('panels', 'Panel install — roof', input.roofPanels, panelW * settings.panels.install_cost_per_w)
   if (input.gmPanels > 0)
-    push('Panel install — ground (50%)', input.gmPanels, panelW * settings.panels.install_cost_per_w * 0.5)
+    push('panels', 'Panel install — ground (50%)', input.gmPanels, panelW * settings.panels.install_cost_per_w * 0.5)
   if (input.roofPanels > 0)
-    push('Roof frame', input.roofPanels, settings.panels.roof_frame_per_panel)
+    push('panels', 'Roof frame', input.roofPanels, settings.panels.roof_frame_per_panel)
 
-  push(inv.name, invCount, inv.planning_cost, inv.id)
-  push(battery.name, units, battery.planning_cost, battery.id)
+  push('system', inv.name, invCount, inv.planning_cost, inv.id)
+  push('system', battery.name, units, battery.planning_cost, battery.id)
 
   const ctx = { invCount, batteryUnits: units, panelCount, solarKw }
   for (const comp of config.components) {
@@ -269,15 +276,15 @@ export function priceSystem(
     const s = byId.get(comp.stock_id)
     if (!s || !s.active) continue
     const q = componentQty(comp.rule, comp.qty, comp.divisor, ctx)
-    if (q > 0) push(s.name, q, s.planning_cost, s.id)
+    if (q > 0) push('system', s.name, q, s.planning_cost, s.id)
   }
 
-  for (const f of settings.fixedCosts) push(f.label, 1, f.amount)
+  for (const f of settings.fixedCosts) push('system', f.label, 1, f.amount)
 
   if (input.gmPanels > 0) {
-    push('Ground mount frame', input.gmPanels, settings.groundMount.ballpark_frame_per_panel)
-    push('Ground mount labour', input.gmPanels, settings.groundMount.labour_per_panel)
-    push('Machinery', 1, settings.groundMount.machinery_fixed)
+    push('ground', 'Ground mount frame', input.gmPanels, settings.groundMount.ballpark_frame_per_panel)
+    push('ground', 'Ground mount labour', input.gmPanels, settings.groundMount.labour_per_panel)
+    push('ground', 'Machinery', 1, settings.groundMount.machinery_fixed)
   }
 
   // Base cost is the SUM OF THE LINES, never computed alongside them — that

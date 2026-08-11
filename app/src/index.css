@@ -1897,3 +1897,96 @@ textarea.jdp-input {
   border-radius: 999px;
   padding: 3px 10px;
 }
+
+/* Breakdown sections. Subtotals exist so a wrong figure has somewhere to show
+   up — a flat column of a dozen numbers hides one. */
+.calc-breakdown th {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 700;
+  padding: 4px;
+}
+
+.calc-breakdown td {
+  padding: 3px 4px;
+  font-size: 12px;
+}
+
+.calc-section td {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  background: var(--bg);
+  padding-top: 9px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.calc-subtotal td {
+  font-weight: 700;
+  border-top: 1px solid var(--line);
+}
+
+.calc-final td {
+  font-weight: 800;
+  font-size: 13px;
+  border-top: 2px solid var(--primary);
+  color: var(--primary);
+  padding-top: 6px;
+}
+
+/* ── simulation ──────────────────────────────────────────
+   The evidence behind a quote, so the failing rows must be unmissable. */
+.sim-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.sim-kpi {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: var(--shadow-card);
+}
+
+.sim-kpi-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.sim-kpi-value {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.sim-kpi-good .sim-kpi-value { color: var(--primary); }
+.sim-kpi-bad  .sim-kpi-value { color: var(--danger); }
+
+.sim-row-fail td {
+  background: #fdecea;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.badge-pass {
+  color: var(--stage-1-text);
+  background: var(--stage-1-light);
+  border-color: transparent;
+}
+
+.badge-fail {
+  color: var(--danger);
+  background: #fdecea;
+  border-color: transparent;
+}
