@@ -776,6 +776,159 @@ export type Database = {
         }
         Relationships: []
       }
+      system_config_batteries: {
+        Row: {
+          config_id: number
+          id: number
+          is_default: boolean
+          stock_id: number
+        }
+        Insert: {
+          config_id: number
+          id?: number
+          is_default?: boolean
+          stock_id: number
+        }
+        Update: {
+          config_id?: number
+          id?: number
+          is_default?: boolean
+          stock_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_config_batteries_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "system_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_config_batteries_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_config_components: {
+        Row: {
+          config_id: number
+          divisor: number
+          id: number
+          phase_scope: Database["public"]["Enums"]["electrical_phase"]
+          qty: number
+          rule: Database["public"]["Enums"]["qty_rule"]
+          sort_order: number
+          stock_id: number
+        }
+        Insert: {
+          config_id: number
+          divisor?: number
+          id?: number
+          phase_scope?: Database["public"]["Enums"]["electrical_phase"]
+          qty?: number
+          rule?: Database["public"]["Enums"]["qty_rule"]
+          sort_order?: number
+          stock_id: number
+        }
+        Update: {
+          config_id?: number
+          divisor?: number
+          id?: number
+          phase_scope?: Database["public"]["Enums"]["electrical_phase"]
+          qty?: number
+          rule?: Database["public"]["Enums"]["qty_rule"]
+          sort_order?: number
+          stock_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_config_components_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "system_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_config_components_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_config_inverters: {
+        Row: {
+          config_id: number
+          id: number
+          max_batteries: number | null
+          oversize_percent: number | null
+          sort_order: number
+          stock_id: number
+        }
+        Insert: {
+          config_id: number
+          id?: number
+          max_batteries?: number | null
+          oversize_percent?: number | null
+          sort_order?: number
+          stock_id: number
+        }
+        Update: {
+          config_id?: number
+          id?: number
+          max_batteries?: number | null
+          oversize_percent?: number | null
+          sort_order?: number
+          stock_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_config_inverters_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "system_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_config_inverters_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_configs: {
+        Row: {
+          active: boolean
+          brand_filter: string
+          id: number
+          label: string
+          sort_order: number
+          standby_w: number
+        }
+        Insert: {
+          active?: boolean
+          brand_filter?: string
+          id?: number
+          label: string
+          sort_order?: number
+          standby_w?: number
+        }
+        Update: {
+          active?: boolean
+          brand_filter?: string
+          id?: number
+          label?: string
+          sort_order?: number
+          standby_w?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -952,6 +1105,14 @@ export type Database = {
         | "gm_component"
         | "consumable"
         | "other"
+      qty_rule:
+        | "per_system"
+        | "per_inverter"
+        | "per_n_inverters"
+        | "per_battery"
+        | "per_n_batteries"
+        | "per_panel"
+        | "per_kw_solar"
       user_role: "admin" | "installer"
     }
     CompositeTypes: {
@@ -1095,6 +1256,15 @@ export const Constants = {
         "gm_component",
         "consumable",
         "other",
+      ],
+      qty_rule: [
+        "per_system",
+        "per_inverter",
+        "per_n_inverters",
+        "per_battery",
+        "per_n_batteries",
+        "per_panel",
+        "per_kw_solar",
       ],
       user_role: ["admin", "installer"],
     },

@@ -13,3 +13,14 @@ export function fmtMoney(v: number | null | undefined): string {
 export function todayISO(): string {
   return new Date().toLocaleDateString('en-CA') // YYYY-MM-DD local
 }
+
+/** Currency WITH cents. The quote breakdown needs these — the parity gate
+ * tolerance is $0.00, so rounding to whole dollars for display would hide the
+ * very differences it exists to catch. fmtMoney stays whole-dollar for lists
+ * and cards where cents are noise. */
+export function fmtMoneyExact(v: number | null | undefined): string {
+  return (v ?? 0).toLocaleString('en-AU', {
+    style: 'currency', currency: 'AUD',
+    minimumFractionDigits: 2, maximumFractionDigits: 2,
+  })
+}

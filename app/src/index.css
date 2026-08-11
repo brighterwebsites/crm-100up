@@ -1834,3 +1834,49 @@ textarea.jdp-input {
   border-left-width: 3px;
   border-left-style: solid;
 }
+
+/* ── calculator ──────────────────────────────────────────
+   The unverified banner is deliberately loud. Until the parity gate is signed
+   off this engine has not been proven against V46, and a quote sent from it
+   could be wrong — that risk should be impossible to miss. */
+.calc-warning {
+  background: var(--stage-3-light);
+  color: var(--stage-3-text);
+  border-left: 4px solid var(--signal);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.calc-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.calc-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 14px;
+  align-items: start;
+  padding-bottom: 24px;
+}
+
+.calc-headline {
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.calc-price {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.calc-breakdown td {
+  padding: 3px 4px;
+  font-size: 12px;
+}
