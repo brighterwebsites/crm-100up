@@ -1,9 +1,15 @@
 /**
  * July hourly solar yield, W per kW of installed DC — 31 days x 24 hours.
  *
- * Ported verbatim from 100UP_suite_V46.html line 1938. July is the worst
- * month in Melbourne, so a system that survives this survives the year; the
- * simulation proving that is what the quote rests on.
+ * Ported verbatim from 100UP_suite_V46.html line 1938. The V46 calculator
+ * labels this "July worst-case - Ballarat VIC": July is the worst month, so a
+ * system that survives it survives the year, and the simulation proving that
+ * is what the quote rests on.
+ *
+ * LOCATION MATTERS. These are Ballarat figures. Quoting a materially sunnier
+ * or duller site against them will mis-size the battery, so a second dataset
+ * (and a per-quote location) is the right answer if 100UP ever quotes outside
+ * the region — not a fudge factor applied to these numbers.
  *
  * Do NOT regenerate or "tidy" these figures. They are the reference dataset
  * the existing quote book was priced against, and the Phase B parity gate

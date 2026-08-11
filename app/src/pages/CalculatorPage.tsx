@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useData, loadProfileArray } from '../lib/data'
 import { supabase } from '../lib/supabaseClient'
-import { findMinUnits, priceSystem } from '../lib/quoteEngine'
+import { findMinUnits, optimisePanels, priceSystem } from '../lib/quoteEngine'
 import type { ConfigBundle, EngineSettings, QuoteResult } from '../lib/quoteEngine'
 import { fmtMoney, fmtMoneyExact } from '../lib/format'
 
@@ -24,8 +24,19 @@ export default function CalculatorPage() {
   const [dailyKwh, setDailyKwh] = useState(20)
   const [panels, setPanels] = useState(36)
   const [gmPanels, setGmPanels] = useState(0)
+  const [panelMode, setPanelMode] = useState<'fixed' | 'optimise'>('fixed')
+  const [minPanels, setMinPanels] = useState(12)
+  const [maxPanels, setMaxPanels] = useState(80)
+  const [panelStep, setPanelStep] = useState(1)
+  const [mount, setMount] = useState<'roof' | 'ground'>('roof')
   const [autoBattery, setAutoBattery] = useState(true)
   const [manualUnits, setManualUnits] = useState(3)
+  const [startUnits, setStartUnits] = useState(1)
+  const [maxUnits, setMaxUnits] = useState(40)
+  // V46 offered auto / force-large / dual-8kW. "Dual" only ever meant a
+  // minimum of 2 inverters (design doc D2), so it decomposes into a pinned
+  // tier plus a floor -- a strict superset of the three old modes.
+  const [pinnedInverterId, setPinnedInverterId] = useState<number | null>(null)
   const [minInverters, setMinInverters] = useState(1)
 
   const load = useCallback(async () => {
@@ -62,15 +73,25 @@ export default function CalculatorPage() {
 
   const results = useMemo(() => {
     if (!settings) return []
+    const gm = mount === 'ground' ? gmPanels : 0
     return configs.map((cfg) => {
-      const base = {
-        phase: 'single' as const,
-        roofPanels: Math.max(0, panels - gmPanels),
-        gmPanels,
-        minInverters,
+      // A pinned tier is only meaningful for configs that actually own it.
+      const pin = cfg.inverters.some((i) => i.stock_id === pinnedInverterId)
+        ? pinnedInverterId
+        : null
+      const common = { phase: 'single' as const, minInverters, pinnedInverterId: pin }
+
+      if (panelMode === 'optimise') {
+        const r = optimisePanels(cfg, common, stocks, settings, {
+          dailyKwh, minPanels, maxPanels, step: panelStep,
+          gmPanels: gm, startUnits, maxUnits,
+        })
+        return { cfg, result: r?.result ?? null, passes: r?.passes ?? false }
       }
+
+      const base = { ...common, roofPanels: Math.max(0, panels - gm), gmPanels: gm }
       if (autoBattery) {
-        const r = findMinUnits(cfg, base, stocks, settings, dailyKwh, 1, 40)
+        const r = findMinUnits(cfg, base, stocks, settings, dailyKwh, startUnits, maxUnits)
         return { cfg, result: r?.result ?? null, passes: r?.passes ?? false }
       }
       return {
@@ -79,7 +100,16 @@ export default function CalculatorPage() {
         passes: true,
       }
     })
-  }, [configs, settings, stocks, panels, gmPanels, autoBattery, manualUnits, dailyKwh, minInverters])
+  }, [configs, settings, stocks, panels, gmPanels, mount, panelMode, minPanels, maxPanels,
+      panelStep, autoBattery, manualUnits, startUnits, maxUnits, dailyKwh, minInverters,
+      pinnedInverterId])
+
+  // Tiers offered by any config, for the pin selector. Single-phase only here;
+  // the 3-phase page will filter the same list on phase instead.
+  const pinnable = useMemo(() => {
+    const ids = new Set(configs.flatMap((c) => c.inverters.map((i) => i.stock_id)))
+    return stocks.filter((s) => ids.has(s.id) && s.phase === 'single' && s.active)
+  }, [configs, stocks])
 
   if (loading) return <div className="placeholder">Loading calculator…</div>
   if (!settings) return <div className="placeholder">Settings not configured — see Assumptions.</div>
@@ -99,13 +129,58 @@ export default function CalculatorPage() {
             <input className="jdp-input num" type="number" step="0.5" value={dailyKwh}
               onChange={(e) => setDailyKwh(e.target.value === '' ? 0 : Number(e.target.value))} />
           </Field>
-          <Field label="Total panels">
-            <input className="jdp-input num" type="number" value={panels}
-              onChange={(e) => setPanels(e.target.value === '' ? 0 : Number(e.target.value))} />
+          <Field label="Panels">
+            <select className="jdp-input" value={panelMode}
+              onChange={(e) => setPanelMode(e.target.value as 'fixed' | 'optimise')}>
+              <option value="fixed">Fixed count</option>
+              <option value="optimise">Optimise range</option>
+            </select>
           </Field>
-          <Field label="of which ground-mounted">
-            <input className="jdp-input num" type="number" value={gmPanels}
-              onChange={(e) => setGmPanels(e.target.value === '' ? 0 : Number(e.target.value))} />
+          {panelMode === 'fixed' ? (
+            <Field label="Total panels">
+              <input className="jdp-input num" type="number" value={panels}
+                onChange={(e) => setPanels(e.target.value === '' ? 0 : Number(e.target.value))} />
+            </Field>
+          ) : (
+            <>
+              <Field label="Min panels">
+                <input className="jdp-input num" type="number" value={minPanels}
+                  onChange={(e) => setMinPanels(e.target.value === '' ? 0 : Number(e.target.value))} />
+              </Field>
+              <Field label="Max panels">
+                <input className="jdp-input num" type="number" value={maxPanels}
+                  onChange={(e) => setMaxPanels(e.target.value === '' ? 0 : Number(e.target.value))} />
+              </Field>
+              <Field label="Panel step">
+                <input className="jdp-input num" type="number" min={1} value={panelStep}
+                  onChange={(e) => setPanelStep(Math.max(1, Number(e.target.value) || 1))} />
+              </Field>
+            </>
+          )}
+          <Field label="Mount">
+            <select className="jdp-input" value={mount}
+              onChange={(e) => setMount(e.target.value as 'roof' | 'ground')}>
+              <option value="roof">Roof only</option>
+              <option value="ground">Roof + ground</option>
+            </select>
+          </Field>
+          {mount === 'ground' && (
+            <Field
+              label="Ground-mounted panels"
+              hint={panelMode === 'optimise' ? 'Held fixed; the sweep varies the roof count' : undefined}
+            >
+              <input className="jdp-input num" type="number" value={gmPanels}
+                onChange={(e) => setGmPanels(e.target.value === '' ? 0 : Number(e.target.value))} />
+            </Field>
+          )}
+          <Field label="Inverter">
+            <select className="jdp-input" value={pinnedInverterId ?? ''}
+              onChange={(e) => setPinnedInverterId(e.target.value ? Number(e.target.value) : null)}>
+              <option value="">Auto -- fewest, then cheapest</option>
+              {pinnable.map((s) => (
+                <option key={s.id} value={s.id}>Force {s.name}</option>
+              ))}
+            </select>
           </Field>
           <Field label="Minimum inverters" hint="2 forces redundancy — V46's &quot;dual&quot;">
             <input className="jdp-input num" type="number" min={1} value={minInverters}
@@ -118,13 +193,30 @@ export default function CalculatorPage() {
               <option value="manual">Manual</option>
             </select>
           </Field>
-          {!autoBattery && (
+          {!autoBattery ? (
             <Field label="Battery units">
               <input className="jdp-input num" type="number" min={1} value={manualUnits}
                 onChange={(e) => setManualUnits(Math.max(1, Number(e.target.value) || 1))} />
             </Field>
+          ) : (
+            <>
+              <Field label="Start units">
+                <input className="jdp-input num" type="number" min={1} value={startUnits}
+                  onChange={(e) => setStartUnits(Math.max(1, Number(e.target.value) || 1))} />
+              </Field>
+              <Field label="Max units">
+                <input className="jdp-input num" type="number" min={1} value={maxUnits}
+                  onChange={(e) => setMaxUnits(Math.max(1, Number(e.target.value) || 1))} />
+              </Field>
+            </>
           )}
         </div>
+      </div>
+
+      <div className="calc-badges">
+        <span className="calc-badge">Auto-run</span>
+        <span className="calc-badge">{configs.map((c) => c.label).join(' & ') || 'No configs'}</span>
+        <span className="calc-badge">July worst-case &middot; Ballarat VIC</span>
       </div>
 
       <div className="calc-results">

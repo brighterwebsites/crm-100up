@@ -329,3 +329,43 @@ export function findMinUnits(
   }
   return last ? { result: last, units: last.batteryUnits, passes: false } : null
 }
+
+/** Sweep panel counts and return the cheapest system that survives July.
+ *
+ * Mirrors V46's runCalc MODE A. Note what it does NOT do: V46 discarded the
+ * inverter mode in optimise+ground (bug #8), silently ignoring both "force
+ * large" and "dual" and quietly skipping battery parity with them. Here the
+ * mode is an input to every path, so ground mount behaves like roof.
+ */
+export function optimisePanels(
+  config: ConfigBundle,
+  base: Omit<QuoteInput, 'batteryUnits' | 'roofPanels' | 'gmPanels'>,
+  stocks: Stock[], settings: EngineSettings,
+  opts: {
+    dailyKwh: number; minPanels: number; maxPanels: number; step: number
+    gmPanels: number; startUnits: number; maxUnits: number
+  }
+): { result: QuoteResult; passes: boolean } | null {
+  let best: { result: QuoteResult; passes: boolean } | null = null
+  let fallback: { result: QuoteResult; passes: boolean } | null = null
+
+  for (let total = opts.minPanels; total <= opts.maxPanels; total += Math.max(1, opts.step)) {
+    const gm = Math.min(opts.gmPanels, total)
+    const found = findMinUnits(
+      config,
+      { ...base, roofPanels: total - gm, gmPanels: gm },
+      stocks, settings, opts.dailyKwh, opts.startUnits, opts.maxUnits
+    )
+    if (!found) continue
+    if (!found.passes) {
+      // Keep the closest near-miss so the UI can show "generator required"
+      // rather than an empty card.
+      if (!fallback) fallback = { result: found.result, passes: false }
+      continue
+    }
+    if (!best || found.result.finalPrice < best.result.finalPrice) {
+      best = { result: found.result, passes: true }
+    }
+  }
+  return best ?? fallback
+}

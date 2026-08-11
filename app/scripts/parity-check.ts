@@ -1,6 +1,6 @@
 // Scenario 1 of docs/phase-b-parity-gate.md, computed by the new engine and
 // compared against V46's arithmetic worked through by hand from the same data.
-import { priceSystem } from '../src/lib/quoteEngine'
+import { applyBatteryParity, priceSystem } from '../src/lib/quoteEngine'
 import type { ConfigBundle, EngineSettings } from '../src/lib/quoteEngine'
 
 const S = (o: Record<string, unknown>) => o as never // test fixtures, not DB rows
@@ -82,3 +82,52 @@ for (const [k, a, b] of rows) {
 const lineSum = r.lines.reduce((s, l) => s + l.total, 0)
 console.log('\nline items sum to base cost:', Math.abs(lineSum - r.baseCost) < 0.005 ? 'yes (bug #6 fixed)' : 'NO')
 console.log('\n' + (fail ? `${fail} MISMATCH(ES)` : 'SCENARIO 1 PARITY: PASS'))
+
+
+// ── Scenario 5: fixed panels, roof + ground, forced dual ──────────────
+// V46 never broke fixed+ground (only optimise+ground discarded the mode), so
+// this must match. 30 roof + 6 ground, dual, manual 4 units.
+const g = priceSystem(config, {
+  phase: 'single', roofPanels: 30, gmPanels: 6, batteryUnits: 4, minInverters: 2,
+}, stocks, settings)!
+
+// V46 by hand: 36 panels = 17.1 kW. Dual forces 2 inverters, so the 8 kW tier
+// (2 needed for solar anyway) ties with the 12 kW on count and wins on price.
+const gPanels = 36 * 143
+const gRoofInstall = 30 * 475 * 0.35
+const gGmInstall = 6 * 475 * 0.35 * 0.5
+const gRoofFrame = 30 * 50
+const gInv = 2 * 2500
+const gGateway = Math.ceil(2 / 3) * 1700
+const gMount = 2 * 250
+const gBatt = 4 * 2600
+const gFixed = 5000
+const gGm = 6 * 150 + 6 * 150 + 1000        // frame + labour + machinery
+const gBase = gPanels + gRoofInstall + gGmInstall + gRoofFrame + gInv + gGateway + gMount + gBatt + gFixed + gGm
+
+const checks: [string, number, number][] = [
+  ['GM inverter count', g.invCount, 2],
+  ['GM inverter kW',    g.invKw,    8],
+  ['GM base cost',      g.baseCost, gBase],
+]
+console.log('\n--- Scenario 5: fixed + ground + dual ---')
+let f2 = 0
+for (const [k, a, b] of checks) {
+  const d = Math.abs(a - b)
+  if (d > 0.005) f2++
+  console.log(k.padEnd(20), a.toFixed(2).padStart(12), b.toFixed(2).padStart(12), d > 0.005 ? `  MISMATCH ${d.toFixed(4)}` : '  ok')
+}
+const gSum = g.lines.reduce((s, l) => s + l.total, 0)
+console.log('lines sum to base:', Math.abs(gSum - g.baseCost) < 0.005 ? 'yes' : 'NO')
+
+// ── Battery parity against the forced floor (design doc D2) ───────────
+console.log('\n--- Battery parity ---')
+const parity: [number, number, number][] = [[3, 2, 4], [4, 2, 4], [3, 1, 3], [4, 3, 6]]
+let f3 = 0
+for (const [u, min, want] of parity) {
+  const got = applyBatteryParity(u, min)
+  if (got !== want) f3++
+  console.log(`units ${u}, floor ${min} -> ${got}`, got === want ? 'ok' : `EXPECTED ${want}`)
+}
+
+console.log('\n' + (fail + f2 + f3 ? `${fail + f2 + f3} FAILURE(S)` : 'ALL CHECKS PASS'))
