@@ -2237,15 +2237,18 @@ textarea.jdp-input {
 }
 
 /* ── JDP accordion cards ──────────────────────────────────────────
-   Four collapsible sections in the job detail panel. The card sits
-   on var(--bg) to sit slightly recessed against the white .jdp wrap.
+   Four collapsible sections in the job detail panel. White, so a
+   top-level card reads the same here as it does on Customers — the
+   border carries the definition, not a fill. Recessed grey was tried
+   first and made these look nested inside the panel rather than being
+   the panel's own content.
    No gap-animation — plain show/hide is enough for this density. */
 
 .jdp-acc-card {
-  background: var(--bg);
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 10px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   overflow: hidden;
 }
 
@@ -2314,7 +2317,9 @@ textarea.jdp-input {
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 12px 14px;
-  margin-bottom: 10px;
+  /* Matches .jdp-acc-card — top-level cards space the same wherever
+     they appear, so the two panels read as one system. */
+  margin-bottom: 12px;
 }
 
 /* ── Order list — supplier select ───────────────────────────────── */
