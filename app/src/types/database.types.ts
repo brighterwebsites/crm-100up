@@ -641,6 +641,44 @@ export type Database = {
         }
         Relationships: []
       }
+      simulation_presets: {
+        Row: {
+          battery_units: number
+          id: number
+          inverter_count: number
+          inverter_stock_id: number | null
+          label: string
+          panel_count: number
+          sort_order: number
+        }
+        Insert: {
+          battery_units?: number
+          id?: number
+          inverter_count?: number
+          inverter_stock_id?: number | null
+          label: string
+          panel_count?: number
+          sort_order?: number
+        }
+        Update: {
+          battery_units?: number
+          id?: number
+          inverter_count?: number
+          inverter_stock_id?: number | null
+          label?: string
+          panel_count?: number
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulation_presets_inverter_stock_id_fkey"
+            columns: ["inverter_stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sizing_rules: {
         Row: {
           id: number

@@ -1990,3 +1990,53 @@ textarea.jdp-input {
   background: #fdecea;
   border-color: transparent;
 }
+
+/* Tile border colours group the strip: 1 = what you configured, 2 = what the
+   simulation returned. The table below repeats that order, so a tile and its
+   column are found in the same place. */
+.sim-kpi-g1 { border-left: 4px solid var(--stage-2); }
+.sim-kpi-g2 { border-left: 4px solid var(--primary); }
+
+.sim-kpi-sub {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.sim-quick-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.sim-quick-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sim-quick-btn {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 12px;
+}
+
+.sim-quick-sub {
+  font-size: 10px;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.sim-tag {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--signal);
+  color: #fff;
+  border-radius: 999px;
+  padding: 1px 6px;
+  margin-left: 6px;
+}
