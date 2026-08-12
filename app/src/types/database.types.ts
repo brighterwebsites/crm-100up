@@ -234,6 +234,146 @@ export type Database = {
         }
         Relationships: []
       }
+      goods_receipt_documents: {
+        Row: {
+          goods_receipt_id: number
+          supplier_document_id: number
+        }
+        Insert: {
+          goods_receipt_id: number
+          supplier_document_id: number
+        }
+        Update: {
+          goods_receipt_id?: number
+          supplier_document_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goods_receipt_documents_goods_receipt_id_fkey"
+            columns: ["goods_receipt_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipt_documents_supplier_document_id_fkey"
+            columns: ["supplier_document_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goods_receipt_items: {
+        Row: {
+          created_at: string
+          goods_receipt_id: number
+          gst_applicable: boolean
+          id: number
+          line_note: string
+          purchase_order_item_id: number | null
+          qty_received: number
+          stock_id: number
+          unit_cost_ex_gst: number | null
+        }
+        Insert: {
+          created_at?: string
+          goods_receipt_id: number
+          gst_applicable?: boolean
+          id?: number
+          line_note?: string
+          purchase_order_item_id?: number | null
+          qty_received: number
+          stock_id: number
+          unit_cost_ex_gst?: number | null
+        }
+        Update: {
+          created_at?: string
+          goods_receipt_id?: number
+          gst_applicable?: boolean
+          id?: number
+          line_note?: string
+          purchase_order_item_id?: number | null
+          qty_received?: number
+          stock_id?: number
+          unit_cost_ex_gst?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goods_receipt_items_goods_receipt_id_fkey"
+            columns: ["goods_receipt_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipt_items_purchase_order_item_id_fkey"
+            columns: ["purchase_order_item_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipt_items_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goods_receipts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: number
+          notes: string
+          purchase_order_id: number | null
+          received_at: string
+          supplier_id: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: number
+          notes?: string
+          purchase_order_id?: number | null
+          received_at?: string
+          supplier_id: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: number
+          notes?: string
+          purchase_order_id?: number | null
+          received_at?: string
+          supplier_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goods_receipts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipts_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipts_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ground_mount_settings: {
         Row: {
           ballpark_frame_per_panel: number
@@ -859,6 +999,7 @@ export type Database = {
           kw: number | null
           kwh: number | null
           last_cost: number
+          last_landed_cost: number
           manufacturer_id: number | null
           model: string
           name: string
@@ -880,6 +1021,7 @@ export type Database = {
           kw?: number | null
           kwh?: number | null
           last_cost?: number
+          last_landed_cost?: number
           manufacturer_id?: number | null
           model?: string
           name: string
@@ -901,6 +1043,7 @@ export type Database = {
           kw?: number | null
           kwh?: number | null
           last_cost?: number
+          last_landed_cost?: number
           manufacturer_id?: number | null
           model?: string
           name?: string
@@ -931,27 +1074,129 @@ export type Database = {
           },
         ]
       }
+      supplier_documents: {
+        Row: {
+          claimed_line_count: number | null
+          claimed_total_units: number | null
+          created_at: string
+          created_by: string | null
+          doc_date: string | null
+          doc_type: string
+          freight_ex_gst: number
+          gst_amount: number | null
+          id: number
+          notes: string
+          other_charges_ex_gst: number
+          price_basis: string
+          price_basis_source: string
+          subtotal_ex_gst: number | null
+          supplier_id: number
+          supplier_ref: string
+          total_inc_gst: number | null
+        }
+        Insert: {
+          claimed_line_count?: number | null
+          claimed_total_units?: number | null
+          created_at?: string
+          created_by?: string | null
+          doc_date?: string | null
+          doc_type?: string
+          freight_ex_gst?: number
+          gst_amount?: number | null
+          id?: number
+          notes?: string
+          other_charges_ex_gst?: number
+          price_basis?: string
+          price_basis_source?: string
+          subtotal_ex_gst?: number | null
+          supplier_id: number
+          supplier_ref?: string
+          total_inc_gst?: number | null
+        }
+        Update: {
+          claimed_line_count?: number | null
+          claimed_total_units?: number | null
+          created_at?: string
+          created_by?: string | null
+          doc_date?: string | null
+          doc_type?: string
+          freight_ex_gst?: number
+          gst_amount?: number | null
+          id?: number
+          notes?: string
+          other_charges_ex_gst?: number
+          price_basis?: string
+          price_basis_source?: string
+          subtotal_ex_gst?: number | null
+          supplier_id?: number
+          supplier_ref?: string
+          total_inc_gst?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_documents_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_documents_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
+          abn: string
+          account_number: string
+          address_line: string
+          contact_name: string
           email: string
           id: number
           name: string
           notes: string
+          payment_terms: string
           phone: string
+          postcode: string
+          state: string
+          suburb: string
+          website: string
         }
         Insert: {
+          abn?: string
+          account_number?: string
+          address_line?: string
+          contact_name?: string
           email?: string
           id?: number
           name: string
           notes?: string
+          payment_terms?: string
           phone?: string
+          postcode?: string
+          state?: string
+          suburb?: string
+          website?: string
         }
         Update: {
+          abn?: string
+          account_number?: string
+          address_line?: string
+          contact_name?: string
           email?: string
           id?: number
           name?: string
           notes?: string
+          payment_terms?: string
           phone?: string
+          postcode?: string
+          state?: string
+          suburb?: string
+          website?: string
         }
         Relationships: []
       }
@@ -1113,7 +1358,42 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      goods_receipt_items_landed: {
+        Row: {
+          freight_allocated: number | null
+          goods_receipt_id: number | null
+          gst_applicable: boolean | null
+          id: number | null
+          landed_unit_cost: number | null
+          purchase_order_item_id: number | null
+          qty_received: number | null
+          stock_id: number | null
+          unit_cost_ex_gst: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goods_receipt_items_goods_receipt_id_fkey"
+            columns: ["goods_receipt_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipt_items_purchase_order_item_id_fkey"
+            columns: ["purchase_order_item_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipt_items_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       advance_job_stage: {
