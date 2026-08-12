@@ -31,6 +31,8 @@ const DAYS = 31
  *  night-time row buries the figures that matter. */
 const n1 = (v: number) => (Math.abs(v) < 0.05 ? '–' : v.toFixed(1))
 const n2 = (v: number) => (Math.abs(v) < 0.005 ? '–' : v.toFixed(2))
+/** Whole watt-hours — at hour granularity the fractions are noise. */
+const wh = (v: number) => (Math.abs(v) < 0.5 ? '–' : Math.round(v).toLocaleString('en-AU'))
 
 export default function SimulationPage() {
   const { isAdmin } = useAuth()
@@ -95,7 +97,14 @@ export default function SimulationPage() {
     const standbyPerHour = standbyW / 1000
     let soc = batteryKwh
     let minSocAll = batteryKwh
-    const hours: { i: number; day: number; hour: number; prod: number; load: number; soc: number }[] = []
+    // Wh at hour granularity, matching V46: kWh figures at this scale round to
+    // "0.0" and stop being readable. SOC stays in kWh because it is a level,
+    // not a flow, and 27000 Wh reads worse than 27.0 kWh.
+    const hours: {
+      i: number; day: number; hour: number
+      wPerKw: number; prod: number; load: number
+      socBefore: number; socAfter: number; spilled: number; unmet: number
+    }[] = []
     const days: {
       day: number; solar: number; load: number; net: number
       spilled: number; unmet: number; minSoc: number; endSoc: number
@@ -104,15 +113,22 @@ export default function SimulationPage() {
 
     for (let i = 0; i < JULY_SOLAR_W_PER_KW.length; i++) {
       const hour = i % 24
-      const prod = (solarKw * JULY_SOLAR_W_PER_KW[i]) / 1000
+      const wPerKw = JULY_SOLAR_W_PER_KW[i]
+      const prod = (solarKw * wPerKw) / 1000
       const load = dailyKwh * (profile[hour] / sum) + standbyPerHour
+      const socBefore = soc
+      let hSpill = 0
+      let hUnmet = 0
       soc += prod - load
-      if (soc > batteryKwh) { dSpill += soc - batteryKwh; soc = batteryKwh }
-      if (soc < 0) { dUnmet += -soc; soc = 0 }
+      if (soc > batteryKwh) { hSpill = soc - batteryKwh; dSpill += hSpill; soc = batteryKwh }
+      if (soc < 0) { hUnmet = -soc; dUnmet += hUnmet; soc = 0 }
       dSolar += prod; dLoad += load
       if (soc < dMin) dMin = soc
       if (soc < minSocAll) minSocAll = soc
-      hours.push({ i, day: Math.floor(i / 24) + 1, hour, prod, load, soc })
+      hours.push({
+        i, day: Math.floor(i / 24) + 1, hour, wPerKw, prod, load,
+        socBefore, socAfter: soc, spilled: hSpill, unmet: hUnmet,
+      })
       if (hour === 23) {
         days.push({
           day: Math.floor(i / 24) + 1, solar: dSolar, load: dLoad, net: dSolar - dLoad,
@@ -174,8 +190,12 @@ export default function SimulationPage() {
         </div>
       )}
 
+      {/* Scenario takes the remaining width; quick-fills shrink to their
+          buttons and sit right, so the two read as controls-then-shortcuts
+          rather than two equal panels. */}
+      <div className="sim-top">
       {/* ── Quick-fills ── */}
-      <div className="card settings-card" style={{ marginBottom: 14 }}>
+      <div className="card settings-card sim-top-quick">
         <div className="sim-quick-head">
           <div className="card-title" style={{ margin: 0 }}>Quick-fills</div>
           {isAdmin && (
@@ -261,7 +281,7 @@ export default function SimulationPage() {
       </div>
 
       {/* ── Scenario inputs ── */}
-      <div className="card settings-card" style={{ marginBottom: 14 }}>
+      <div className="card settings-card sim-top-scenario">
         <div className="card-title">Scenario</div>
         <div className="calc-inputs">
           <F label="Daily load kWh"><NumIn v={dailyKwh} set={setDailyKwh} step="0.5" /></F>
@@ -272,6 +292,7 @@ export default function SimulationPage() {
             <NumIn v={standbyW} set={setStandbyW} />
           </F>
         </div>
+      </div>
       </div>
 
       {/* ── Section 1: verdict ── */}
@@ -350,20 +371,28 @@ export default function SimulationPage() {
                         <thead>
                           <tr>
                             <th style={{ textAlign: 'left' }}>Hour</th>
-                            <th className="num">Solar gen</th>
-                            <th className="num">Load</th>
-                            <th className="num">Net</th>
-                            <th className="num">SOC</th>
+                            <th className="num">Solar (W/kW)</th>
+                            <th className="num">Solar gen (Wh)</th>
+                            <th className="num">Load (Wh)</th>
+                            <th className="num">Net (Wh)</th>
+                            <th className="num">SOC before</th>
+                            <th className="num">SOC after</th>
+                            <th className="num">Spilled (Wh)</th>
+                            <th className="num">Unmet (Wh)</th>
                           </tr>
                         </thead>
                         <tbody>
                           {sim.hours.filter((h) => h.day === d.day).map((h) => (
-                            <tr key={h.i} className={h.soc <= 0 ? 'sim-row-fail' : undefined}>
+                            <tr key={h.i} className={h.unmet > 0 ? 'sim-row-fail' : undefined}>
                               <td style={{ textAlign: 'left' }}>{String(h.hour).padStart(2, '0')}:00</td>
-                              <td className="num">{n2(h.prod)}</td>
-                              <td className="num">{n2(h.load)}</td>
-                              <td className="num">{n2(h.prod - h.load)}</td>
-                              <td className="num">{n2(h.soc)}</td>
+                              <td className="num">{wh(h.wPerKw)}</td>
+                              <td className="num">{wh(h.prod * 1000)}</td>
+                              <td className="num">{wh(h.load * 1000)}</td>
+                              <td className="num">{wh((h.prod - h.load) * 1000)}</td>
+                              <td className="num">{n2(h.socBefore)}</td>
+                              <td className="num">{n2(h.socAfter)}</td>
+                              <td className="num">{wh(h.spilled * 1000)}</td>
+                              <td className="num">{wh(h.unmet * 1000)}</td>
                             </tr>
                           ))}
                         </tbody>

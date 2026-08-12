@@ -2117,3 +2117,38 @@ textarea.jdp-input {
   padding: 2px 4px;
   font-size: 11px;
 }
+
+/* Scenario and quick-fills side by side: inputs take the space, shortcuts
+   take only what their buttons need. Stacks below 900px, where two columns
+   would squeeze the number fields. */
+.sim-top {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.sim-top-scenario {
+  flex: 1 1 380px;
+  order: 1;
+  min-width: 0;
+}
+
+.sim-top-quick {
+  flex: 0 1 auto;
+  order: 2;
+  max-width: 100%;
+}
+
+@media (max-width: 900px) {
+  .sim-top-quick { flex-basis: 100%; }
+}
+
+/* Nine columns of hourly figures — tighten so a day fits without scrolling
+   sideways inside the accordion. */
+.sim-hours-table th,
+.sim-hours-table td {
+  padding: 2px 6px;
+  white-space: nowrap;
+}
