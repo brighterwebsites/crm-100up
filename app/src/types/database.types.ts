@@ -1435,6 +1435,15 @@ export type Database = {
         }
       }
       apply_pending_bom_now: { Args: { p_job_id: number }; Returns: number }
+      attach_supplier_document: {
+        Args: {
+          p_document: Json
+          p_prices?: Json
+          p_receipt_ids: number[]
+          p_supplier_id: number
+        }
+        Returns: Json
+      }
       create_purchase_order: {
         Args: { p_lines: Json; p_supplier_id: number }
         Returns: {
@@ -1487,6 +1496,17 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      receive_goods: {
+        Args: {
+          p_document: Json
+          p_lines: Json
+          p_notes?: string
+          p_purchase_order_id?: number
+          p_received_at?: string
+          p_supplier_id: number
+        }
+        Returns: Json
       }
       receive_stock: {
         Args: {
