@@ -139,7 +139,10 @@ export default function OrderList({ onOpenJob }: { onOpenJob: (id: number) => vo
                         <span className="order-meta-pill">
                           {isClosed(job.stage, job.step) ? 'Closed' : STAGE_NAMES_SHORT[job.stage]}
                         </span>
-                        {dt && <span className="order-meta-pill">{fmtDate(dt)}</span>}
+                        {/* "No date set" is information, not an empty value —
+                            an unscheduled job you are ordering stock for is
+                            exactly the one worth noticing. */}
+                        <span className="order-meta-pill">{dt ? fmtDate(dt) : 'No date set'}</span>
                       </div>
                     )
                   })

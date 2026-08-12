@@ -2261,7 +2261,7 @@ textarea.jdp-input {
   font: inherit;
   text-align: left;
 }
-.jdp-acc-toggle:hover { background: rgba(0,0,0,0.025); }
+.jdp-acc-toggle:hover { background: var(--bg); }
 
 .jdp-acc-toggle-title {
   font-size: 10px;
@@ -2324,7 +2324,7 @@ textarea.jdp-input {
   padding: 5px 9px;
   border: 1.5px solid var(--line);
   border-radius: 7px;
-  background: #fff;
+  background: var(--card);
   color: var(--ink);
   cursor: pointer;
 }
@@ -2346,8 +2346,8 @@ textarea.jdp-input {
   font-weight: 700;
   padding: 2px 9px;
   border-radius: 999px;
-  background: #fdecea;
-  color: #93300f;
+  background: var(--stage-3-light);
+  color: var(--stage-3-text);
   white-space: nowrap;
 }
 
@@ -2357,7 +2357,7 @@ textarea.jdp-input {
   font-size: 11px;
   padding: 2px 9px;
   border-radius: 999px;
-  background: #eef0f3;
+  background: var(--bg);
   color: var(--muted);
   white-space: nowrap;
 }
