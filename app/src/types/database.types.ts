@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_call_log: {
+        Row: {
+          created_at: string
+          id: number
+          input_ref: string | null
+          model_used: string
+          output: string
+          purpose: string
+          tokens_in: number
+          tokens_out: number
+          tokens_used: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          input_ref?: string | null
+          model_used: string
+          output: string
+          purpose: string
+          tokens_in?: number
+          tokens_out?: number
+          tokens_used?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          input_ref?: string | null
+          model_used?: string
+          output?: string
+          purpose?: string
+          tokens_in?: number
+          tokens_out?: number
+          tokens_used?: number | null
+        }
+        Relationships: []
+      }
       assumptions: {
         Row: {
           created_at: string
@@ -103,6 +139,76 @@ export type Database = {
           version?: number
         }
         Relationships: []
+      }
+      email_sends: {
+        Row: {
+          cc_address: string
+          customer_id: number | null
+          error_message: string | null
+          id: number
+          job_id: number | null
+          provider_message_id: string | null
+          provider_status: string | null
+          purchase_order_id: number | null
+          screen_type: string
+          sent_at: string
+          status: string
+          subject: string
+          to_address: string
+        }
+        Insert: {
+          cc_address?: string
+          customer_id?: number | null
+          error_message?: string | null
+          id?: number
+          job_id?: number | null
+          provider_message_id?: string | null
+          provider_status?: string | null
+          purchase_order_id?: number | null
+          screen_type?: string
+          sent_at?: string
+          status?: string
+          subject: string
+          to_address?: string
+        }
+        Update: {
+          cc_address?: string
+          customer_id?: number | null
+          error_message?: string | null
+          id?: number
+          job_id?: number | null
+          provider_message_id?: string | null
+          provider_status?: string | null
+          purchase_order_id?: number | null
+          screen_type?: string
+          sent_at?: string
+          status?: string
+          subject?: string
+          to_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_sends_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_sends_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_sends_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fixed_site_costs: {
         Row: {
@@ -201,6 +307,41 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: true
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integrations: {
+        Row: {
+          config: Json
+          provider: string
+          secret: string | null
+          secret_last4: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          config?: Json
+          provider: string
+          secret?: string | null
+          secret_last4?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          config?: Json
+          provider?: string
+          secret?: string | null
+          secret_last4?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integrations_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

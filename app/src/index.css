@@ -2152,3 +2152,59 @@ textarea.jdp-input {
   padding: 2px 6px;
   white-space: nowrap;
 }
+
+/* ── card title ──────────────────────────────────────────
+   Used in twelve places since the Assumptions page landed and never actually
+   defined, so every one of them has been rendering as body text. */
+.card-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+}
+
+/* ── settings / integrations ─────────────────────────────
+   A single column rather than the auto-fill grid the Assumptions page uses:
+   these cards are read top to bottom as a setup sequence (send mail, then AI,
+   then the mailbox), and side-by-side columns break that order on wide
+   screens. Capped because a full-width text input for an API key is unusable. */
+.settings-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 680px;
+  padding-bottom: 24px;
+}
+
+/* ── tabs ────────────────────────────────────────────────
+   First tabs in the app. Underline rather than a button group, so the panel
+   below reads as belonging to the selected tab. */
+.tab-row {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 12px;
+}
+
+.tab-btn {
+  appearance: none;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 7px 12px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.tab-btn:hover {
+  color: var(--ink);
+}
+
+.tab-btn-on {
+  color: var(--ink);
+  border-bottom-color: var(--primary);
+}

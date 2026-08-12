@@ -2,10 +2,9 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts'
 import { requireAdmin } from '../_shared/admin.ts'
 
-// Only 'email' is wired up today (CyberPanel Email Delivery / CyberPersons).
-// Widen the provider check constraint in a follow-up migration if/when
-// another integration (e.g. Hermes) needs its own private.integrations row.
-const KNOWN_PROVIDERS = ['email']
+// Kept in step with the provider CHECK on public.integrations. Widening one
+// without the other gets you a 400 here or a constraint violation there.
+const KNOWN_PROVIDERS = ['email', 'anthropic', 'gmail']
 
 interface SaveBody {
   provider?: string
@@ -38,7 +37,6 @@ Deno.serve(async (req) => {
   }
 
   const { data: existing } = await admin.service
-    .schema('private')
     .from('integrations')
     .select('secret, secret_last4')
     .eq('provider', provider)
@@ -47,7 +45,7 @@ Deno.serve(async (req) => {
   const nextSecret = body.clear_secret ? null : body.secret ?? existing?.secret ?? null
   const nextLast4 = body.clear_secret ? '' : body.secret ? body.secret.slice(-4) : existing?.secret_last4 ?? ''
 
-  const { error } = await admin.service.schema('private').from('integrations').upsert(
+  const { error } = await admin.service.from('integrations').upsert(
     {
       provider,
       config: body.config ?? {},

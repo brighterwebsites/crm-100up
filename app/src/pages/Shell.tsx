@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Clock, ClipboardList, Download, FlaskConical, House, LayoutGrid, Menu, Package,
   Pickaxe, Plug, ReceiptText, Ruler, Settings, ShoppingCart, SlidersHorizontal,
@@ -16,7 +16,7 @@ import CustomersPage from './CustomersPage'
 import StubPage from './StubPage'
 import DailyLoadProfilePage from './DailyLoadProfilePage'
 import PurchaseOrdersPage from './PurchaseOrdersPage'
-import SettingsPage from './SettingsPage'
+import SettingsPage, { type GmailReturn } from './SettingsPage'
 import AssumptionsPage from './AssumptionsPage'
 import CalculatorPage from './CalculatorPage'
 import SimulationPage from './SimulationPage'
@@ -51,7 +51,21 @@ function ShellInner() {
   const [page, setPage]               = useState<Page>('pipeline')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [orderJobId, setOrderJobId]   = useState<number | null>(null)
+  const [gmailReturn, setGmailReturn] = useState<GmailReturn | undefined>()
   const { jobs, customers, stocks, suppliers, purchaseOrders, items, installationRequests } = useData()
+
+  // Gmail OAuth return trip. The app has no router — `page` is state and always
+  // starts on Pipeline — so the callback lands on the root with ?gmail=… and
+  // this hands the outcome to Settings. Read once and stripped from the URL, so
+  // a refresh does not re-announce a connection made ten minutes ago.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const outcome = params.get('gmail')
+    if (!outcome) return
+    setGmailReturn({ ok: outcome === 'connected', message: params.get('message') ?? undefined })
+    setPage('settings')
+    window.history.replaceState({}, '', window.location.pathname)
+  }, [])
 
   // Backup export — denormalises customers + installation_requests back to
   // the old app's flat JSON shape so the file stays importable if ever needed.
@@ -229,7 +243,7 @@ function ShellInner() {
           {isAdmin && page === 'qd-assumptions'    && <AssumptionsPage />}
           {isAdmin && page === 'qd-simulation'     && <SimulationPage />}
           {isAdmin && page === 'qd-daily-load-profile' && <DailyLoadProfilePage />}
-          {isAdmin && page === 'settings'          && <SettingsPage />}
+          {isAdmin && page === 'settings'          && <SettingsPage gmailReturn={gmailReturn} />}
           {!isAdmin && (
             <CustomerJobsPage installerOnly />
           )}

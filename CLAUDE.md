@@ -50,8 +50,29 @@ placeholders in `Shell.tsx`. Assumptions data **is** in the database
 still be made in the old file.
 
 Also open: receive-against-PO, real cost capture on receipt, notifications
-(email service exists, nothing sends), and `scripts/import_from_export.py` is
-out of date against the current schema — **a hard blocker on cutover**.
+(email now sends, but nothing triggers it automatically), and
+`scripts/import_from_export.py` is out of date against the current schema —
+**a hard blocker on cutover**.
+
+## Integrations
+
+Three connectors, all admin-only, all keyed off `public.integrations` (one row
+per provider, secret readable only by the service role). Settings → Integrations
+manages them; Edge Functions verify the caller is an admin via `requireAdmin`
+before touching anything.
+
+| Provider | Used for | State |
+|---|---|---|
+| `email` | CyberPersons transactional send (`send-email`), logged to `email_sends` | Working — needs an API key entered |
+| `anthropic` | `aiComplete` in `_shared/ai.ts`; invoice reading on Receive Stock (`extract-invoice`), logged to `ai_call_log` | Working — needs an API key entered |
+| `gmail` | OAuth connection only (`gmail-oauth-start` / `-callback`). Stores a refresh token. **No sync yet** — no poller, no message table | Connection only |
+
+Gmail OAuth needs four Edge Function secrets: `GOOGLE_OAUTH_CLIENT_ID`,
+`GOOGLE_OAUTH_CLIENT_SECRET`, `GMAIL_OAUTH_REDIRECT_URI`, `CRM_APP_URL`.
+
+The app has **no router** — `page` is `useState` in `Shell.tsx`. The OAuth
+callback therefore returns to the app root with `?gmail=…`, and Shell reads it
+on mount to open Settings. Any future external return trip has to do the same.
 
 ## Conventions
 
@@ -76,13 +97,24 @@ out of date against the current schema — **a hard blocker on cutover**.
    the history to the local filename version immediately afterwards.
 2. **Check which migration last defined a function** before changing it —
    e.g. `reschedule_booking` lives in migration 004, not 003.
-3. **Regenerate `app/src/types/database.types.ts`** after any migration.
+3. **Regenerate `app/src/types/database.types.ts`** after any migration:
+   `supabase gen types typescript --linked --schema public > app/src/types/database.types.ts`
 4. **Stage/step and pipeline-gate dates are RPC-only.** `advance_job_stage`,
    `move_job_back`, `reschedule_booking` plus the `private.guard_jobs_update()`
    trigger. This exists specifically to fix the old app's bug where setting a
    date directly bypassed stock consumption — **do not weaken it.**
 5. **RLS discipline**: explicit `grant`, `enable row level security`, then one
    policy per operation. `anon` gets nothing.
+
+   **A `grant` alone does not describe what a new table ends up with.** This
+   project carries an `ALTER DEFAULT PRIVILEGES` rule granting **ALL** to
+   `anon`, `authenticated` and `service_role` on every new table in `public`.
+   So `grant select on X to authenticated` leaves `anon` holding INSERT,
+   UPDATE, DELETE and TRUNCATE as well. Start each new table's migration with
+   `revoke all on X from anon, authenticated;` before granting, and verify
+   afterwards with `information_schema.role_table_grants` — the migration text
+   will otherwise mislead you. See `docs/bugs.md` #13; three tables were caught
+   by this.
 6. **Clipboard-and-print for outputs** — CES summaries, job details, POs are
    rich HTML tables or plain text for pasting, not file exports. New output
    features follow the same pattern.

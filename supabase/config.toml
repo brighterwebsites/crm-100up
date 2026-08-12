@@ -1,0 +1,20 @@
+# 100UP CRM — Supabase CLI config.
+#
+# Deliberately minimal. This project is developed against the remote instance
+# only (`supabase link` + `supabase db push`); the local stack is never
+# started, so the [db] / [auth] / [studio] sections that `supabase init`
+# normally writes would be unread noise that drifts out of step with remote.
+#
+# What this file IS needed for: `supabase functions deploy` reads verify_jwt
+# from here. Without it every function deploys with JWT verification on, and
+# the Gmail OAuth callback would 401 — Google redirects a browser to it with
+# no Authorization header and there is no way to add one.
+
+project_id = "nmyczgnvjhwhgpgvwfdx"
+
+# Google redirects the user's browser here after consent, unauthenticated.
+# The caller is instead verified through the signed `state` parameter that
+# gmail-oauth-start minted, which carries the admin's user id and a timestamp
+# the callback rejects after 15 minutes.
+[functions.gmail-oauth-callback]
+verify_jwt = false

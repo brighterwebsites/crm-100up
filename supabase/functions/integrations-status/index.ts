@@ -2,7 +2,7 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts'
 import { requireAdmin } from '../_shared/admin.ts'
 
-const KNOWN_PROVIDERS = ['email']
+const KNOWN_PROVIDERS = ['email', 'anthropic', 'gmail']
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -28,7 +28,6 @@ Deno.serve(async (req) => {
   }
 
   const { data, error } = await admin.service
-    .schema('private')
     .from('integrations')
     .select('config, secret_last4, secret')
     .eq('provider', provider)
