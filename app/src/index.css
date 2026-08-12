@@ -2208,3 +2208,168 @@ textarea.jdp-input {
   color: var(--ink);
   border-bottom-color: var(--primary);
 }
+
+/* ── Pipeline panel: 50 vw + horizontal scroll ───────────────────
+   The panel flex-shrinks to 0 so the grid is pushed left to the
+   remaining width and gains a horizontal scroll. The scrollbar track
+   is hidden everywhere on the pipeline grid (the table overflow is
+   enough visual affordance on a wide board). The mobile rule below
+   must come after the 50vw rule to keep winning on narrow screens. */
+
+.pipeline-detail-panel.panel-is-open {
+  width: 50vw;
+}
+
+.pipeline-grid-wrap {
+  scrollbar-width: none;        /* Firefox */
+}
+.pipeline-grid-wrap::-webkit-scrollbar {
+  display: none;                /* Chrome / Safari / Edge */
+}
+
+@media (max-width: 768px) {
+  .pipeline-detail-panel.panel-is-open {
+    width: 100vw;
+    position: fixed;
+    inset: 48px 0 0 0;
+    z-index: 50;
+  }
+}
+
+/* ── JDP accordion cards ──────────────────────────────────────────
+   Four collapsible sections in the job detail panel. The card sits
+   on var(--bg) to sit slightly recessed against the white .jdp wrap.
+   No gap-animation — plain show/hide is enough for this density. */
+
+.jdp-acc-card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.jdp-acc-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.jdp-acc-toggle:hover { background: rgba(0,0,0,0.025); }
+
+.jdp-acc-toggle-title {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+
+.jdp-acc-chevron {
+  flex-shrink: 0;
+  color: var(--muted);
+  transition: transform 0.2s;
+}
+
+.jdp-acc-body {
+  padding: 0 14px 12px;
+}
+
+/* ── Pipeline date milestone pills ──────────────────────────────── */
+.jdp-date-pills {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.date-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.date-pill-booked    { background: var(--stage-2-light); color: var(--stage-2-text); border-color: transparent; }
+.date-pill-started   { background: var(--stage-3-light); color: var(--stage-3-text); border-color: transparent; }
+.date-pill-installed { background: var(--stage-1-light); color: var(--stage-1-text); border-color: transparent; }
+.date-pill-ces       { background: var(--stage-2-light); color: var(--stage-2-text); border-color: transparent; }
+.date-pill-rebate    { background: var(--stage-4-light); color: var(--stage-4-text); border-color: transparent; }
+
+/* ── Customers page — customer detail card ───────────────────────
+   Sits inside the .jdp padding — no extra wrapper needed. */
+.cust-detail-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+/* ── Order list — supplier select ───────────────────────────────── */
+.supplier-select {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 5px 9px;
+  border: 1.5px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+/* Override grid → tight flex so qty/stage/date pills sit together */
+.order-cust-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 0;
+  border-top: 1px solid var(--line);
+}
+
+.order-qty-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #fdecea;
+  color: #93300f;
+  white-space: nowrap;
+}
+
+.order-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #eef0f3;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ── PO line items card ──────────────────────────────────────────
+   Table sits inside a rounded card; the table-wrap handles overflow. */
+.po-lines-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.po-lines-card .table-wrap {
+  border-radius: 0;
+}

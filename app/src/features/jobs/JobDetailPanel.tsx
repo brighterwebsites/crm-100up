@@ -6,7 +6,7 @@
  * No modal wrapper — the parent decides how to frame it.
  */
 import {
-  ArrowLeft, ArrowRight, Calendar, ClipboardCheck, ClipboardList, CircleCheck,
+  ArrowLeft, ArrowRight, Calendar, ChevronDown, ClipboardCheck, ClipboardList, CircleCheck,
   DollarSign, Link2, Mail, MessageSquare, Package, Phone, Printer, TriangleAlert,
   Wrench, X,
 } from 'lucide-react'
@@ -42,6 +42,10 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
   const [reschedule, setReschedule] = useState(false)
   const [showCes, setShowCes] = useState(false)
   const [showLink, setShowLink] = useState(false)
+  const [openSections, setOpenSections] = useState({ customer: true, install: true, stock: true, jobDetails: true })
+  function toggleSection(k: keyof typeof openSections) {
+    setOpenSections(p => ({ ...p, [k]: !p[k] }))
+  }
 
   // ── job form state ──
   const [jobForm, setJobForm] = useState(jobFormFrom(job))
@@ -238,14 +242,14 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
           )}
         </div>
 
-        <div className="jdp-date-strip">
-          {job.planned_install_date   && <span><Calendar size={11} aria-hidden /> Booked {fmtDate(job.planned_install_date)}</span>}
-          {job.install_start_date     && <span><Wrench size={11} aria-hidden /> Started {fmtDate(job.install_start_date)}</span>}
-          {job.install_completion_date && <span><CircleCheck size={11} aria-hidden /> Installed {fmtDate(job.install_completion_date)}</span>}
-          {job.ces_submitted           && <span><ClipboardList size={11} aria-hidden /> CES sub {fmtDate(job.ces_submitted)}</span>}
-          {job.ces_received            && <span><ClipboardCheck size={11} aria-hidden /> CES rec {fmtDate(job.ces_received)}</span>}
-          {job.rebate_submitted        && <span><DollarSign size={11} aria-hidden /> Rebate sub {fmtDate(job.rebate_submitted)}</span>}
-          {job.rebate_received         && <span><DollarSign size={11} aria-hidden /> Rebate rec {fmtDate(job.rebate_received)}</span>}
+        <div className="jdp-date-pills">
+          {job.planned_install_date    && <span className="date-pill date-pill-booked"><Calendar size={11} aria-hidden /> Booked {fmtDate(job.planned_install_date)}</span>}
+          {job.install_start_date      && <span className="date-pill date-pill-started"><Wrench size={11} aria-hidden /> Started {fmtDate(job.install_start_date)}</span>}
+          {job.install_completion_date && <span className="date-pill date-pill-installed"><CircleCheck size={11} aria-hidden /> Installed {fmtDate(job.install_completion_date)}</span>}
+          {job.ces_submitted           && <span className="date-pill date-pill-ces"><ClipboardList size={11} aria-hidden /> CES sub {fmtDate(job.ces_submitted)}</span>}
+          {job.ces_received            && <span className="date-pill date-pill-ces"><ClipboardCheck size={11} aria-hidden /> CES rec {fmtDate(job.ces_received)}</span>}
+          {job.rebate_submitted        && <span className="date-pill date-pill-rebate"><DollarSign size={11} aria-hidden /> Rebate sub {fmtDate(job.rebate_submitted)}</span>}
+          {job.rebate_received         && <span className="date-pill date-pill-rebate"><DollarSign size={11} aria-hidden /> Rebate rec {fmtDate(job.rebate_received)}</span>}
         </div>
 
         {reschedule && (
@@ -287,8 +291,7 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
       )}
 
       {/* ── Customer Details ── */}
-      <div className="jdp-section">
-        <div className="jdp-section-title">Customer Details</div>
+      <AccSection title="Customer Details" open={openSections.customer} onToggle={() => toggleSection('customer')}>
         <div className="jdp-2col">
           <F label="Customer name" full>
             <input className="jdp-input" disabled={!isAdmin} value={custForm.name} onChange={(e) => setCustForm({ ...custForm, name: e.target.value })} />
@@ -310,11 +313,10 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
             <input className="jdp-input" disabled={!isAdmin} value={custForm.address} onChange={(e) => setCustForm({ ...custForm, address: e.target.value })} />
           </F>
         </div>
-      </div>
+      </AccSection>
 
       {/* ── Install Details ── */}
-      <div className="jdp-section">
-        <div className="jdp-section-title">Install Details</div>
+      <AccSection title="Install Details" open={openSections.install} onToggle={() => toggleSection('install')}>
         <div className="jdp-2col">
           <F label="Job type">
             <select
@@ -369,11 +371,10 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
             <button className="btn btn-primary" style={{ fontSize: 12, padding: '7px 14px' }} onClick={saveJobAndCustomer}>Save notes</button>
           </div>
         )}
-      </div>
+      </AccSection>
 
       {/* ── Stock ── */}
-      <div className="jdp-section">
-        <div className="jdp-section-title">Stock</div>
+      <AccSection title="Stock" open={openSections.stock} onToggle={() => toggleSection('stock')}>
         {pending.length > 0 && (
           <div className="stock-block">
             <div className="stock-block-title">Pending (auto-assigns on booking)</div>
@@ -418,12 +419,11 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
             ))}
           </div>
         )}
-      </div>
+      </AccSection>
 
       {/* ── Job details (installation_requests) ── */}
       {isAdmin && (
-        <div className="jdp-section">
-          <div className="jdp-section-title">Job Details</div>
+        <AccSection title="Job Details" open={openSections.jobDetails} onToggle={() => toggleSection('jobDetails')}>
           <div className="jdp-2col">
             <F label="Job order ref">
               <input className="jdp-input" value={irForm.ref} onChange={(e) => setIrForm({ ...irForm, ref: e.target.value })} />
@@ -459,19 +459,18 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
           <div className="jdp-save-row">
             <button className="btn btn-primary" style={{ fontSize: 12, padding: '7px 14px' }} onClick={saveIR}>Save job order</button>
           </div>
-        </div>
+        </AccSection>
       )}
 
       {/* Installer view of site & instructions (read-ish) */}
       {!isAdmin && ir && (
-        <div className="jdp-section">
-          <div className="jdp-section-title">Site &amp; Instructions</div>
+        <AccSection title="Site & Instructions" open={openSections.jobDetails} onToggle={() => toggleSection('jobDetails')}>
           <div className="jdp-2col">
             {ir.site_access_notes && <F label="Site access" full><div style={{ fontSize: 13, padding: '4px 0' }}>{ir.site_access_notes}</div></F>}
             {ir.special_instructions && <F label="Special instructions" full><div style={{ fontSize: 13, padding: '4px 0' }}>{ir.special_instructions}</div></F>}
             {ir.additional_notes && <F label="Additional notes" full><div style={{ fontSize: 13, padding: '4px 0' }}>{ir.additional_notes}</div></F>}
           </div>
-        </div>
+        </AccSection>
       )}
 
       {/* ── Documents ── */}
@@ -606,6 +605,18 @@ function F({ label, children, full }: { label: string; children: React.ReactNode
     <div className={`jdp-field${full ? ' jdp-full' : ''}`}>
       {label && <span className="jdp-label">{label}</span>}
       {children}
+    </div>
+  )
+}
+
+function AccSection({ title, open, onToggle, children }: { title: string; open: boolean; onToggle: () => void; children: React.ReactNode }) {
+  return (
+    <div className="jdp-acc-card">
+      <button className="jdp-acc-toggle" onClick={onToggle}>
+        <span className="jdp-acc-toggle-title">{title}</span>
+        <ChevronDown size={14} className="jdp-acc-chevron" style={{ transform: open ? 'rotate(180deg)' : undefined }} aria-hidden />
+      </button>
+      {open && <div className="jdp-acc-body">{children}</div>}
     </div>
   )
 }

@@ -150,7 +150,7 @@ function CustomerDetail({
       {err && <div className="login-error" style={{ marginBottom: 6 }}>{err}</div>}
       {ok  && <div className="login-ok"    style={{ marginBottom: 6 }}>Saved</div>}
 
-      <div className="jdp-section">
+      <div className="cust-detail-card">
         <div className="jdp-section-title">Customer Details</div>
         <div className="jdp-2col">
           <div className="jdp-field jdp-full">

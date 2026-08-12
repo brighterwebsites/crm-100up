@@ -111,6 +111,7 @@ export default function OrderList({ onOpenJob }: { onOpenJob: (id: number) => vo
                     {card.kind === 'short' ? `ORDER ${card.toOrder} unit${card.toOrder !== 1 ? 's' : ''}` : 'ZERO STOCK'}
                   </span>
                   <select
+                    className="supplier-select"
                     value={card.stock.preferred_supplier_id ?? ''}
                     onChange={(e) => setStockSupplier(card.stock.id, e.target.value ? Number(e.target.value) : null)}
                     title="Assign supplier — remembered for next time"
@@ -132,11 +133,13 @@ export default function OrderList({ onOpenJob }: { onOpenJob: (id: number) => vo
                         <button className="btn-link-name" onClick={() => onOpenJob(job.id)}>
                           {custName}
                         </button>
-                        <span>{card.kind === 'short' ? `${qty} short` : `×${qty} needed`}</span>
-                        <span className="mutedtext">
-                          {isClosed(job.stage, job.step) ? 'Closed' : STAGE_NAMES_SHORT[job.stage]} ·{' '}
-                          {dt ? fmtDate(dt) : 'No date set'}
+                        <span className="order-qty-pill">
+                          {card.kind === 'short' ? `${qty} short` : `×${qty} needed`}
                         </span>
+                        <span className="order-meta-pill">
+                          {isClosed(job.stage, job.step) ? 'Closed' : STAGE_NAMES_SHORT[job.stage]}
+                        </span>
+                        {dt && <span className="order-meta-pill">{fmtDate(dt)}</span>}
                       </div>
                     )
                   })

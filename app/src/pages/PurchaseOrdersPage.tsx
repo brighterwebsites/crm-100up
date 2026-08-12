@@ -138,34 +138,36 @@ export default function PurchaseOrdersPage() {
 
             <div className="jdp-section">
               <div className="jdp-section-title">Line items ({selectedItems.length})</div>
-              <div className="table-wrap">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th style={{ textAlign: 'left' }}>Item</th>
-                      <th>Qty ordered</th>
-                      <th>Cost</th>
-                      <th>Qty received</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedItems.map((it) => (
-                      <tr key={it.id}>
-                        <td style={{ textAlign: 'left' }}>
-                          {stocks.find((s) => s.id === it.stock_id)?.name ?? `Stock #${it.stock_id}`}
-                        </td>
-                        <td>{it.qty_ordered}</td>
-                        <td>${it.cost.toFixed(2)}</td>
-                        <td>{it.qty_received}</td>
-                      </tr>
-                    ))}
-                    {selectedItems.length === 0 && (
+              <div className="po-lines-card">
+                <div className="table-wrap">
+                  <table className="table">
+                    <thead>
                       <tr>
-                        <td colSpan={4} className="mutedtext">No line items.</td>
+                        <th style={{ textAlign: 'left' }}>Item</th>
+                        <th>Qty ordered</th>
+                        <th>Cost</th>
+                        <th>Qty received</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {selectedItems.map((it) => (
+                        <tr key={it.id}>
+                          <td style={{ textAlign: 'left' }}>
+                            {stocks.find((s) => s.id === it.stock_id)?.name ?? `Stock #${it.stock_id}`}
+                          </td>
+                          <td>{it.qty_ordered}</td>
+                          <td>${it.cost.toFixed(2)}</td>
+                          <td>{it.qty_received}</td>
+                        </tr>
+                      ))}
+                      {selectedItems.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="mutedtext">No line items.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
