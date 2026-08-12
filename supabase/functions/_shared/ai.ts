@@ -7,9 +7,10 @@ const ANTHROPIC_VERSION = '2023-06-01'
 const DEFAULT_MODEL = 'claude-haiku-4-5'
 const DEFAULT_MAX_TOKENS = 1024
 
+/** Only the generic default lives here. Task-specific model choices belong to
+ *  the task — see invoiceModel() in _shared/invoice.ts. */
 interface AnthropicConfig {
   model?: string
-  invoice_model?: string
 }
 
 /**
@@ -179,31 +180,3 @@ export async function aiComplete(
 
   return { output, model_used: modelUsed, tokens_used: tokensIn + tokensOut }
 }
-
-/** Model for reading supplier invoices. Overridable in Settings. */
-export function invoiceModel(config: { invoice_model?: string } | null | undefined): string {
-  // Extraction runs against scans and photos where a misread line item becomes
-  // a wrong stock count, so this deliberately does not default to the cheap
-  // text model. A whole invoice costs a fraction of a cent either way.
-  return config?.invoice_model || 'claude-sonnet-5'
-}
-
-export const INVOICE_EXTRACT_PROMPT = `You read supplier invoices and delivery/goods-received dockets for a solar installation business and return structured JSON.
-
-Return ONLY a JSON object, no prose and no markdown fence, with exactly these keys:
-  "supplier"    — the supplying company's name as printed, or null
-  "invoiceRef"  — the invoice or docket number, or null
-  "invoiceDate" — ISO date "YYYY-MM-DD", or null
-  "lines"       — array of {"name": string, "qty": number, "unitCost": number|null}
-
-Rules for "lines":
-- One entry per physical product line actually supplied.
-- "name" is the product description as printed, including model or part number. Do not tidy, expand or translate it — it is matched against an existing stock list downstream.
-- "qty" is the quantity supplied on this document. If a line shows ordered and delivered quantities that differ, use the DELIVERED quantity.
-- "unitCost" is the ex-GST price for ONE unit. If only a line total is shown, divide it by qty. If no price appears at all, use null.
-- Exclude freight, delivery, surcharges, GST/tax lines, rounding, discounts and totals. Those are not stock.
-- Exclude any line with a zero or absent quantity.
-
-If the document is unreadable or is not an invoice or docket, return {"supplier":null,"invoiceRef":null,"invoiceDate":null,"lines":[]}.
-
-Never invent a value. A null is correct when the document does not say.`

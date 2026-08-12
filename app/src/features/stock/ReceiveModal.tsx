@@ -40,6 +40,7 @@ export default function ReceiveModal({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState<'upload' | 'paste'>('upload')
   const [raw, setRaw] = useState('')
   const [err, setErr] = useState<string | null>(null)
+  const [warnings, setWarnings] = useState<string[]>([])
   const [reading, setReading] = useState(false)
   const [supplierId, setSupplierId] = useState<string>('')
   const [invoiceRef, setInvoiceRef] = useState('')
@@ -100,9 +101,33 @@ export default function ReceiveModal({ onClose }: { onClose: () => void }) {
 
   async function readFile(file: File) {
     setErr(null)
+    setWarnings([])
     setReading(true)
     try {
-      applyInvoice(await extractInvoice(file))
+      const { document, reconciliation } = await extractInvoice(file)
+      // Adapter. extract-invoice now returns the full document — totals,
+      // freight, PO reference, GST basis — but this screen still commits
+      // through receive_stock, which takes none of it. The richer payload is
+      // consumed properly when the Add Goods Receipt screen lands (step 5);
+      // until then the extra fields are surfaced as warnings rather than
+      // silently dropped.
+      applyInvoice({
+        supplier: document.supplier,
+        invoiceRef: document.supplier_ref,
+        invoiceDate: document.doc_date,
+        lines: document.lines.map((l) => ({ name: l.name, qty: l.qty, unitCost: l.unit_cost })),
+      })
+      const notes = [...reconciliation.warnings]
+      if (reconciliation.price_basis === 'inc_gst') {
+        notes.push('Unit costs on this document INCLUDE GST — shown as printed, not adjusted.')
+      }
+      if (document.po_ref) {
+        notes.push(`The supplier quoted purchase order ${document.po_ref}. Receiving against a PO comes in a later update.`)
+      }
+      if ((document.freight_ex_gst ?? 0) > 0) {
+        notes.push(`Freight of $${(document.freight_ex_gst ?? 0).toFixed(2)} was on this document and is not captured yet.`)
+      }
+      setWarnings(notes)
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Could not read that invoice.')
     } finally {
@@ -149,6 +174,18 @@ export default function ReceiveModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
         {err && <div className="login-error">{err}</div>}
+        {/* Reconciliation findings. Not errors — the receipt is still valid —
+            but a document whose lines do not add up to its own totals usually
+            means a page did not scan, and that is worth seeing BEFORE the
+            quantities are committed rather than discovering it in a stocktake. */}
+        {warnings.length > 0 && (
+          <div className="warn-box">
+            <strong>Check before receiving:</strong>
+            <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
+              {warnings.map((w, i) => <li key={i}>{w}</li>)}
+            </ul>
+          </div>
+        )}
         {!review ? (
           <>
             <div className="tab-row">

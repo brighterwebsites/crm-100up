@@ -1,104 +1,50 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts'
 import { requireAdmin } from '../_shared/admin.ts'
-import { aiComplete, INVOICE_EXTRACT_PROMPT, invoiceModel } from '../_shared/ai.ts'
+import { aiComplete } from '../_shared/ai.ts'
+import {
+  INVOICE_EXTRACT_PROMPT,
+  invoiceModel,
+  normaliseExtraction,
+  reconcile,
+} from '../_shared/invoice.ts'
 
 /**
- * Reads a supplier invoice or goods-received docket and returns the same shape
- * the Receive Stock modal already parses by hand:
+ * Reads a supplier invoice or delivery docket and returns everything the
+ * goods receipt flow needs to propose a receipt: the document header, its
+ * totals, freight, any PO reference the supplier quoted, and the product
+ * lines.
  *
- *   { supplier, invoiceRef, invoiceDate, lines: [{ name, qty, unitCost }] }
+ * Reads only. Nothing is written, no stock moves, no receipt is created —
+ * the output is a PROPOSAL for Fred to check, and receive_goods commits it
+ * once he has. A misread here costs a correction, never a wrong stock count.
  *
- * That contract is deliberate. It replaces only the *input* step — previously
- * "upload the PDF to a Claude chat and paste the JSON back" — and leaves the
- * review, stock matching and atomic receive_stock commit untouched. Nothing is
- * written to stock here: this function only reads a document and proposes
- * lines, which Fred then confirms.
+ * The GST basis is settled by reconciling the lines against the document's own
+ * totals rather than by asking the model, because "do these prices include
+ * GST" answered wrongly is a silent 10% error in a cost figure.
  */
 
-// Anthropic accepts PDFs as documents and these three as images. HEIC is not
-// on the list, which matters because it is the iPhone camera default — the
-// client-side check gives a clearer message than a 400 from the API.
-const ACCEPTED = new Set([
-  'application/pdf',
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-])
+// Anthropic takes PDFs as documents and these three as images. HEIC is absent,
+// which matters because it is the iPhone camera default.
+const ACCEPTED = new Set(['application/pdf', 'image/jpeg', 'image/png', 'image/webp'])
 
-// Raw bytes before base64. The encoding adds ~33%, so this is ~13.3 MB on the
-// wire — comfortably inside the Edge Function request limit while still
-// accepting a multi-page scan.
+// Raw bytes before base64, which inflates by ~33%.
 const MAX_BYTES = 10 * 1024 * 1024
 
 interface ExtractBody {
-  /** Base64 with no data: URI prefix. */
+  /** Base64, no data: URI prefix. */
   file_base64?: string
   mime_type?: string
-  /** Only used as the ai_call_log input_ref, for tracing a call to a document. */
+  /** Only used as the ai_call_log input_ref, to trace a call to a document. */
   filename?: string
 }
 
-interface InvoiceLine {
-  name: string
-  qty: number
-  unitCost: number | null
-}
-
-interface ParsedInvoice {
-  supplier: string | null
-  invoiceRef: string | null
-  invoiceDate: string | null
-  lines: InvoiceLine[]
-}
-
-/**
- * The prefill means the reply should already be bare JSON, but a fence still
- * shows up occasionally and costs nothing to survive.
- */
+/** The prefill should make the reply bare JSON, but a fence occasionally
+ *  survives and costs nothing to tolerate. */
 function stripFence(s: string): string {
   const t = s.trim()
   if (!t.startsWith('```')) return t
   return t.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim()
-}
-
-function coerceNumber(v: unknown): number | null {
-  if (typeof v === 'number' && Number.isFinite(v)) return v
-  if (typeof v === 'string') {
-    // Tolerate "1,234.56" and "$88.00" — the model is told to send numbers,
-    // but it is reading a document full of currency-formatted strings.
-    const n = Number(v.replace(/[^0-9.\-]/g, ''))
-    return Number.isFinite(n) ? n : null
-  }
-  return null
-}
-
-function normalise(raw: unknown): ParsedInvoice {
-  const o = (raw ?? {}) as Record<string, unknown>
-  const linesIn = Array.isArray(o.lines) ? o.lines : []
-
-  const lines: InvoiceLine[] = []
-  for (const l of linesIn) {
-    const line = (l ?? {}) as Record<string, unknown>
-    const name = typeof line.name === 'string' ? line.name.trim() : ''
-    const qty = coerceNumber(line.qty)
-    // A line with no name or no positive quantity cannot be received against
-    // stock, so drop it here rather than showing Fred a row he must delete.
-    if (!name || qty === null || qty <= 0) continue
-    lines.push({ name, qty, unitCost: coerceNumber(line.unitCost) })
-  }
-
-  const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null)
-  const date = str(o.invoiceDate)
-
-  return {
-    supplier: str(o.supplier),
-    invoiceRef: str(o.invoiceRef),
-    // The modal only accepts YYYY-MM-DD; anything else is dropped so it falls
-    // back to today rather than silently setting a wrong receipt date.
-    invoiceDate: date && /^\d{4}-\d{2}-\d{2}/.test(date) ? date.slice(0, 10) : null,
-    lines,
-  }
 }
 
 Deno.serve(async (req) => {
@@ -129,7 +75,6 @@ Deno.serve(async (req) => {
       400,
     )
   }
-  // base64 encodes 3 bytes per 4 characters.
   if ((fileB64.length * 3) / 4 > MAX_BYTES) {
     return jsonResponse({ error: 'File is larger than 10 MB. Split it or photograph fewer pages.' }, 413)
   }
@@ -145,12 +90,13 @@ Deno.serve(async (req) => {
     result = await aiComplete(admin.service, {
       purpose: 'invoice_extract',
       input:
-        'Extract the supplier, invoice reference, invoice date and product lines from this document.',
+        'Extract the document header, totals, freight and product lines from this supplier document.',
       attachments: [{ media_type: mime, data: fileB64 }],
       systemPrompt: INVOICE_EXTRACT_PROMPT,
       model: invoiceModel(row?.config as { invoice_model?: string } | null),
-      // A long docket can run to 40+ line items; 1024 truncates mid-array.
-      maxTokens: 4096,
+      // A long docket runs to 40+ lines and now carries more fields each;
+      // 1024 truncates mid-array.
+      maxTokens: 8192,
       assistantPrefill: '{',
       context: { input_ref: body.filename ?? null },
     })
@@ -171,8 +117,8 @@ Deno.serve(async (req) => {
     )
   }
 
-  const invoice = normalise(parsed)
-  if (invoice.lines.length === 0) {
+  const document = normaliseExtraction(parsed)
+  if (document.lines.length === 0) {
     return jsonResponse(
       {
         error:
@@ -182,9 +128,12 @@ Deno.serve(async (req) => {
     )
   }
 
+  const reconciliation = reconcile(document)
+
   return jsonResponse({
     ok: true,
-    invoice,
+    document,
+    reconciliation,
     model_used: result.model_used,
     tokens_used: result.tokens_used,
   })

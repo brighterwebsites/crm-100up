@@ -92,11 +92,46 @@ export function sendEmail(params: {
 
 // ── Invoice extraction ───────────────────────────────────────────────────
 
-export interface ExtractedInvoice {
+export interface ExtractedLine {
+  name: string
+  /** Delivered quantity — what to receive into stock. */
+  qty: number
+  /** What the document says was ordered, where it prints both. */
+  qty_ordered: number | null
+  /** Exactly as printed. Whether it includes GST is `reconciliation.price_basis`. */
+  unit_cost: number | null
+  gst_applicable: boolean | null
+}
+
+export interface ExtractedDocument {
+  doc_type: 'docket' | 'invoice' | 'both'
   supplier: string | null
-  invoiceRef: string | null
-  invoiceDate: string | null
-  lines: { name: string; qty: number; unitCost: number | null }[]
+  supplier_ref: string | null
+  doc_date: string | null
+  /** 100UP's own PO number where the supplier quoted it. Seeds PO matching. */
+  po_ref: string | null
+  claimed_line_count: number | null
+  claimed_total_units: number | null
+  subtotal_ex_gst: number | null
+  gst_amount: number | null
+  total_inc_gst: number | null
+  freight_ex_gst: number | null
+  other_charges_ex_gst: number | null
+  lines: ExtractedLine[]
+}
+
+export interface Reconciliation {
+  price_basis: 'ex_gst' | 'inc_gst' | 'mixed' | 'unknown'
+  /** Which arithmetic test settled the GST basis — worth showing, not just logging. */
+  matched_on: string | null
+  line_total: number
+  /** Non-fatal, but put them in front of someone before they commit. */
+  warnings: string[]
+}
+
+export interface ExtractionResult {
+  document: ExtractedDocument
+  reconciliation: Reconciliation
 }
 
 /** Files Anthropic will accept. HEIC is not among them — see fileToBase64. */
@@ -121,16 +156,16 @@ export function fileToBase64(file: File): Promise<string> {
   })
 }
 
-export async function extractInvoice(file: File): Promise<ExtractedInvoice> {
+export async function extractInvoice(file: File): Promise<ExtractionResult> {
   if (file.size > INVOICE_MAX_BYTES) {
     throw new Error('File is larger than 10 MB. Split it or photograph fewer pages.')
   }
-  const res = await invoke<{ ok: true; invoice: ExtractedInvoice }>('extract-invoice', {
+  const res = await invoke<{ ok: true } & ExtractionResult>('extract-invoice', {
     file_base64: await fileToBase64(file),
     mime_type: file.type,
     filename: file.name,
   })
-  return res.invoice
+  return { document: res.document, reconciliation: res.reconciliation }
 }
 
 // ── AI usage ─────────────────────────────────────────────────────────────
