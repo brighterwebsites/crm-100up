@@ -16,8 +16,8 @@
  * down from full within one month, even when the array cannot sustain the
  * load. The header calls that out when production is below consumption.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Plus, Trash2, Zap } from 'lucide-react'
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
+import { ChevronDown, ChevronRight, Plus, Trash2, Zap } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { useData, loadProfileArray } from '../lib/data'
 import { supabase } from '../lib/supabaseClient'
@@ -306,7 +306,8 @@ export default function SimulationPage() {
           Click a day for its 24 hours. The battery starts full and carries over,
           so a run of dull days is what catches a system out, not any single one.
         </div>
-        <table className="table calc-breakdown">
+        <div className="sim-scroll">
+        <table className="table calc-breakdown sim-table">
           <thead>
             <tr>
               <th style={{ textAlign: 'left' }}>Day</th>
@@ -322,11 +323,14 @@ export default function SimulationPage() {
           </thead>
           <tbody>
             {sim.days.map((d) => (
-              <tr key={d.day} className={d.unmet > 0 ? 'sim-row-fail' : undefined}
-                  style={{ cursor: 'pointer' }}
+              <Fragment key={d.day}>
+              <tr className={`sim-day-row${d.unmet > 0 ? ' sim-row-fail' : ''}${openDay === d.day ? ' sim-day-open' : ''}`}
                   onClick={() => setOpenDay(openDay === d.day ? null : d.day)}>
                 <td style={{ textAlign: 'left' }}>
-                  Day {d.day}
+                  {openDay === d.day
+                    ? <ChevronDown size={12} aria-hidden />
+                    : <ChevronRight size={12} aria-hidden />}
+                  {' '}Day {d.day}
                   {sim.worst && d.day === sim.worst.day && <span className="sim-tag">worst</span>}
                 </td>
                 <td className="num">{n1(d.solar)}</td>
@@ -338,7 +342,40 @@ export default function SimulationPage() {
                 <td className="num">{n2(d.endSoc)}</td>
                 <td style={{ textAlign: 'left' }}>{d.unmet > 0 ? 'Shortfall' : 'OK'}</td>
               </tr>
+              {openDay === d.day && (
+                <tr className="sim-hours-row">
+                  <td colSpan={9}>
+                    <div className="sim-hours">
+                      <table className="table sim-hours-table">
+                        <thead>
+                          <tr>
+                            <th style={{ textAlign: 'left' }}>Hour</th>
+                            <th className="num">Solar gen</th>
+                            <th className="num">Load</th>
+                            <th className="num">Net</th>
+                            <th className="num">SOC</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {sim.hours.filter((h) => h.day === d.day).map((h) => (
+                            <tr key={h.i} className={h.soc <= 0 ? 'sim-row-fail' : undefined}>
+                              <td style={{ textAlign: 'left' }}>{String(h.hour).padStart(2, '0')}:00</td>
+                              <td className="num">{n2(h.prod)}</td>
+                              <td className="num">{n2(h.load)}</td>
+                              <td className="num">{n2(h.prod - h.load)}</td>
+                              <td className="num">{n2(h.soc)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </td>
+                </tr>
+              )}
+              </Fragment>
             ))}
+          </tbody>
+          <tfoot>
             <tr className="calc-subtotal">
               <td style={{ textAlign: 'left' }}>Totals</td>
               <td className="num">{n1(sim.totals.solar)}</td>
@@ -350,37 +387,11 @@ export default function SimulationPage() {
               <td className="num">–</td>
               <td style={{ textAlign: 'left' }}>{survives ? 'OK' : 'Shortfall'}</td>
             </tr>
-          </tbody>
+          </tfoot>
         </table>
+        </div>
       </div>
 
-      {openDay != null && (
-        <div className="card settings-card" style={{ marginTop: 14 }}>
-          <div className="card-title">Day {openDay} — hourly</div>
-          <table className="table calc-breakdown">
-            <thead>
-              <tr>
-                <th style={{ textAlign: 'left' }}>Hour</th>
-                <th className="num">Solar gen</th>
-                <th className="num">Load</th>
-                <th className="num">Net</th>
-                <th className="num">SOC</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sim.hours.filter((h) => h.day === openDay).map((h) => (
-                <tr key={h.i} className={h.soc <= 0 ? 'sim-row-fail' : undefined}>
-                  <td style={{ textAlign: 'left' }}>{String(h.hour).padStart(2, '0')}:00</td>
-                  <td className="num">{n2(h.prod)}</td>
-                  <td className="num">{n2(h.load)}</td>
-                  <td className="num">{n2(h.prod - h.load)}</td>
-                  <td className="num">{n2(h.soc)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
     </div>
   )
 }

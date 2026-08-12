@@ -2040,3 +2040,80 @@ textarea.jdp-input {
   padding: 1px 6px;
   margin-left: 6px;
 }
+
+/* ── simulation daily table ──────────────────────────────
+   One scroll container holds the 31 days AND any expanded hours, so opening a
+   day pushes the rest down inside the same box rather than growing the page.
+   Header and totals stay pinned — with 31 rows plus 24 expanded ones you
+   otherwise lose both the column labels and the figure you are comparing to. */
+.sim-scroll {
+  max-height: 62vh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.sim-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.sim-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+
+.sim-table tfoot td {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: var(--card);
+  border-top: 2px solid var(--line);
+}
+
+.sim-day-row {
+  cursor: pointer;
+}
+
+.sim-day-row:hover td {
+  background: var(--bg);
+}
+
+.sim-day-open td {
+  background: var(--stage-2-light);
+  font-weight: 600;
+}
+
+/* The expanded hours sit in a full-width cell so the parent table keeps its
+   column widths — a nested table cannot disturb the grid above it. */
+.sim-hours-row > td {
+  padding: 0;
+  background: var(--bg);
+}
+
+.sim-hours {
+  padding: 8px 10px 12px 26px;
+  border-left: 3px solid var(--stage-2);
+}
+
+.sim-hours-table {
+  width: 100%;
+}
+
+.sim-hours-table th {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 700;
+  padding: 3px 4px;
+}
+
+.sim-hours-table td {
+  padding: 2px 4px;
+  font-size: 11px;
+}
