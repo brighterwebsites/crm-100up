@@ -151,6 +151,14 @@ on mount to open Settings. Any future external return trip has to do the same.
   isn't.
 - Fred tests against real data. Never change data schemas without a migration
   plan.
+- **Free-tier auto-pause.** The Supabase org is on the free plan. If the
+  project (`nmyczgnvjhwhgpgvwfdx`) sees no database activity for 7
+  consecutive days, Supabase pauses it — the whole Auth/API/DB stack goes
+  unreachable until someone restores it from the dashboard (or
+  `restore_project` via MCP). A gap in dev activity (no commits, nobody
+  opening the app) is enough to trigger this even though nothing is actually
+  broken in the code. If auth/login/data suddenly stops working with no
+  code change to blame, check project status before debugging anything else.
 
 ## Reference files
 
