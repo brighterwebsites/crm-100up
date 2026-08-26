@@ -1939,6 +1939,30 @@ textarea.jdp-input {
   padding-top: 6px;
 }
 
+/* ── quick estimate ──────────────────────────────────────
+   Off-grid vs generator-assisted side by side, each with a Deye/Sigenergy
+   price cell. Reuses the calc-* card language rather than a new system. */
+.qe-compare {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+  align-items: start;
+}
+
+.qe-price-bar {
+  display: flex;
+  gap: 10px;
+}
+
+.qe-price-cell {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
 /* ── simulation ──────────────────────────────────────────
    The evidence behind a quote, so the failing rows must be unmissable. */
 .sim-kpis {

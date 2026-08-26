@@ -19,6 +19,7 @@ import PurchaseOrdersPage from './PurchaseOrdersPage'
 import SettingsPage, { type GmailReturn } from './SettingsPage'
 import AssumptionsPage from './AssumptionsPage'
 import CalculatorPage from './CalculatorPage'
+import QuickEstimatePage from './QuickEstimatePage'
 import SimulationPage from './SimulationPage'
 
 type Page =
@@ -236,7 +237,7 @@ function ShellInner() {
           {isAdmin && page === 'orders'        && <OrderList onOpenJob={handleOpenJob} />}
           {isAdmin && page === 'purchase-orders' && <PurchaseOrdersPage />}
           {isAdmin && page === 'suppliers'     && <SuppliersPage />}
-          {isAdmin && page === 'qd-quick-estimate' && <StubPage icon={House} title="Quick Estimate" note="Bedroom/occupant-based system sizing — not ported yet." />}
+          {isAdmin && page === 'qd-quick-estimate' && <QuickEstimatePage />}
           {isAdmin && page === 'qd-system-calc'    && <CalculatorPage />}
           {isAdmin && page === 'qd-3phase'         && <StubPage icon={Plug} title="3 Phase System" note="Three-phase system sizing tool — not ported yet." />}
           {isAdmin && page === 'qd-gm-bom'         && <StubPage icon={Pickaxe} title="Ground Mount BOM" note="Ground mount bill-of-materials generator — not ported yet." />}

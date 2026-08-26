@@ -1,0 +1,108 @@
+**1\. Assumptions and Calculators (the big one)**
+
+| Tool | Status | What that means for you |
+| :---- | :---- | :---- |
+| Calculator (single phase) | Live | Panels, battery, inverter, roof/ground, Sigenergy vs Deye, cost breakdown ***Pending*** \- Syle/layout adjustment, Copy to quote, Modal to Email direct to customer from 100up.com.au \- Some issues/bugs/design calculation behaviour unresolved See below.  |
+| Simulation | Live | July worst-case run, with the daily/hourly ***Pending** \- Graphs* |
+| Assumptions / Settings | Live | Pricing, rebates, sizing rules, site costs, panel settings. \*Inverter and Batteries are assigned from stock list data ***Pending*** \- Assumptions System setup \- an interface that lets you select the specific Deye/Sigenergy items from stock list items  |
+| Daily Load Profile | Live | Unchanged |
+| Quick Estimate | Not yet | ***Plan:** calc in crm \+ website | website version with lead capture. **Pending*** \- plan is to host this on the website via wp-plug in with a button in CRM to push any updated assumptions from CRM to website. so they are connected but data can be in sync.  2 versions for website 1\) Simplified version that points to the 1, 2, 3, 4, 5, bedroom page, 2\) Compare systems Calc that goes on the systems page and includes lead capture.  "Leads captured" get sent to email and sent to a spreadsheet \- we could create a "leads" section in CRM to track/manage followups before they become customers \- also good to help calculate how effective website is being along with being able to accuratley calculate Average Client value from website and Lead to Customer Ratio from Website (drives website investment decisions) .  |
+| 3 Phase | Not yet | Pending \- plan is to get Calculator (single phase) right first and then do the 3 phase, as they are mostly the same and only dif is that it uses items marked as 3phase..  |
+| Ground Mount BOM | Not yet | Indiv Items imported to Stock items Backend is done (so in the single phase calc the ground mount items all calculate to give total but the indiv calc / quote text copy and "Generate/print PO is not started.  |
+
+**2\. Products are a real catalogue,**  
+
+Stock items carry type, brand, phase, planning cost, last cost, and active/inactive and data held in the stock items is used in the calculators. 
+
+***Missing/Issues*** 
+
+* In assumptions there is a note: "Deye 10kW · AI-W5.1-10P3 \- Cost of one Deye 10kW all-in-one inverter (AI-W5.1-10P3-AU-B; note: 10kW exists only as three-phase — PDU/Base billed separately)"    
+  * In the 1Phase calculator we do get Deye AI-W5.1-10P1-AU-B (10kW) @ $2,450   
+  * In the 3Phase calculator we get Deye 12kW three-phase all-in-one inverter (AI-W5.1-12P3-AU-B)  
+* *10kw 3phase doesnt seem to exist in assumptions but is a stock item "Deye AI-W5.1-10P3-AU-B"  but  AI-W5.1-10P1-AU-B is not?*  
+  * Added both to stock Items \- Pricing needs to be confirmed  
+* Stock Items CEC Specification Details (need to separate the inputs here so section contains just CEC specs and a separat section for exta details like those used in assumptions  
+* This creates a foundation so adding/changing a product in calculator later is data entry, not a developer change.
+
+**3\. The app looks and behaves more like a finished tool**
+
+* Subdomain \- (can be changed if you like \-  
+* Emoji icons replaced with a proper icon set (same screens, less “prototype”).  
+* Warmer, consistent visual language — numbers in monospace so kW / $ / qty actually scan.  
+* Pipeline board has clearer stage groupings.  
+* Job detail is collapsible cards instead of one long scroll.  
+* Milestone dates (Booked / Installed / CES / Rebate) are pills, not a buried list.  
+* Password recovery actually completes — the reset email used to have nowhere to land.
+
+**4\. Integrations Settings and set up**
+
+* Email Send from system is working (can send test email in settings \- not yet wired into customer or job details yet)  
+* Claude/Anthropic API connection  
+* AI Invoice reading is started \- read a docket/invoice and pull lines, totals, GST, freight more testing and work needed here. Nothing auto-commits stock human gated before quantities change .  
+* Gmail (Google Workspace) Integration (plan is to create a table that logs and link to gmail email for convenience (finds and logs only supplier/customer emails (just date, subject not the full email 1 click opens gmail email in a new tab)
+
+**5\. Receiving stock — designed and half-built (not a finished screen yet)**
+
+The old “paste invoice → qty goes up” path threw away the unit price and couldn’t receive against an open PO with a price dif. 
+
+**6\. Other things done**
+
+* Orders, receipts, and supplier documents are handled separately (so stock can be receiped from delivery docket received now, invoice later; one invoice covering two deliveries \- covers messy real cases).  
+* Backend can receive against a PO, capture cost, and roll PO status (sent → partial → closed).  
+* Invoice extraction now reconciles GST and totals with arithmetic, not a model guess. If the numbers don’t add up, it flags you instead of writing a wrong cost.
+
+***Not in front of you yet***: the new “upload → confirm → commit” screen, and the Suppliers / Stock Received tabs. (part of this is built \- the upload invoice modal and also fallback paste from json)
+
+**6\. Still to come**
+
+* **Calculators** \-  3-phase, Quick Estimate, & Ground Mount BOM.  
+* Goods receipt engine \+ extraction, the receiving workflow in the UI.  
+* Generate CEC import CSV for upload to the portal...   
+* “Important stock” at a glance on Pipeline along with stock alerts same as up the top of Stock inventory   
+* *Other visual and design tweaks like* Pipeline dots from V46 pulsing indicators. (need to create Alerts/Stale rules if pulsing dots are supposed to indicated something special like \>21 days, are different by stage, outstanding stock etc \-  filters exist and still do nothing). 
+
+**Must decide (changes quoted sizes or daily workflow)**
+
+1\. **What does “survives July” actually mean? (bug \#10)**
+
+* Today a system can pass by coasting down from a full battery over 31 days, even when the array cannot meet the load. Undersized arrays look fine if the bank is huge enough.  
+* **Q:** should a pass require end-of-month SOC ≥ start (or a repeated July), not merely “didn’t hit empty”?  
+* This will move quoted system sizes. It is current V46 behaviour, faithfully ported — changing it is a product call, not a bug-fix.
+
+**2\. Warn when the array cannot carry the load?**
+
+Same bug. No battery size fixes production \< load. A warning is cheap; whether you want it is the question.
+
+**3\. When to Freeze further dev work on your html and json and migrate to cloud?**
+
+* freeze on Fred initiated changes (except genuine bug fixes) for a short period   
+* create a way to log feature request ideas from withint he tool for conveneience and then I can fix until we fully handover and work collaboratley on development  
+* Parity is measuring against a moving target so need a freeze date/period, as every tweak in the HTML is either re-implemented or lost.  
+* will also need to Re-key \+ build import script from freeze data html/json data 
+
+**7\. File supplier PDFs to Google Drive? (wishlist W1)**
+
+CRM keeps extracted data, not the file. Drive folder by supplier/year is the audit trail when a supplier disputes a price. Ask before building. Needs extra Google permission on top of Gmail.
+
+ (essentially if you connect gmail (integration already exists), we can also connect gdrive  the integration part shares the same credentials so its a natural extenstion, would also allow you to generate a pdf for a customer and save it to gdrive if you needed too).
+
+**8\. New stock item mid-receipt?**
+
+Old flow could create a stock row from a misread invoice line. Safer: item must exist first. Confirm.
+
+**9\. Installer table**
+
+flagged not speced \- think we need it. what do you actually needs: a list of installers, assign jobs, contact details, email installer (create in a way installers can log in and see jobs assigned to them \- if so what details do they see vs what they shouldnt see) 
+
+**Known Bugs**
+
+* Calculator: typing 0 freezes recalc **(bug \#11)**  
+* Cost provenance on last\_cost (wishlist W2) Receipts will write it; Stock page still allows hand-edit. Two writers, no stamp. Parked for now.  
+* Cost breakdown double-count in V46 **(bug \#6)** Display only; quoted totals were correct. New calculator should not copy this.  
+* **Bug \#8 (optimise \+ ground ignored force mode) — no historical underpricing.** Last paid price must stay visible next to planning price. Qty on hand stays beside cost on purpose.
+
+  Bugs Vaness needs to sort ASAP.
+
+* CRM subdomain noindex/seo protection for 100up.com.au domain  
+* Auth emails still on throttled Supabase SMTP Needed before go-live, not this week.
+

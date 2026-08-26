@@ -84,3 +84,104 @@ easier later rather than harder.
 **Related**: `docs/bugs.md` #3 (assumption costs and stock costs drift
 silently) and #4 (`receive_stock` captures no unit cost — being fixed by the
 goods receipt work, which is what creates this question).
+
+
+
+## VAnessa Notes to Add above
+Needs to be added to correct docs/sections
+
+## Installers
+
+- Installer account/login
+- Installer Jobs - what they need to see vs what they shouldnt see
+- Email notifiication to installers (what notiifications and when)
+
+
+##CEC Bridge Portal
+- Export job details to csv (example coming)
+- allows upload of job details that are stored in CRM directly to Special portal for rebate submissions
+- CSV import in the portal seems to allow import of data, not sure if it is accumulative or import overwrites info, so if data is changed or updated in portal will it clear existing infor, (important becuae there isdata that wont be in the crm -  like many many images and serial numbers of parts installed)
+
+
+Bugs
+- Pipeline - JobClosed Tile doesnt work. Also remove closed jobs from default display, only show in filter all jobs, and tile closed. list 
+
+
+
+##Public estimator: Quick System Estimate embed on 100UP website
+Raised 2026-08-11 (Vanessa), from conversation exploring iframe and WP plugin options.
+
+The Quick System Estimate (V46 section #qe) is a bedroom/occupant-based system sizer running the July Ballarat worst-case simulation. It produces two indicative prices (full off-grid vs smaller system + generator). Publicly useful as a lead-generation asset on the 100UP marketing site.
+
+**Update 2026-08-14 (Vanessa + Claude, after auditing the actual WP repo/live site)**
+
+Corrected facts, replacing assumptions this entry was originally written on:
+- There is no "100UP MU plugin." The real repo is `brighterwebsites/100up-tools`
+  (local: `F:\GIT_REPOS_INDIV\100up-conversion-tools`, currently a stale
+  uncloned copy — re-clone before editing). It's a normal plugin, deployed at
+  `/wp-content/plugins/100up-tools-claude-quiz-system-layout-x8kj4s/` on
+  `100up.com.au`. `main` is the correct branch — confirmed byte-identical to
+  what's live (checked via SSH, `hunpu_deploy_v1` key despite the `.mcp.json`
+  entry saying `100up_deploy` — that filename is wrong, fix it there). A
+  `combined` branch exists with an accidental nested duplicate
+  (`plugins/100up-solar-calculator/...` inside itself) and was never
+  deployed — dead end, ignore or delete.
+- The plugin (`100up-solar.php`) already ships five shortcodes on `main`:
+  `[100up-solar-ticker]`, `[100-up-daily-energy]`, `[100-up-quiz-system]`,
+  `[solar_quick_estimate]`, `[solar_calculator]` — plus a "Solar Pricing"
+  admin settings page backed by `wp_options` (`100up_solar_assumptions`).
+  That option has never been saved in production, so it's currently running
+  on hardcoded PHP defaults (`includes/defaults.php`) — no drift has
+  happened yet, but it's a second, independently-editable pricing store the
+  moment anyone touches that admin page.
+- **Nothing captures a lead today, anywhere in this plugin.** `includes/ajax.php`
+  exists but only proxies the Ballarat solar-radiation API for the ticker —
+  there is no lead endpoint, table, or email field on any shortcode.
+
+Decisions (Vanessa, 2026-08-14):
+- **CRM/Supabase stays the single source of truth for pricing, product, and
+  assumption data**, pushed to WP — not the WP admin page independently
+  edited. The push-model architecture below still stands. How WP stores what
+  it receives (a DB table, a `wp_options` value, or nothing durable at all
+  beyond the JS bundle) is unspecified and not a blocker — a "last synced"
+  display is a nice-to-have, not a requirement.
+- **Lead capture is not needed on the two tools that already work as
+  informational/navigational aids**, and neither needs further build:
+  - `[100-up-daily-energy]` — purely informational. Leave as-is.
+  - `[100-up-quiz-system]` — functions as a routing menu (picks the right
+    bedroom-count landing page), not a pricing tool. No lead capture belongs
+    on the quiz itself. Leave as-is.
+- **The thing that needs building is new**, not a modification of
+  `[solar_quick_estimate]` or `[solar_calculator]`: a side-by-side compare
+  tool (full off-grid vs generator-assisted, adjustable % generator usage —
+  the real V46 Quick Estimate behaviour) embedded on each bedroom-count
+  landing page the quiz routes to. **This is the one that needs lead capture
+  with email.** Scope it as a new shortcode/tool in the `100up-tools` repo,
+  separate from the existing calculator/quick-estimate shortcodes.
+
+Architecture agreed (original, still current for the CRM→WP push)
+
+Push model, not pull: CRM pushes a sanitised assumptions snapshot to WordPress; the marketing site reads from its own storage at render time. Nothing on the marketing site connects to Supabase at runtime.
+
+CRM side: Edge Function publish-estimator-assumptions — builds payload, HMAC-signs it, POSTs to WP, logs result. Triggered by an explicit "Publish to marketing site" button in the Assumptions UI (intentional publish, not automatic on save).
+WP side: custom REST route in the `100up-tools` plugin. Validates HMAC, writes to storage (shape TBD — see 2026-08-14 note above), purges LiteSpeed Cache on the estimator page(s).
+Estimator JS: extract the pure math from V46 (quickEstimate(), simulate(), assumption references) into a portable vanilla ES module — no framework, takes assumptions as a constructor argument. `assets/solar-calc.js` in the WP repo already has a client-side port of this for `[solar_quick_estimate]`/`[solar_calculator]` — check it before writing a new one; the new landing-page compare tool may be able to reuse it directly.
+Lead capture direction
+
+Fred currently routes enquiries via a spreadsheet. He does not yet see the pipeline value of tracking leads separately from jobs — the estimator lead capture is both a feature and an education tool. When "3 bedrooms, $28k estimated, submitted 9:47pm" arrives in the pipeline, the attribution becomes visible without a lecture.
+
+Lead flow: WP form → WP custom table → CRM polls WP REST API on a schedule (application password auth). CRM initiates all connections; WP has no outbound calls to Supabase. Leads enter the pipeline tagged with source, estimated system size, and estimated value.
+
+Not SCOS. The publish-assumptions payload and the estimator shortcode are 100UP-specific. They ship inside the `100up-tools` plugin (brighterwebsites/100up-tools), not a SCOS-shared plugin.
+
+Confirm before building
+
+website version needs lead capture, not just the calculator widget. - delivered via a plugin in separate repo - likely that  only "assumption data" needs to sync
+entry point for estimator leads — Phase 1 captured via webhook to xsl Phase 2 new 'pre-stage that doesnt land in pipeline, would need to be kept sep from actual customers
+*Decide if need for leads table design: columns, RLS, dedup key (email+phone hash).
+WP application password: create a dedicated crm-sync WP user, not admin creds.
+HMAC secret rotation plan — secret in Supabase env vars + wp-config.php, not wp_options.
+LSCache purge scope: estimator page(s) only, not full site.
+Failure alerting: notify if publish or lead-poll fails for >2 hours.
+Publish diff view: show Fred what changes before he confirms (e.g. "panel cost $180→$195").
+This is not a scos thing - this is 100up specific.
