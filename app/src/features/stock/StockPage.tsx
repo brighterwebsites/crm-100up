@@ -1,4 +1,4 @@
-import { Package } from 'lucide-react'
+import { ClipboardList, Package } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useAuth } from '../../lib/auth'
 import { brandFor, useData } from '../../lib/data'
@@ -7,6 +7,8 @@ import { PHASE_LABEL, PRODUCT_GROUPS, PRODUCT_TYPE_LABEL, inGroup } from '../../
 import type { ProductGroup } from '../../lib/productTypes'
 import ReceiveModal from './ReceiveModal'
 import StockDetailPanel from './StockDetailPanel'
+import StockTakeModal from './StockTakeModal'
+import { inTransitMap } from './stockTakeSheet'
 
 /** Planning price and last paid price have diverged. Not an error — it is
  * what happens when a supplier reprices — but worth surfacing so the quoting
@@ -17,13 +19,18 @@ function stale(s: { planning_cost: number; last_cost: number }): boolean {
 
 export default function StockPage() {
   const { isAdmin } = useAuth()
-  const { stocks, manufacturers, suppliers, jobs, items } = useData()
+  const { stocks, manufacturers, suppliers, jobs, items, purchaseOrders, purchaseOrderItems } = useData()
   const [receiving, setReceiving] = useState(false)
+  const [stockTake, setStockTake] = useState(false)
   const [filter, setFilter] = useState<ProductGroup>('all')
   const [search, setSearch] = useState('')
   const [openId, setOpenId] = useState<number | 'new' | null>(null)
 
   const alloc = useMemo(() => allocatedMap(jobs, items), [jobs, items])
+  const transit = useMemo(
+    () => inTransitMap(purchaseOrders, purchaseOrderItems),
+    [purchaseOrders, purchaseOrderItems],
+  )
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -40,6 +47,21 @@ export default function StockPage() {
     })
   }, [stocks, manufacturers, filter, search])
 
+  // The sheet counts what is on screen. Saying so on the document matters:
+  // a filtered count reconciled as if it were a full one would write off
+  // every item that was never on the page.
+  const scope = useMemo(() => {
+    const parts: string[] = []
+    if (filter !== 'all') parts.push(PRODUCT_GROUPS.find((g) => g.key === filter)?.label ?? filter)
+    if (search.trim()) parts.push(`search “${search.trim()}”`)
+    return parts.join(' · ')
+  }, [filter, search])
+
+  const sheetInput = useMemo(
+    () => ({ stocks: filtered, manufacturers, suppliers, allocated: alloc, transit, scope: scope || undefined }),
+    [filtered, manufacturers, suppliers, alloc, transit, scope],
+  )
+
   return (
     <div className="pipeline-page">
       <div className="filter-row">
@@ -54,7 +76,15 @@ export default function StockPage() {
             <button className="btn btn-gray" onClick={() => setOpenId('new')}>
               + Add new
             </button>
-            <button className="btn btn-primary" style={{ marginLeft: 'auto' }} onClick={() => setReceiving(true)}>
+            <button
+              className="btn btn-gray"
+              style={{ marginLeft: 'auto' }}
+              onClick={() => setStockTake(true)}
+              title="Printable count sheet for the products shown"
+            >
+              <ClipboardList size={13} aria-hidden /> Print stock take
+            </button>
+            <button className="btn btn-primary" onClick={() => setReceiving(true)}>
               <Package size={13} aria-hidden /> Receive stock
             </button>
           </>
@@ -157,6 +187,7 @@ export default function StockPage() {
       </div>
 
       {receiving && <ReceiveModal onClose={() => setReceiving(false)} />}
+      {stockTake && <StockTakeModal input={sheetInput} onClose={() => setStockTake(false)} />}
     </div>
   )
 }
