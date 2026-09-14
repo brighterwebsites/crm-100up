@@ -375,58 +375,60 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
         )}
       </AccSection>
 
-      {/* ── Stock ── Installers don't see the Assigned block, so for them the
-          card only renders when there's pending or consumed stock to show. */}
-      {(isAdmin || pending.length > 0 || consumed.length > 0) && (
-        <AccSection title="Stock" open={openSections.stock} onToggle={() => toggleSection('stock')}>
-          {pending.length > 0 && (
-            <div className="stock-block">
-              <div className="stock-block-title">Pending (auto-assigns on booking)</div>
-              {pending.map((i) => (
-                <div key={i.id} className="stock-line">
-                  <span>{stockName(i.stock_id)}</span>
-                  <span>× {i.qty}</span>
-                </div>
-              ))}
-              {isAdmin && (
-                <button className="btn btn-gray" style={{ fontSize: 11, marginTop: 6 }} onClick={() => run(() => applyPendingNow(job.id), 'Assigned now')}>
-                  Assign now
-                </button>
-              )}
-            </div>
-          )}
-          {isAdmin && (
-            <div className="stock-block">
-              <div className="stock-block-title">Assigned</div>
-              {assigned.length === 0 && <div className="mutedtext">No stock assigned.</div>}
-              {assigned.map((i) => (
-                <div key={i.id} className="stock-line">
-                  <span>
-                    {stockName(i.stock_id)}
-                    {shortMap[i.stock_id] ? <span className="short-pill">{shortMap[i.stock_id]} short</span> : null}
-                  </span>
-                  <span>
-                    × {i.qty}
-                    <button className="btn-x" title="Remove" onClick={() => removeStock(i.id)}><X size={13} aria-hidden /></button>
-                  </span>
-                </div>
-              ))}
-              <AddStockRow stocks={stocks} onAdd={addStock} />
-            </div>
-          )}
-          {consumed.length > 0 && (
-            <div className="stock-block">
-              <div className="stock-block-title">Consumed at install</div>
-              {consumed.map((i) => (
-                <div key={i.id} className="stock-line consumed">
-                  <span>{stockName(i.stock_id)}</span>
-                  <span>× {i.qty}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </AccSection>
-      )}
+      {/* ── Stock ── A job's stock moves as a group: pending → assigned (on
+          booking) → consumed (on install start), so usually only one block has
+          items. Empty blocks are hidden: an empty "Assigned" next to a full
+          "Consumed" list read as if nothing was ever assigned. Admins always
+          get the Assigned block because it holds Add stock. */}
+      <AccSection title="Stock" open={openSections.stock} onToggle={() => toggleSection('stock')}>
+        {pending.length > 0 && (
+          <div className="stock-block">
+            <div className="stock-block-title">Pending (auto-assigns on booking)</div>
+            {pending.map((i) => (
+              <div key={i.id} className="stock-line">
+                <span>{stockName(i.stock_id)}</span>
+                <span>× {i.qty}</span>
+              </div>
+            ))}
+            {isAdmin && (
+              <button className="btn btn-gray" style={{ fontSize: 11, marginTop: 6 }} onClick={() => run(() => applyPendingNow(job.id), 'Assigned now')}>
+                Assign now
+              </button>
+            )}
+          </div>
+        )}
+        {(isAdmin || assigned.length > 0) && (
+          <div className="stock-block">
+            <div className="stock-block-title">Assigned</div>
+            {jobItems.length === 0 && <div className="mutedtext">No stock assigned.</div>}
+            {assigned.map((i) => (
+              <div key={i.id} className="stock-line">
+                <span>
+                  {stockName(i.stock_id)}
+                  {shortMap[i.stock_id] ? <span className="short-pill">{shortMap[i.stock_id]} short</span> : null}
+                </span>
+                <span>
+                  × {i.qty}
+                  {isAdmin && <button className="btn-x" title="Remove" onClick={() => removeStock(i.id)}><X size={13} aria-hidden /></button>}
+                </span>
+              </div>
+            ))}
+            {isAdmin && <AddStockRow stocks={stocks} onAdd={addStock} />}
+          </div>
+        )}
+        {consumed.length > 0 && (
+          <div className="stock-block">
+            <div className="stock-block-title">Consumed at install</div>
+            {consumed.map((i) => (
+              <div key={i.id} className="stock-line consumed">
+                <span>{stockName(i.stock_id)}</span>
+                <span>× {i.qty}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {!isAdmin && jobItems.length === 0 && <div className="mutedtext">No stock allocated to this job yet.</div>}
+      </AccSection>
 
       {/* ── Job details (installation_requests) ── */}
       {isAdmin && (
