@@ -226,8 +226,15 @@ on mount to open Settings. Any future external return trip has to do the same.
 ## Working in this repo
 
 - **Deploy = push to `main`.** Cloudflare Workers Builds is connected to the
-  GitHub repo and rebuilds the `crm-100up` worker on every push to `main`.
-  There's no CI workflow in the repo and no manual deploy step.
+  GitHub repo and rebuilds the `crm-100up` worker on every push to `main`,
+  live at **https://offgridcrm.100up.com.au/** (`crm.100up.com.au` in the
+  noindex plan was a suggestion and does not exist). There's no CI workflow
+  in the repo and no manual deploy step. `main` carries a GitHub rule requiring
+  pull requests; Vanessa's account bypasses it, so a direct push succeeds with
+  a "Changes must be made through a pull request" notice. That's expected,
+  not a failure. To confirm a deploy landed, grep the live JS bundle for a
+  string unique to the change: Cloudflare's bundle hash never matches a local
+  build, so comparing filenames proves nothing.
   **Default workflow: once a change builds and lints clean, commit and push to
   `main`**, so it's live for Vanessa to test and Fred to check in on. Don't
   leave finished work committed-but-unpushed, or only running on a local dev
