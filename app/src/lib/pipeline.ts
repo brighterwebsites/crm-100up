@@ -56,9 +56,17 @@ export const PIPELINE: Record<number, StageDef> = {
   },
 }
 
-export const TOTAL_STEPS = 19
-/** Flat ordinal offset per stage (mirror of the old SOFF constant). */
-export const STAGE_OFFSET: Record<number, number> = { 1: 0, 2: 4, 3: 7, 4: 13 }
+const STAGES = [1, 2, 3, 4]
+
+// Derived from the step lists, never hardcoded. V46's SOFF constant, which
+// this used to mirror, had stage 4 at 13 instead of 12: every Compliance dot
+// on the Pipeline board sat one column to the right, and a closed job's dot
+// (ordinal 19, one past the last column) drew nowhere.
+export const TOTAL_STEPS = STAGES.reduce((n, s) => n + PIPELINE[s].steps.length, 0)
+/** Flat ordinal offset per stage: the number of steps in all earlier stages. */
+export const STAGE_OFFSET: Record<number, number> = Object.fromEntries(
+  STAGES.map((s, i) => [s, STAGES.slice(0, i).reduce((n, p) => n + PIPELINE[p].steps.length, 0)]),
+)
 
 export function stepOrdinal(stage: number, step: number): number {
   return (STAGE_OFFSET[stage] ?? 0) + step
@@ -69,7 +77,7 @@ export function stepLabel(stage: number, step: number): string {
 }
 
 export function isClosed(stage: number, step: number): boolean {
-  return stage === 4 && step === 6
+  return stage === 4 && step === PIPELINE[4].steps.length - 1
 }
 
 /** Steps whose Advance action needs a date from the user (mirrors the old
