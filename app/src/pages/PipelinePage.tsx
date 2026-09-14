@@ -1,4 +1,4 @@
-import { Mail, Package, Phone, Wrench } from 'lucide-react'
+import { Mail, Package, Phone } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useData } from '../lib/data'
 import type { Customer, Job } from '../lib/data'
@@ -177,10 +177,9 @@ export default function PipelinePage() {
                           {cust.email && <a href={`mailto:${cust.email}`} onClick={(e) => e.stopPropagation()}><Mail size={11} aria-hidden /></a>}
                         </div>
                       )}
-                      {(short || j.fixes_needed) && (
+                      {short && (
                         <div className="p-alerts">
-                          {short       && <span className="short-pill"><Package size={11} aria-hidden /> stock short</span>}
-                          {j.fixes_needed && <span className="short-pill short-pill-signal"><Wrench size={11} aria-hidden /> fixes</span>}
+                          <span className="short-pill"><Package size={11} aria-hidden /> stock short</span>
                         </div>
                       )}
                     </td>

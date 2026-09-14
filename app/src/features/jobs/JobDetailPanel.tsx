@@ -130,9 +130,8 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
           job_type: jobForm.job_type,
           assigned_installer_id: jobForm.assigned_installer_id || null,
           notes: jobForm.notes,
-          fixes_needed: jobForm.fixes_needed,
         }
-      : { notes: jobForm.notes, fixes_needed: jobForm.fixes_needed }
+      : { installer_notes: jobForm.installer_notes }
 
     await run(async () => {
       await updateJob(job, jobPatch)
@@ -161,10 +160,6 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
           job_id: job.id,
           job_order_ref: irForm.ref,
           issued_date: irForm.issued || null,
-          vehicle: irForm.vehicle,
-          site_access_notes: irForm.siteAccess,
-          special_instructions: irForm.specialInstructions,
-          additional_notes: irForm.extraNotes,
         },
         { onConflict: 'job_id' },
       )
@@ -279,13 +274,12 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
       </div>
 
       {/* ── Alerts ── */}
-      {(hasShortage || isOverdue || job.fixes_needed) && (
+      {(hasShortage || isOverdue) && (
         <div className="jdp-section">
           <div className="jdp-section-title">Alerts</div>
           <div className="jdp-alerts">
             {hasShortage  && <span className="alert-tag"><Package size={11} aria-hidden /> Stock short</span>}
             {isOverdue    && <span className="alert-tag"><Calendar size={11} aria-hidden /> Install overdue</span>}
-            {job.fixes_needed && <span className="alert-tag alert-tag-info"><Wrench size={11} aria-hidden /> Fixes needed</span>}
           </div>
         </div>
       )}
@@ -329,9 +323,13 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
               <option value="service">Service / upgrade</option>
             </select>
           </F>
-          <F label="Value (AUD)">
-            <input className="jdp-input" disabled={!isAdmin} type="number" value={jobForm.value} onChange={(e) => setJobForm({ ...jobForm, value: e.target.value })} />
-          </F>
+          {/* UI-only hide: the value is still readable via the API by the
+              assigned installer until the installer-visibility pass (docs/bugs.md). */}
+          {isAdmin && (
+            <F label="Value (AUD)">
+              <input className="jdp-input" type="number" value={jobForm.value} onChange={(e) => setJobForm({ ...jobForm, value: e.target.value })} />
+            </F>
+          )}
           <F label="System">
             <input className="jdp-input" disabled={!isAdmin} value={jobForm.system_description} onChange={(e) => setJobForm({ ...jobForm, system_description: e.target.value })} />
           </F>
@@ -352,13 +350,17 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
             </select>
           </F>
           <F label="Notes" full>
-            <textarea className="jdp-input" rows={3} value={jobForm.notes} onChange={(e) => setJobForm({ ...jobForm, notes: e.target.value })} />
+            <textarea className="jdp-input" rows={3} disabled={!isAdmin} value={jobForm.notes} onChange={(e) => setJobForm({ ...jobForm, notes: e.target.value })} />
           </F>
-          <F label="" full>
-            <label style={{ display: 'flex', gap: 7, alignItems: 'center', fontSize: 13, cursor: 'pointer' }}>
-              <input type="checkbox" checked={jobForm.fixes_needed} onChange={(e) => setJobForm({ ...jobForm, fixes_needed: e.target.checked })} />
-              Fixes needed
-            </label>
+          <F label="Installer notes" full>
+            <textarea
+              className="jdp-input"
+              rows={3}
+              disabled={isAdmin}
+              placeholder={isAdmin ? 'No notes from the installer yet' : 'Your comments or notes on this job'}
+              value={jobForm.installer_notes}
+              onChange={(e) => setJobForm({ ...jobForm, installer_notes: e.target.value })}
+            />
           </F>
         </div>
         {isAdmin && (
@@ -434,41 +436,12 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
             <F label="Installer">
               <input className="jdp-input" disabled value={installerName(job.assigned_installer_id)} />
             </F>
-            <F label="Vehicle / rego">
-              <input className="jdp-input" value={irForm.vehicle} onChange={(e) => setIrForm({ ...irForm, vehicle: e.target.value })} />
-            </F>
             <F label="Planned install date">
               <input className="jdp-input" disabled value={job.planned_install_date ?? ''} />
             </F>
           </div>
-
-          <div style={{ marginTop: 10 }}>
-            <div className="jdp-section-title">Site &amp; Instructions</div>
-            <div className="jdp-2col">
-              <F label="Site access notes" full>
-                <textarea className="jdp-input" rows={2} value={irForm.siteAccess} onChange={(e) => setIrForm({ ...irForm, siteAccess: e.target.value })} />
-              </F>
-              <F label="Special instructions" full>
-                <textarea className="jdp-input" rows={2} value={irForm.specialInstructions} onChange={(e) => setIrForm({ ...irForm, specialInstructions: e.target.value })} />
-              </F>
-              <F label="Additional notes" full>
-                <textarea className="jdp-input" rows={2} value={irForm.extraNotes} onChange={(e) => setIrForm({ ...irForm, extraNotes: e.target.value })} />
-              </F>
-            </div>
-          </div>
           <div className="jdp-save-row">
             <button className="btn btn-primary" style={{ fontSize: 12, padding: '7px 14px' }} onClick={saveIR}>Save job order</button>
-          </div>
-        </AccSection>
-      )}
-
-      {/* Installer view of site & instructions (read-ish) */}
-      {!isAdmin && ir && (
-        <AccSection title="Site & Instructions" open={openSections.jobDetails} onToggle={() => toggleSection('jobDetails')}>
-          <div className="jdp-2col">
-            {ir.site_access_notes && <F label="Site access" full><div style={{ fontSize: 13, padding: '4px 0' }}>{ir.site_access_notes}</div></F>}
-            {ir.special_instructions && <F label="Special instructions" full><div style={{ fontSize: 13, padding: '4px 0' }}>{ir.special_instructions}</div></F>}
-            {ir.additional_notes && <F label="Additional notes" full><div style={{ fontSize: 13, padding: '4px 0' }}>{ir.additional_notes}</div></F>}
           </div>
         </AccSection>
       )}
@@ -535,7 +508,7 @@ function jobFormFrom(job: Job | undefined) {
     job_type: (job?.job_type ?? 'install') as 'install' | 'service',
     assigned_installer_id: job?.assigned_installer_id ?? '',
     notes: job?.notes ?? '',
-    fixes_needed: job?.fixes_needed ?? false,
+    installer_notes: job?.installer_notes ?? '',
   }
 }
 
@@ -553,10 +526,6 @@ function irFormFrom(ir: InstallationRequest | undefined) {
   return {
     ref: ir?.job_order_ref ?? '',
     issued: ir?.issued_date ?? '',
-    vehicle: ir?.vehicle ?? '',
-    siteAccess: ir?.site_access_notes ?? '',
-    specialInstructions: ir?.special_instructions ?? '',
-    extraNotes: ir?.additional_notes ?? '',
   }
 }
 

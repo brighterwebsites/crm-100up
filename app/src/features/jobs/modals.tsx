@@ -81,10 +81,6 @@ export function JobOrderModal({
   const [doc, setDoc] = useState({
     ref: existingIR?.job_order_ref || defaultRef,
     issued: existingIR?.issued_date || new Date().toLocaleDateString('en-CA'),
-    vehicle: existingIR?.vehicle || '',
-    siteAccess: existingIR?.site_access_notes || '',
-    specialInstructions: existingIR?.special_instructions || '',
-    extraNotes: existingIR?.additional_notes || '',
   })
   const [err, setErr] = useState<string | null>(null)
 
@@ -98,10 +94,6 @@ export function JobOrderModal({
           job_id: job.id,
           job_order_ref: doc.ref,
           issued_date: doc.issued || null,
-          vehicle: doc.vehicle,
-          site_access_notes: doc.siteAccess,
-          special_instructions: doc.specialInstructions,
-          additional_notes: doc.extraNotes,
         },
         { onConflict: 'job_id' },
       )
@@ -135,23 +127,7 @@ export function JobOrderModal({
             Issued date
             <input type="date" value={doc.issued} onChange={set('issued')} />
           </label>
-          <label>
-            Vehicle
-            <input value={doc.vehicle} onChange={set('vehicle')} />
-          </label>
-          <label>
-            Site access
-            <input value={doc.siteAccess} onChange={set('siteAccess')} />
-          </label>
         </div>
-        <label className="notes-label">
-          Special instructions
-          <textarea rows={3} value={doc.specialInstructions} onChange={set('specialInstructions')} />
-        </label>
-        <label className="notes-label">
-          Additional notes
-          <textarea rows={2} value={doc.extraNotes} onChange={set('extraNotes')} />
-        </label>
         <div className="row">
           <button className="btn btn-primary" onClick={save}>
             Save job order

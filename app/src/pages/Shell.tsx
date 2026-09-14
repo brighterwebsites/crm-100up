@@ -88,10 +88,6 @@ function ShellInner() {
           ? {
               ref: ir.job_order_ref,
               issued: ir.issued_date ?? '',
-              vehicle: ir.vehicle,
-              siteAccess: ir.site_access_notes,
-              specialInstructions: ir.special_instructions,
-              extraNotes: ir.additional_notes,
               customItems: ir.custom_items,
               savedAt: new Date(ir.updated_at).getTime(),
             }
@@ -109,6 +105,7 @@ function ShellInner() {
           stage: j.stage,
           step: j.step,
           notes: j.notes,
+          installerNotes: j.installer_notes,
           created: new Date(j.created_at).getTime(),
           stockItems: byJob(j.id, 'assigned'),
           stockConsumed: byJob(j.id, 'consumed'),
@@ -121,7 +118,6 @@ function ShellInner() {
           cesReceived: j.ces_received ?? '',
           rebateSubmitted: j.rebate_submitted ?? '',
           rebateReceived: j.rebate_received ?? '',
-          fixesNeeded: j.fixes_needed,
         }
       }),
       stocks: stocks.map((s) => ({ id: s.id, name: s.name, qty: s.qty, ...(s.preferred_supplier_id ? { supplierId: s.preferred_supplier_id } : {}) })),

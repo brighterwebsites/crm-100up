@@ -1,4 +1,4 @@
-import { Package, Wrench } from 'lucide-react'
+import { Package } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useData } from '../lib/data'
 import type { Job } from '../lib/data'
@@ -132,7 +132,6 @@ export default function CustomerJobsPage({ installerOnly, initialJobId }: Props)
                 <div className="master-item-name">
                   {cust?.name ?? `Job #${j.id}`}
                   {short && <span className="short-pill" style={{ marginLeft: 6 }}><Package size={11} aria-hidden /></span>}
-                  {j.fixes_needed && <span className="type-pill" style={{ marginLeft: 6 }}><Wrench size={11} aria-hidden /></span>}
                 </div>
                 {j.location && <div className="master-item-sub">{j.location}</div>}
                 <div className="master-item-stage">{stageChip(j)}</div>
