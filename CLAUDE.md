@@ -22,6 +22,36 @@ the new app is where all new work goes.
 
 Supabase project ref: `nmyczgnvjhwhgpgvwfdx`.
 
+## Repo layout and sibling repos
+
+**This repo's root is `F:\GIT_REPOS_INDIV\crm-100up` — it is the working
+directory, and `.git` lives there.** Until 2026-09-15 the repo sat one level
+down in a non-git wrapper folder of the same name (`crm-100up\crm-100up`),
+which meant this file never auto-loaded and `git` commands from the workspace
+root failed. That nesting is gone — if you ever see a `crm-100up` subfolder
+reappear here, something has re-cloned into the wrong place.
+
+Three related repos, opened together via `100up-crm.code-workspace`:
+
+| Repo | Path | What it is |
+|---|---|---|
+| `crm-100up` | `F:\GIT_REPOS_INDIV\crm-100up` | This repo — the CRM and Quote Designer |
+| `BW-CRM` | `..\BW-CRM` | Brighter Websites' own CRM. Separate product, shares patterns, **not** a dependency |
+| `100up-tools` | `..\100up-tools` | The public 100up.com.au WordPress plugin — solar ticker, daily energy, system-finder quiz, quick estimate |
+
+`100up-tools` matters here because the public estimator is meant to consume
+**this** repo's pricing: the `assumptions` table is the single source of truth
+and gets pushed to WordPress, never edited independently on the WP side. Spec
+lives in `docs/wp-quick-system-estimate-spec.md`. Branch `main` is current;
+the `combined` branch holds an accidental nested duplicate and was never
+deployed — ignore it.
+
+> A stale, pre-restructure copy of that plugin used to sit at
+> `F:\GIT_REPOS_INDIV\100up-conversion-tools` with no `.git` at all. It was
+> archived to `100up-conversion-tools.stale-20260915` on 2026-09-15. Do not
+> edit it, and do not treat it as the plugin — it predates the rename to
+> `100up-solar.php` and the `includes/` restructure.
+
 ## Read these before starting work
 
 | Doc | Why |
@@ -91,8 +121,21 @@ on mount to open Settings. Any future external return trip has to do the same.
    in commit `6e609a4` (see `supabase/migration-history-repair-rollback.sql`
    for the prior state).
 
-   The CLI is **not currently installed on the dev machine** — install it
-   before the next migration, or the drift restarts on the first one.
+   The CLI **is installed** (v2.113.0, via npm, `supabase` on PATH) as of
+   2026-09-15. What it does *not* reliably have is a valid access token — a
+   stale PAT makes every `--linked` command fail with a bare 401:
+
+   ```
+   supabase migration list --linked
+   → LegacyDbConfigLoginRoleStatusError: unexpected login role status 401
+   ```
+
+   That is an auth problem, **not** a "project is paused" problem and **not**
+   a reason to fall back to an MCP connection. Fix it with `supabase login`
+   (or set `SUPABASE_ACCESS_TOKEN` from a PAT) and carry on with `db push`.
+   The project link itself survives in `supabase/.temp/project-ref`, which is
+   gitignored — if that file is missing, re-run `supabase link` first.
+
    If a migration ever does have to go through an agent connection, re-stamp
    the history to the local filename version immediately afterwards.
 2. **Check which migration last defined a function** before changing it —
@@ -175,6 +218,10 @@ on mount to open Settings. Any future external return trip has to do the same.
 - New app: `cd app && npm install && npm run dev`. Lint with `oxlint`.
 - Legacy file: open directly in a browser, no build step.
 - Local Supabase workflows via the `supabase` CLI; prefer testing locally
-  before applying to the remote project.
+  before applying to the remote project. If a `--linked` command 401s, that's
+  a stale PAT — see convention 1, not a paused project.
 - `.agents/skills/supabase-postgres-best-practices/` is vendored here — consult
   it for RLS, indexing, and function-security patterns.
+- `app/.env.local` and `supabase/.temp/` are gitignored and machine-local.
+  They survived the 2026-09-15 flatten, but a fresh clone won't have them:
+  recreate `.env.local` from `app/.env.example` and re-run `supabase link`.
