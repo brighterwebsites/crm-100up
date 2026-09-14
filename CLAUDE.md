@@ -13,7 +13,7 @@ and both are currently real:
 |---|---|---|
 | **What** | `100UP_suite_V46.html` — single self-contained HTML file, inline JS/CSS, `localStorage` only | `app/` — React + TypeScript + Vite, Supabase backend, deployed to Cloudflare |
 | **Holds** | The six Quote Designer calculators | The whole CRM half |
-| **Status** | Still the only way to produce a quote | Live, multi-user, hosted |
+| **Status** | Still the only way to produce a quote | Deployed and multi-user, but **not in business use yet** — Fred checks in on progress |
 
 Fred quotes in the old file, then pastes the result into the new app via the
 "Link quote" screen. **Do not treat either as dead.** The old file is the
@@ -69,7 +69,12 @@ List, Purchase Orders (view-only), Suppliers, Receive Stock (paste-invoice),
 Settings (email service), Daily Load Profile.
 
 Auth with two roles: **admin** (Fred — everything) and **installer** (assigned
-jobs only, can edit `notes` and `fixes_needed` only). Enforced by RLS, not UI.
+jobs only; can edit `installer_notes` and nothing else — Fred's `notes` are
+read-only to them). Writes are enforced in the database (RLS plus the
+allowlist in `private.guard_jobs_update()`), not the UI. **Reads are not yet:**
+installers can read every cost and pricing table through the API, whatever the
+UI shows them — `docs/bugs.md` #14, a blocker before real installers log in.
+Public signups are disabled; users are created by an admin.
 
 ## What's not built
 
@@ -192,8 +197,13 @@ on mount to open Settings. Any future external return trip has to do the same.
 - **The V46 cost breakdown double-counts** the mounting kit and Deye PDU/Base
   in its itemised rows (`docs/bugs.md` #6). Base cost is correct; the display
   isn't.
-- Fred tests against real data. Never change data schemas without a migration
-  plan.
+- **Not in business use yet (as of 2026-09-15).** Fred still runs the business
+  on V46. The CRM holds his imported legacy data plus test records, and he
+  looks in to follow progress. Schema changes carry no business impact, so ship
+  them in one go: no staged "deploy the frontend first, drop the column later"
+  dance. Migration *history* discipline (convention 1) applies regardless.
+  **This flips at cutover.** Once Fred depends on it, a column drop must follow
+  the frontend deploy that stops using it, or the live app breaks mid-save.
 - **Free-tier auto-pause.** The Supabase org is on the free plan. If the
   project (`nmyczgnvjhwhgpgvwfdx`) sees no database activity for 7
   consecutive days, Supabase pauses it — the whole Auth/API/DB stack goes
@@ -215,11 +225,21 @@ on mount to open Settings. Any future external return trip has to do the same.
 
 ## Working in this repo
 
-- New app: `cd app && npm install && npm run dev`. Lint with `oxlint`.
+- **Deploy = push to `main`.** Cloudflare Workers Builds is connected to the
+  GitHub repo and rebuilds the `crm-100up` worker on every push to `main`.
+  There's no CI workflow in the repo and no manual deploy step.
+  **Default workflow: once a change builds and lints clean, commit and push to
+  `main`**, so it's live for Vanessa to test and Fred to check in on. Don't
+  leave finished work committed-but-unpushed, or only running on a local dev
+  server. `npm run deploy` (raw `wrangler deploy`) still exists but bypasses
+  git, so the live app stops matching `main`; don't use it.
+- Database changes are separate: Cloudflare never touches Supabase. Apply
+  migrations with `supabase db push` (convention 1). Until cutover the remote
+  project is the dev environment, so there's no local Supabase stack to test
+  against first. If a `--linked` command 401s, that's a stale PAT — see
+  convention 1, not a paused project.
+- New app locally: `cd app && npm install && npm run dev`. Lint with `oxlint`.
 - Legacy file: open directly in a browser, no build step.
-- Local Supabase workflows via the `supabase` CLI; prefer testing locally
-  before applying to the remote project. If a `--linked` command 401s, that's
-  a stale PAT — see convention 1, not a paused project.
 - `.agents/skills/supabase-postgres-best-practices/` is vendored here — consult
   it for RLS, indexing, and function-security patterns.
 - `app/.env.local` and `supabase/.temp/` are gitignored and machine-local.
