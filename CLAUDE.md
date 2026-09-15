@@ -65,8 +65,10 @@ deployed — ignore it.
 ## What's built (new app)
 
 Pipeline board (19 steps), Customer Jobs, Customers, Job detail, Stock, Order
-List, Purchase Orders (draft → send to supplier / mark sent, print, delete;
-open POs count as stock on order), Suppliers, Receive Stock (paste-invoice),
+List, Purchase Orders (draft → send to supplier / mark sent, receive against
+the PO, print, delete; open POs count as stock on order), Suppliers, Receive
+Stock (AI-read invoice; ad-hoc from the Stock page via `receive_stock`, or
+against a PO via `receive_goods` with the PO's lines as a reading hint),
 Stock takes (printed count sheet → counts → apply; `docs/stock-take-design.md`),
 Settings (email service), Daily Load Profile.
 
