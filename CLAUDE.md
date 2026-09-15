@@ -148,9 +148,18 @@ on mount to open Settings. Any future external return trip has to do the same.
 3. **Regenerate `app/src/types/database.types.ts`** after any migration:
    `supabase gen types typescript --linked --schema public > app/src/types/database.types.ts`
 4. **Stage/step and pipeline-gate dates are RPC-only.** `advance_job_stage`,
-   `move_job_back`, `reschedule_booking` plus the `private.guard_jobs_update()`
-   trigger. This exists specifically to fix the old app's bug where setting a
-   date directly bypassed stock consumption — **do not weaken it.**
+   `move_job_back`, `reschedule_booking`, `set_step_date` plus the
+   `private.guard_jobs_update()` trigger. This exists specifically to fix the
+   old app's bug where setting a date directly bypassed stock consumption —
+   **do not weaken it.**
+
+   **Never hardcode step numbers.** Identify a step by `pipeline_steps.key`
+   (`'install_in_progress'`, `'ces_received'`, …). The same row carries
+   `installer_can_set` (who may tick it) and `date_column` (which `jobs`
+   column holds its date, if any; otherwise the date is in
+   `job_step_dates`). Hardcoded positions have already bitten twice: an
+   off-by-one board offset, and a move-back that cleared the wrong date.
+   Full model: `docs/installer-model-design.md`.
 5. **RLS discipline**: explicit `grant`, `enable row level security`, then one
    policy per operation. `anon` gets nothing.
 
