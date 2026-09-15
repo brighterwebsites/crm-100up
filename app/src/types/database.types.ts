@@ -1036,6 +1036,93 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_take_lines: {
+        Row: {
+          qty_counted: number | null
+          qty_printed: number
+          qty_system: number | null
+          stock_id: number
+          stock_take_id: number
+        }
+        Insert: {
+          qty_counted?: number | null
+          qty_printed: number
+          qty_system?: number | null
+          stock_id: number
+          stock_take_id: number
+        }
+        Update: {
+          qty_counted?: number | null
+          qty_printed?: number
+          qty_system?: number | null
+          stock_id?: number
+          stock_take_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_take_lines_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_take_lines_stock_take_id_fkey"
+            columns: ["stock_take_id"]
+            isOneToOne: false
+            referencedRelation: "stock_takes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_takes: {
+        Row: {
+          applied_at: string | null
+          applied_by: string | null
+          id: number
+          printed_at: string
+          printed_by: string | null
+          product_types: Database["public"]["Enums"]["product_type"][]
+          ref: string
+          status: string
+        }
+        Insert: {
+          applied_at?: string | null
+          applied_by?: string | null
+          id?: never
+          printed_at?: string
+          printed_by?: string | null
+          product_types: Database["public"]["Enums"]["product_type"][]
+          ref?: string
+          status?: string
+        }
+        Update: {
+          applied_at?: string | null
+          applied_by?: string | null
+          id?: never
+          printed_at?: string
+          printed_by?: string | null
+          product_types?: Database["public"]["Enums"]["product_type"][]
+          ref?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_takes_applied_by_fkey"
+            columns: ["applied_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_takes_printed_by_fkey"
+            columns: ["printed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stocks: {
         Row: {
           active: boolean
@@ -1481,6 +1568,25 @@ export type Database = {
         }
       }
       apply_pending_bom_now: { Args: { p_job_id: number }; Returns: number }
+      apply_stock_take: {
+        Args: { p_stock_take_id: number }
+        Returns: {
+          applied_at: string | null
+          applied_by: string | null
+          id: number
+          printed_at: string
+          printed_by: string | null
+          product_types: Database["public"]["Enums"]["product_type"][]
+          ref: string
+          status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "stock_takes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       attach_supplier_document: {
         Args: {
           p_document: Json
@@ -1489,6 +1595,25 @@ export type Database = {
           p_supplier_id: number
         }
         Returns: Json
+      }
+      cancel_stock_take: {
+        Args: { p_stock_take_id: number }
+        Returns: {
+          applied_at: string | null
+          applied_by: string | null
+          id: number
+          printed_at: string
+          printed_by: string | null
+          product_types: Database["public"]["Enums"]["product_type"][]
+          ref: string
+          status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "stock_takes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       create_purchase_order: {
         Args: { p_lines: Json; p_supplier_id: number }
@@ -1508,6 +1633,25 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "purchase_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      create_stock_take: {
+        Args: { p_product_types: Database["public"]["Enums"]["product_type"][] }
+        Returns: {
+          applied_at: string | null
+          applied_by: string | null
+          id: number
+          printed_at: string
+          printed_by: string | null
+          product_types: Database["public"]["Enums"]["product_type"][]
+          ref: string
+          status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "stock_takes"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -1639,6 +1783,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      save_stock_take_counts: {
+        Args: { p_counts: Json; p_stock_take_id: number }
+        Returns: undefined
       }
       set_step_date: {
         Args: {

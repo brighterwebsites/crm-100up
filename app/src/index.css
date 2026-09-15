@@ -585,6 +585,52 @@ button {
   max-width: 620px;
 }
 
+/* Stock take: sheet preview, type picker, open-take banner, count groups. */
+.modal-sheet {
+  max-width: 900px;
+  max-height: calc(100vh - 48px);
+}
+.sheet-frame {
+  width: 100%;
+  min-height: 65vh;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+.stocktake-types {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 6px 14px;
+}
+.stocktake-type {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.stocktake-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  background: var(--stage-3-light);
+  color: var(--stage-3-text);
+  font-size: 13px;
+}
+.stocktake-group {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--bg);
+}
+
 .modal-head {
   display: flex;
   align-items: center;

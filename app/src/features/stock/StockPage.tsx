@@ -1,12 +1,17 @@
-import { Package } from 'lucide-react'
+import { ClipboardList, Package } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useAuth } from '../../lib/auth'
 import { brandFor, useData } from '../../lib/data'
+import type { StockTake } from '../../lib/data'
+import { fmtDate } from '../../lib/format'
 import { allocatedMap } from '../../lib/stockCalc'
 import { PHASE_LABEL, PRODUCT_GROUPS, PRODUCT_TYPE_LABEL, inGroup } from '../../lib/productTypes'
 import type { ProductGroup } from '../../lib/productTypes'
 import ReceiveModal from './ReceiveModal'
 import StockDetailPanel from './StockDetailPanel'
+import StockTakeCount from './StockTakeCount'
+import { NewStockTakeModal, StockTakeSheetModal } from './StockTakeModals'
+import { cancelStockTake } from './stockTake'
 
 /** Planning price and last paid price have diverged. Not an error — it is
  * what happens when a supplier reprices — but worth surfacing so the quoting
@@ -17,13 +22,32 @@ function stale(s: { planning_cost: number; last_cost: number }): boolean {
 
 export default function StockPage() {
   const { isAdmin } = useAuth()
-  const { stocks, manufacturers, suppliers, jobs, items } = useData()
+  const { stocks, manufacturers, suppliers, jobs, items, stockTakes, stockTakeLines, refresh } = useData()
   const [receiving, setReceiving] = useState(false)
   const [filter, setFilter] = useState<ProductGroup>('all')
   const [search, setSearch] = useState('')
   const [openId, setOpenId] = useState<number | 'new' | null>(null)
+  const [newTake, setNewTake] = useState(false)
+  const [sheetTake, setSheetTake] = useState<StockTake | null>(null)
+  const [counting, setCounting] = useState(false)
+  const [takeErr, setTakeErr] = useState<string | null>(null)
 
   const alloc = useMemo(() => allocatedMap(jobs, items), [jobs, items])
+  const openTake = stockTakes.find((t) => t.status === 'open')
+  const openTakeLines = openTake ? stockTakeLines.filter((l) => l.stock_take_id === openTake.id) : []
+
+  async function cancelTake(take: StockTake) {
+    const msg = `Cancel ${take.ref}? Its number stays on record as cancelled. Counts entered so far are discarded and on hand does not change.`
+    if (!confirm(msg)) return
+    setTakeErr(null)
+    try {
+      await cancelStockTake(take)
+      await refresh()
+      setCounting(false)
+    } catch (e) {
+      setTakeErr(e instanceof Error ? e.message : String(e))
+    }
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -54,12 +78,37 @@ export default function StockPage() {
             <button className="btn btn-gray" onClick={() => setOpenId('new')}>
               + Add new
             </button>
-            <button className="btn btn-primary" style={{ marginLeft: 'auto' }} onClick={() => setReceiving(true)}>
+            <button
+              className="btn btn-gray"
+              style={{ marginLeft: 'auto' }}
+              disabled={!!openTake}
+              title={openTake ? `${openTake.ref} is still open: apply or cancel it first` : 'Print a count sheet and start a stock take'}
+              onClick={() => setNewTake(true)}
+            >
+              <ClipboardList size={13} aria-hidden /> Stock take
+            </button>
+            <button className="btn btn-primary" onClick={() => setReceiving(true)}>
               <Package size={13} aria-hidden /> Receive stock
             </button>
           </>
         )}
       </div>
+
+      {isAdmin && openTake && !counting && (
+        <div className="stocktake-banner">
+          <strong>Stock take {openTake.ref} is open</strong>
+          <span>
+            printed {fmtDate(openTake.printed_at)} · {openTakeLines.filter((l) => l.qty_counted !== null).length} of{' '}
+            {openTakeLines.length} counted
+          </span>
+          <span style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+            <button className="btn btn-primary" onClick={() => setCounting(true)}>Enter counts</button>
+            <button className="btn btn-gray" onClick={() => setSheetTake(openTake)}>Reprint sheet</button>
+            <button className="btn btn-gray" onClick={() => cancelTake(openTake)}>Cancel stock take</button>
+          </span>
+        </div>
+      )}
+      {takeErr && <div className="login-error">{takeErr}</div>}
 
       <div className="quick-filters">
         <span>Show:</span>
@@ -72,6 +121,9 @@ export default function StockPage() {
 
       <div className="pipeline-content">
         <div className="pipeline-grid-wrap">
+          {isAdmin && counting && openTake ? (
+            <StockTakeCount key={openTake.id} take={openTake} onExit={() => setCounting(false)} />
+          ) : (
           <div className="card table-wrap">
             <table className="table">
               <thead>
@@ -143,6 +195,7 @@ export default function StockPage() {
               </tbody>
             </table>
           </div>
+          )}
         </div>
 
         <div className={`pipeline-detail-panel ${openId !== null ? 'panel-is-open' : ''}`}>
@@ -157,6 +210,16 @@ export default function StockPage() {
       </div>
 
       {receiving && <ReceiveModal onClose={() => setReceiving(false)} />}
+      {newTake && (
+        <NewStockTakeModal
+          onClose={() => setNewTake(false)}
+          onCreated={(take) => {
+            setNewTake(false)
+            setSheetTake(take)
+          }}
+        />
+      )}
+      {sheetTake && <StockTakeSheetModal take={sheetTake} onClose={() => setSheetTake(null)} />}
     </div>
   )
 }

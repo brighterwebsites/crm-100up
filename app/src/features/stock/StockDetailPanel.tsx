@@ -11,6 +11,7 @@ import { useAuth } from '../../lib/auth'
 import { useData } from '../../lib/data'
 import { supabase } from '../../lib/supabaseClient'
 import { allocatedMap } from '../../lib/stockCalc'
+import { fmtDate } from '../../lib/format'
 import type { Enums, TablesInsert } from '../../types/database.types'
 import { PHASE_LABEL, PRODUCT_TYPE_LABEL } from '../../lib/productTypes'
 import type { Phase, ProductType } from '../../lib/productTypes'
@@ -72,8 +73,13 @@ const BLANK_FORM: Form = {
 
 export default function StockDetailPanel({ stockId, onClose, onCreated }: Props) {
   const { isAdmin } = useAuth()
-  const { stocks, manufacturers, suppliers, jobs, items, refresh } = useData()
+  const { stocks, manufacturers, suppliers, jobs, items, stockTakes, stockTakeLines, refresh } = useData()
   const stock = stockId === 'new' ? undefined : stocks.find((s) => s.id === stockId)
+  const takeHistory = stockTakeLines
+    .filter((l) => l.stock_id === stockId && l.qty_system !== null && l.qty_counted !== null)
+    .map((line) => ({ line, take: stockTakes.find((t) => t.id === line.stock_take_id) }))
+    .filter((x): x is { line: typeof x.line; take: NonNullable<typeof x.take> } => x.take?.status === 'applied')
+    .sort((a, b) => (b.take.applied_at ?? '').localeCompare(a.take.applied_at ?? ''))
 
   const [form, setForm] = useState<Form>(BLANK_FORM)
   const [err, setErr] = useState<string | null>(null)
@@ -131,7 +137,8 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
       model: form.model.trim(),
       preferred_supplier_id: form.preferred_supplier_id ? Number(form.preferred_supplier_id) : null,
       last_cost: Number(form.last_cost) || 0,
-      qty: Math.max(0, Number(form.qty) || 0),
+      // No qty: on hand is read-only (20260915130001). New items start at 0
+      // and move only through receiving, installs and stock takes.
       kva: form.kva ? Number(form.kva) : null,
       kw: form.kw ? Number(form.kw) : null,
       kwh: form.kwh ? Number(form.kwh) : null,
@@ -328,7 +335,12 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
             </F>
           )}
           <F label="On hand">
-            <input className="jdp-input" disabled={!isAdmin} type="number" min={0} value={form.qty} onChange={(e) => setForm({ ...form, qty: e.target.value })} />
+            <input
+              className="jdp-input"
+              disabled
+              value={form.qty}
+              title="Changes only through receiving, installs and stock takes"
+            />
           </F>
           <F label="Allocated">
             <input className="jdp-input" disabled value={alloc} />
@@ -337,7 +349,35 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
             <input className="jdp-input" disabled value={avail} style={avail < 0 ? { color: 'var(--danger)', fontWeight: 700 } : undefined} />
           </F>
         </div>
+        {stockId !== 'new' && (
+          <div className="mutedtext" style={{ marginTop: 6 }}>
+            On hand changes only through receiving, installs and stock takes.
+          </div>
+        )}
       </div>
+
+      {/* The stock-take part of this item's trail: what each count found
+          against what the system held. Receipts and installs join this in
+          the planned Stock history panel (docs/stock-take-design.md). */}
+      {takeHistory.length > 0 && (
+        <div className="jdp-section">
+          <div className="jdp-section-title">Stock takes</div>
+          {takeHistory.map(({ take, line }) => {
+            const diff = (line.qty_counted ?? 0) - (line.qty_system ?? 0)
+            return (
+              <div key={take.id} className="stock-line">
+                <span>{take.ref} · {fmtDate(take.applied_at)}</span>
+                <span>
+                  system {line.qty_system} → counted {line.qty_counted}{' '}
+                  <strong style={{ color: diff === 0 ? 'var(--muted)' : diff < 0 ? 'var(--danger)' : undefined }}>
+                    ({diff > 0 ? '+' : ''}{diff})
+                  </strong>
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       <div className="jdp-section">
         <div className="jdp-section-title">CEC Specification Details</div>
