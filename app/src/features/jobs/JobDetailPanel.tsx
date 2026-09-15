@@ -7,7 +7,7 @@
  */
 import {
   ArrowLeft, ArrowRight, Calendar, ChevronDown, Circle, CircleCheck, CircleDot, ClipboardCheck,
-  ClipboardList, DollarSign, Link2, Mail, MessageSquare, Package, Phone, Printer, TriangleAlert,
+  ClipboardList, DollarSign, Link2, Mail, MessageSquare, Package, Phone, TriangleAlert, Truck,
   Wrench, X,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
@@ -15,12 +15,12 @@ import { useAuth } from '../../lib/auth'
 import { useData } from '../../lib/data'
 import type { Customer, InstallationRequest, Job, PipelineStep } from '../../lib/data'
 import { PIPELINE, isClosed, nextStepNeedsDate, stepLabel } from '../../lib/pipeline'
-import { bookedInstalls, computeJobShortfalls } from '../../lib/stockCalc'
+import { bookedInstalls, computeJobShortfalls, onOrderMap } from '../../lib/stockCalc'
 import { fmtDate, todayISO } from '../../lib/format'
 import { copyText } from '../../lib/clipboard'
 import { advanceJob, applyPendingNow, jobDetailsText, moveJobBack, rescheduleBooking, setStepDate, updateJob } from './actions'
 import { supabase } from '../../lib/supabaseClient'
-import { CesModal, LinkQuoteModal, printJobPo } from './modals'
+import { CesModal, LinkQuoteModal } from './modals'
 
 interface Props {
   jobId: number
@@ -29,7 +29,7 @@ interface Props {
 
 export default function JobDetailPanel({ jobId, onClose }: Props) {
   const { isAdmin } = useAuth()
-  const { jobs, customers, items, stocks, manufacturers, suppliers, profiles, installationRequests, pipelineSteps, stepDates, refresh } = useData()
+  const { jobs, customers, items, stocks, manufacturers, profiles, installationRequests, pipelineSteps, stepDates, purchaseOrders, purchaseOrderItems, refresh } = useData()
 
   const job = jobs.find((j) => j.id === jobId)
   const customer: Customer | undefined = job ? customers.find((c) => c.id === job.customer_id) : undefined
@@ -73,16 +73,21 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
   const pending  = jobItems.filter((i) => i.status === 'pending')
   const assigned = jobItems.filter((i) => i.status === 'assigned')
   const consumed = jobItems.filter((i) => i.status === 'consumed')
-  const shortMap = useMemo(
-    () => computeJobShortfalls(jobs, items, stocks)[jobId] ?? {},
-    [jobs, items, stocks, jobId],
+  // Short = nothing on the shelf or on an open PO covers it; on order = an
+  // open PO (draft included) does.
+  const stockStatus = useMemo(
+    () => computeJobShortfalls(jobs, items, stocks, onOrderMap(purchaseOrders, purchaseOrderItems)),
+    [jobs, items, stocks, purchaseOrders, purchaseOrderItems],
   )
+  const shortMap = stockStatus.short[jobId] ?? {}
+  const onOrderMapForJob = stockStatus.onOrder[jobId] ?? {}
   const clashes = useMemo(() => bookedInstalls(jobs, jobId), [jobs, jobId])
   const clashOnDate = clashes.filter((c) => c.date === dateVal)
   const stockName = (id: number) => stocks.find((s) => s.id === id)?.name ?? `#${id}`
 
-  // Has stock shortage?
+  // Has stock shortage? Is any of it already on order?
   const hasShortage = Object.keys(shortMap).length > 0
+  const hasOnOrder = Object.keys(onOrderMapForJob).length > 0
   // Is install overdue?
   const isOverdue =
     job?.planned_install_date != null &&
@@ -297,11 +302,12 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
       </div>
 
       {/* ── Alerts ── */}
-      {(hasShortage || isOverdue) && (
+      {(hasShortage || hasOnOrder || isOverdue) && (
         <div className="jdp-section">
           <div className="jdp-section-title">Alerts</div>
           <div className="jdp-alerts">
             {hasShortage  && <span className="alert-tag"><Package size={11} aria-hidden /> Stock short</span>}
+            {hasOnOrder   && <span className="alert-tag alert-tag-info"><Truck size={11} aria-hidden /> Stock on order</span>}
             {isOverdue    && <span className="alert-tag"><Calendar size={11} aria-hidden /> Install overdue</span>}
           </div>
         </div>
@@ -429,6 +435,7 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
                 <span>
                   {stockName(i.stock_id)}
                   {shortMap[i.stock_id] ? <span className="short-pill">{shortMap[i.stock_id]} short</span> : null}
+                  {onOrderMapForJob[i.stock_id] ? <span className="short-pill short-pill-onorder">{onOrderMapForJob[i.stock_id]} on order</span> : null}
                 </span>
                 <span>
                   × {i.qty}
@@ -527,15 +534,6 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
           {canCes && (
             <button className="btn btn-gray" style={{ fontSize: 12 }} onClick={() => setShowCes(true)}>
               <ClipboardCheck size={13} aria-hidden /> CES summary
-            </button>
-          )}
-          {isAdmin && (
-            <button
-              className="btn btn-gray"
-              style={{ fontSize: 12 }}
-              onClick={() => printJobPo(job, customer?.name ?? `Job #${job.id}`, assigned.length ? assigned : pending, stocks, suppliers)}
-            >
-              <Printer size={13} aria-hidden /> Print PO
             </button>
           )}
           {isAdmin && (

@@ -1,9 +1,9 @@
-import { Mail, Package, Phone } from 'lucide-react'
+import { Mail, Package, Phone, Truck } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useData } from '../lib/data'
 import type { Customer, Job } from '../lib/data'
 import { PIPELINE, isClosed, stepOrdinal } from '../lib/pipeline'
-import { computeJobShortfalls } from '../lib/stockCalc'
+import { computeJobShortfalls, onOrderMap } from '../lib/stockCalc'
 import { fmtDate } from '../lib/format'
 import JobDetailPanel from '../features/jobs/JobDetailPanel'
 
@@ -22,11 +22,15 @@ for (const { stage } of COLUMNS) {
 const STAGE_ORDER = [1, 2, 3, 4]
 
 export default function PipelinePage() {
-  const { jobs, customers, items, stocks } = useData()
+  const { jobs, customers, items, stocks, purchaseOrders, purchaseOrderItems } = useData()
   const [filter, setFilter] = useState<Filter>('active')
   const [openId, setOpenId] = useState<number | null>(null)
 
-  const shortfalls = useMemo(() => computeJobShortfalls(jobs, items, stocks), [jobs, items, stocks])
+  const stockStatus = useMemo(
+    () => computeJobShortfalls(jobs, items, stocks, onOrderMap(purchaseOrders, purchaseOrderItems)),
+    [jobs, items, stocks, purchaseOrders, purchaseOrderItems],
+  )
+  const shortfalls = stockStatus.short
 
   // Stat counts
   const counts = useMemo(() => ({
@@ -157,6 +161,7 @@ export default function PipelinePage() {
                 const cust: Customer | undefined = custMap.get(j.customer_id)
                 const closed = isClosed(j.stage, j.step)
                 const short = !!shortfalls[j.id]
+                const onOrder = !!stockStatus.onOrder[j.id]
                 const isSelected = j.id === openId
                 const dotCol = stepOrdinal(j.stage, j.step)
                 const stageDef = PIPELINE[j.stage]
@@ -177,9 +182,10 @@ export default function PipelinePage() {
                           {cust.email && <a href={`mailto:${cust.email}`} onClick={(e) => e.stopPropagation()}><Mail size={11} aria-hidden /></a>}
                         </div>
                       )}
-                      {short && (
+                      {(short || onOrder) && (
                         <div className="p-alerts">
-                          <span className="short-pill"><Package size={11} aria-hidden /> stock short</span>
+                          {short   && <span className="short-pill"><Package size={11} aria-hidden /> stock short</span>}
+                          {onOrder && <span className="short-pill short-pill-onorder"><Truck size={11} aria-hidden /> on order</span>}
                         </div>
                       )}
                     </td>

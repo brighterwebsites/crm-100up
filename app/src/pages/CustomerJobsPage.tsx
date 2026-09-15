@@ -1,9 +1,9 @@
-import { Package } from 'lucide-react'
+import { Package, Truck } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useData } from '../lib/data'
 import type { Job } from '../lib/data'
 import { PIPELINE, isClosed, stepLabel } from '../lib/pipeline'
-import { computeJobShortfalls } from '../lib/stockCalc'
+import { computeJobShortfalls, onOrderMap } from '../lib/stockCalc'
 import { useAuth } from '../lib/auth'
 import { createJob } from '../features/jobs/actions'
 import JobDetailPanel from '../features/jobs/JobDetailPanel'
@@ -17,13 +17,17 @@ interface Props {
 
 export default function CustomerJobsPage({ installerOnly, initialJobId }: Props) {
   const { profile, isAdmin } = useAuth()
-  const { jobs, customers, items, stocks, refresh } = useData()
+  const { jobs, customers, items, stocks, purchaseOrders, purchaseOrderItems, refresh } = useData()
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<number | null>(initialJobId ?? null)
   const [newName, setNewName] = useState('')
   const [creating, setCreating] = useState(false)
 
-  const shortfalls = useMemo(() => computeJobShortfalls(jobs, items, stocks), [jobs, items, stocks])
+  const stockStatus = useMemo(
+    () => computeJobShortfalls(jobs, items, stocks, onOrderMap(purchaseOrders, purchaseOrderItems)),
+    [jobs, items, stocks, purchaseOrders, purchaseOrderItems],
+  )
+  const shortfalls = stockStatus.short
   const custMap = useMemo(() => new Map(customers.map((c) => [c.id, c])), [customers])
 
   const visibleJobs = useMemo(() => {
@@ -121,6 +125,7 @@ export default function CustomerJobsPage({ installerOnly, initialJobId }: Props)
           {visibleJobs.map((j) => {
             const cust = custMap.get(j.customer_id)
             const short = !!shortfalls[j.id]
+            const onOrder = !!stockStatus.onOrder[j.id]
             const closed = isClosed(j.stage, j.step)
             return (
               <button
@@ -131,7 +136,8 @@ export default function CustomerJobsPage({ installerOnly, initialJobId }: Props)
               >
                 <div className="master-item-name">
                   {cust?.name ?? `Job #${j.id}`}
-                  {short && <span className="short-pill" style={{ marginLeft: 6 }}><Package size={11} aria-hidden /></span>}
+                  {short && <span className="short-pill" style={{ marginLeft: 6 }} title="Stock short, not yet ordered"><Package size={11} aria-hidden /></span>}
+                  {onOrder && <span className="short-pill short-pill-onorder" style={{ marginLeft: 6 }} title="Stock on order"><Truck size={11} aria-hidden /></span>}
                 </div>
                 {j.location && <div className="master-item-sub">{j.location}</div>}
                 <div className="master-item-stage">{stageChip(j)}</div>

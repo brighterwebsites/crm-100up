@@ -901,6 +901,7 @@ export type Database = {
           po_amount: number
           po_ref: string
           po_status: Database["public"]["Enums"]["po_status"]
+          sent_at: string | null
           supplier_id: number | null
           total_units: number
         }
@@ -913,6 +914,7 @@ export type Database = {
           po_amount?: number
           po_ref?: string
           po_status?: Database["public"]["Enums"]["po_status"]
+          sent_at?: string | null
           supplier_id?: number | null
           total_units?: number
         }
@@ -925,6 +927,7 @@ export type Database = {
           po_amount?: number
           po_ref?: string
           po_status?: Database["public"]["Enums"]["po_status"]
+          sent_at?: string | null
           supplier_id?: number | null
           total_units?: number
         }
@@ -1498,6 +1501,29 @@ export type Database = {
           po_amount: number
           po_ref: string
           po_status: Database["public"]["Enums"]["po_status"]
+          sent_at: string | null
+          supplier_id: number | null
+          total_units: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "purchase_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      mark_purchase_order_sent: {
+        Args: { p_po_id: number }
+        Returns: {
+          created_at: string
+          id: number
+          invoice_ref: string
+          item_count: number
+          occurred_at: string
+          po_amount: number
+          po_ref: string
+          po_status: Database["public"]["Enums"]["po_status"]
+          sent_at: string | null
           supplier_id: number | null
           total_units: number
         }
@@ -1567,6 +1593,7 @@ export type Database = {
           po_amount: number
           po_ref: string
           po_status: Database["public"]["Enums"]["po_status"]
+          sent_at: string | null
           supplier_id: number | null
           total_units: number
         }
@@ -1657,7 +1684,7 @@ export type Database = {
       inverter_size_class: "small" | "medium" | "large"
       job_stock_item_status: "pending" | "assigned" | "consumed"
       job_type: "install" | "service"
-      po_status: "sent" | "partially_received" | "closed"
+      po_status: "draft" | "sent" | "partially_received" | "closed"
       product_type:
         | "panel"
         | "inverter"
@@ -1809,7 +1836,7 @@ export const Constants = {
       inverter_size_class: ["small", "medium", "large"],
       job_stock_item_status: ["pending", "assigned", "consumed"],
       job_type: ["install", "service"],
-      po_status: ["sent", "partially_received", "closed"],
+      po_status: ["draft", "sent", "partially_received", "closed"],
       product_type: [
         "panel",
         "inverter",

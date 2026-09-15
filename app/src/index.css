@@ -537,6 +537,13 @@ button {
   color: #ffffff;
 }
 
+/* Short, but an open PO covers it: softer than "short", which means nobody
+   has ordered it yet. */
+.short-pill-onorder {
+  background: var(--stage-2-light);
+  color: var(--stage-2-text);
+}
+
 .job-progress {
   height: 4px;
   background: var(--line);

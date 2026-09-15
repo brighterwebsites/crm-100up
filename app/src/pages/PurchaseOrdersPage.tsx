@@ -1,17 +1,19 @@
-import { Trash2 } from 'lucide-react'
+import { Mail, Printer, Send, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useData } from '../lib/data'
 import type { PurchaseOrder } from '../lib/data'
-import { supabase } from '../lib/supabaseClient'
 import { fmtDate } from '../lib/format'
+import { deletePo, markPoSent, poLines, printPurchaseOrder, sendPurchaseOrder } from '../features/stock/poActions'
 
 const STATUS_LABEL: Record<PurchaseOrder['po_status'], string> = {
+  draft: 'Draft — not sent',
   sent: 'Sent',
   partially_received: 'Partially received',
   closed: 'Closed',
 }
 
 const STATUS_STYLE: Record<PurchaseOrder['po_status'], { bg: string; text: string }> = {
+  draft: { bg: 'var(--stage-3-light)', text: 'var(--stage-3-text)' },
   sent: { bg: 'var(--stage-1-light)', text: 'var(--stage-1-text)' },
   partially_received: { bg: 'var(--stage-2-light)', text: 'var(--stage-2-text)' },
   closed: { bg: '#eef0f3', text: 'var(--muted)' },
@@ -26,15 +28,16 @@ function StatusChip({ status }: { status: PurchaseOrder['po_status'] }) {
   )
 }
 
-// Note: this page is read-only for now (list + line items). "Receive
-// against a PO" — the action that would move sent -> partially_received
-// -> closed and fill in qty_received — is a follow-up (docs/bugs.md #4);
-// ad-hoc Receive Stock (Stock page) still creates its own closed PO.
+// Drafts can be sent (emailed to the supplier, then marked sent) or marked
+// sent, and any PO can be printed under its real number. Delete is offered
+// while nothing has been received; the DB refuses it otherwise. "Receive
+// against a PO" in the UI is still a follow-up (docs/bugs.md #4).
 export default function PurchaseOrdersPage() {
   const { purchaseOrders, purchaseOrderItems, suppliers, stocks, refresh } = useData()
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
 
   const filtered = useMemo(() => {
     if (!search.trim()) return purchaseOrders
@@ -53,13 +56,33 @@ export default function PurchaseOrdersPage() {
     [purchaseOrderItems, selectedId],
   )
 
-  async function cancelPo(id: number) {
+  const selectedSupplier = suppliers.find((sp) => sp.id === selected?.supplier_id)
+
+  async function act(fn: () => Promise<unknown>) {
     setErr(null)
-    if (!confirm('Delete this PO? Only possible while nothing has been received against it.')) return
-    const { error } = await supabase.from('purchase_orders').delete().eq('id', id)
-    if (error) { setErr(error.message); return }
-    setSelectedId(null)
-    await refresh()
+    setBusy(true)
+    try {
+      await fn()
+      await refresh()
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function removePo(po: PurchaseOrder) {
+    if (!confirm(`Delete ${po.po_ref}? Only possible while nothing has been received against it.`)) return
+    return act(async () => {
+      await deletePo(po)
+      setSelectedId(null)
+    })
+  }
+
+  function sendPo(po: PurchaseOrder) {
+    if (!selectedSupplier?.email) return
+    if (!confirm(`Email ${po.po_ref} to ${selectedSupplier.name} <${selectedSupplier.email}> and mark it sent?`)) return
+    return act(() => sendPurchaseOrder(po, selectedSupplier, poLines(po, purchaseOrderItems, stocks)))
   }
 
   return (
@@ -108,11 +131,42 @@ export default function PurchaseOrdersPage() {
                 <div className="jdp-name">{selected.po_ref}</div>
                 <StatusChip status={selected.po_status} />
               </div>
-              {selected.po_status === 'sent' && (
-                <button className="btn btn-gray" style={{ fontSize: 12 }} onClick={() => cancelPo(selected.id)}>
-                  <Trash2 size={13} aria-hidden /> Delete PO
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                {selected.po_status === 'draft' && (
+                  <>
+                    <button
+                      className="btn btn-primary"
+                      style={{ fontSize: 12 }}
+                      disabled={busy || !selectedSupplier?.email}
+                      title={selectedSupplier?.email ? `Email to ${selectedSupplier.email}, then mark sent` : 'No email on this supplier. Use Mark sent.'}
+                      onClick={() => sendPo(selected)}
+                    >
+                      <Mail size={13} aria-hidden /> Send to supplier
+                    </button>
+                    <button
+                      className="btn btn-gray"
+                      style={{ fontSize: 12 }}
+                      disabled={busy}
+                      title="Already sent another way (phone, their portal)"
+                      onClick={() => act(() => markPoSent(selected))}
+                    >
+                      <Send size={13} aria-hidden /> Mark sent
+                    </button>
+                  </>
+                )}
+                <button
+                  className="btn btn-gray"
+                  style={{ fontSize: 12 }}
+                  onClick={() => printPurchaseOrder(selected, selectedSupplier, poLines(selected, purchaseOrderItems, stocks))}
+                >
+                  <Printer size={13} aria-hidden /> Print PO
                 </button>
-              )}
+                {(selected.po_status === 'draft' || selected.po_status === 'sent') && (
+                  <button className="btn btn-gray" style={{ fontSize: 12 }} disabled={busy} onClick={() => removePo(selected)}>
+                    <Trash2 size={13} aria-hidden /> Delete PO
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="jdp-section">
@@ -123,7 +177,11 @@ export default function PurchaseOrdersPage() {
                 </div>
                 <div className="jdp-field">
                   <span className="jdp-label">Supplier</span>
-                  <span>{suppliers.find((sp) => sp.id === selected.supplier_id)?.name ?? 'No supplier'}</span>
+                  <span>{selectedSupplier?.name ?? 'No supplier'}</span>
+                </div>
+                <div className="jdp-field">
+                  <span className="jdp-label">Sent</span>
+                  <span>{selected.sent_at ? fmtDate(selected.sent_at) : 'Not sent yet'}</span>
                 </div>
                 <div className="jdp-field">
                   <span className="jdp-label">Invoice</span>

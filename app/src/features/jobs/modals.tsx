@@ -1,10 +1,10 @@
 import { ClipboardCheck, FileText, Link2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import type { Customer, InstallationRequest, Job, JobStockItem, Manufacturer, Stock, Supplier } from '../../lib/data'
+import type { Customer, InstallationRequest, Job, JobStockItem, Manufacturer, Stock } from '../../lib/data'
 import { supabase } from '../../lib/supabaseClient'
 import { copyHtml, copyText } from '../../lib/clipboard'
 import { matchStock, normalizePart } from '../../lib/normalizePart'
-import { buildCes, buildPoHtml, openPrintWindow, updateJob } from './actions'
+import { buildCes, updateJob } from './actions'
 
 /* ── CES summary modal (copy-to-email HTML table) ─────────────── */
 
@@ -136,19 +136,6 @@ export function JobOrderModal({
       </div>
     </div>
   )
-}
-
-/* ── Purchase order print (derived only, no persistence) ──────── */
-
-export function printJobPo(job: Job, customerName: string, lines: JobStockItem[], stocks: Stock[], suppliers: Supplier[]) {
-  const ref = `PO-${String(job.id).padStart(4, '0')}-${new Date().getFullYear()}`
-  const parts = lines.map((l) => ({
-    name: stocks.find((s) => s.id === l.stock_id)?.name ?? `stock #${l.stock_id}`,
-    qty: l.qty,
-  }))
-  const supIds = new Set(lines.map((l) => stocks.find((s) => s.id === l.stock_id)?.preferred_supplier_id).filter(Boolean))
-  const supplierName = supIds.size === 1 ? suppliers.find((sp) => sp.id === [...supIds][0])?.name ?? null : null
-  openPrintWindow(buildPoHtml(`Purchase Order — ${customerName}`, ref, supplierName, parts))
 }
 
 /* ── Link calculator quote (paste-JSON bridge, port of openLinkQuote/
