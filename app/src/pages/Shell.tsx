@@ -224,7 +224,7 @@ function ShellInner() {
         </aside>
 
         <main className="app-main">
-          {isAdmin && page === 'pipeline'      && <PipelinePage />}
+          {isAdmin && page === 'pipeline'      && <PipelinePage onOpenOrderList={() => setPage('orders')} />}
           {isAdmin && page === 'customer-jobs' && (
             <CustomerJobsPage initialJobId={orderJobId} key={orderJobId ?? 'cj'} />
           )}

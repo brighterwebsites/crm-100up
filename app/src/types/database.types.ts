@@ -765,6 +765,8 @@ export type Database = {
       pipeline_steps: {
         Row: {
           date_column: string | null
+          follow_up_action: string
+          follow_up_days: number | null
           installer_can_set: boolean
           key: string
           ordinal: number
@@ -775,6 +777,8 @@ export type Database = {
         }
         Insert: {
           date_column?: string | null
+          follow_up_action?: string
+          follow_up_days?: number | null
           installer_can_set?: boolean
           key: string
           ordinal: number
@@ -785,6 +789,8 @@ export type Database = {
         }
         Update: {
           date_column?: string | null
+          follow_up_action?: string
+          follow_up_days?: number | null
           installer_can_set?: boolean
           key?: string
           ordinal?: number

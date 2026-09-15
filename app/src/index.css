@@ -1261,6 +1261,102 @@ button {
   border-spacing: 0;
   font-size: 12px;
   background: var(--card);
+  width: 100%;
+}
+
+/* Needs attention: the Pipeline's right column while no job is open. */
+.pipeline-attention {
+  width: 320px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--line);
+  background: var(--card);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+@media (max-width: 1100px) {
+  .pipeline-attention { display: none; }
+}
+.attn-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.attn-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.attn-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 6px;
+}
+.attn-table th {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: right;
+  padding: 3px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.attn-table td {
+  text-align: right;
+  padding: 5px 4px;
+  border-bottom: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+}
+.attn-table th:first-child,
+.attn-table td:first-child { text-align: left; }
+.attn-item {
+  display: grid;
+  grid-template-columns: 10px 1fr;
+  column-gap: 8px;
+  row-gap: 1px;
+  width: 100%;
+  padding: 7px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.attn-item:hover { background: var(--bg); }
+.attn-item .attn-text { grid-column: 2; color: var(--muted); }
+.attn-dot { width: 8px; height: 8px; margin-top: 4px; border-radius: 50%; }
+/* V46's alert colours: red = chase / overdue, amber = stale, brown = stock. */
+.attn-alert { background: #D93025; }
+.attn-stale { background: #E8A020; }
+.attn-stock { background: #7B3F00; }
+
+/* The same signals on the Pipeline dots, as a ring so the stage colour
+   still shows. V46 pulsed alert and stock; stale was a steady amber. */
+.p-dot-alert { animation: p-pulse-alert 1.5s infinite; }
+.p-dot-stock { animation: p-pulse-stock 1.8s infinite; }
+.p-dot-stale { box-shadow: 0 0 0 3px #E8A020; }
+@keyframes p-pulse-alert {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(217, 48, 37, 0.55); }
+  60% { box-shadow: 0 0 0 8px rgba(217, 48, 37, 0); }
+}
+@keyframes p-pulse-stock {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(123, 63, 0, 0.6); }
+  60% { box-shadow: 0 0 0 8px rgba(123, 63, 0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .p-dot-alert { animation: none; box-shadow: 0 0 0 3px #D93025; }
+  .p-dot-stock { animation: none; box-shadow: 0 0 0 3px #7B3F00; }
 }
 
 .p-th-left {

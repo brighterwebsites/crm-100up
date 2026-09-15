@@ -3,9 +3,13 @@ import { useMemo, useState } from 'react'
 import { useData } from '../lib/data'
 import type { Customer, Job } from '../lib/data'
 import { PIPELINE, isClosed, stepOrdinal } from '../lib/pipeline'
-import { computeJobShortfalls, onOrderMap } from '../lib/stockCalc'
+import { allocatedMap, computeJobShortfalls, computeOrderData, onOrderMap } from '../lib/stockCalc'
+import { dotSeverity, jobAttention } from '../lib/attention'
+import type { AttentionItem } from '../lib/attention'
 import { fmtDate } from '../lib/format'
 import JobDetailPanel from '../features/jobs/JobDetailPanel'
+import AttentionPanel from '../features/pipeline/AttentionPanel'
+import type { StockRow } from '../features/pipeline/AttentionPanel'
 
 type Filter = 'all' | 'active' | 'alerts' | 'stale' | 'install' | 'service' | 'stock' | 'comms' | 'quoting' | 'compliance'
 
@@ -21,16 +25,45 @@ for (const { stage } of COLUMNS) {
 }
 const STAGE_ORDER = [1, 2, 3, 4]
 
-export default function PipelinePage() {
-  const { jobs, customers, items, stocks, purchaseOrders, purchaseOrderItems } = useData()
+export default function PipelinePage({ onOpenOrderList }: { onOpenOrderList?: () => void }) {
+  const { jobs, customers, items, stocks, suppliers, purchaseOrders, purchaseOrderItems, pipelineSteps, stepDates } = useData()
   const [filter, setFilter] = useState<Filter>('active')
   const [openId, setOpenId] = useState<number | null>(null)
 
-  const stockStatus = useMemo(
-    () => computeJobShortfalls(jobs, items, stocks, onOrderMap(purchaseOrders, purchaseOrderItems)),
-    [jobs, items, stocks, purchaseOrders, purchaseOrderItems],
-  )
+  const onOrder = useMemo(() => onOrderMap(purchaseOrders, purchaseOrderItems), [purchaseOrders, purchaseOrderItems])
+  const stockStatus = useMemo(() => computeJobShortfalls(jobs, items, stocks, onOrder), [jobs, items, stocks, onOrder])
   const shortfalls = stockStatus.short
+
+  // The follow-up rules (lib/attention.ts): one list drives the right-hand
+  // panel, the pulsing dots and the Alerts / Stale filters.
+  const attention = useMemo(
+    () => jobAttention(jobs, pipelineSteps, stepDates, shortfalls),
+    [jobs, pipelineSteps, stepDates, shortfalls],
+  )
+  const attentionByJob = useMemo(() => {
+    const m = new Map<number, AttentionItem[]>()
+    for (const it of attention) m.set(it.job.id, [...(m.get(it.job.id) ?? []), it])
+    return m
+  }, [attention])
+
+  // Stock for the panel: every item jobs need beyond the shelf, split into
+  // what still has to be ordered and what an open PO already covers.
+  const orderData = useMemo(
+    () => computeOrderData(jobs, items, stocks, suppliers, onOrder),
+    [jobs, items, stocks, suppliers, onOrder],
+  )
+  const stockRows = useMemo((): StockRow[] => {
+    const alloc = allocatedMap(jobs, items)
+    return stocks
+      .map((s) => {
+        const need = Math.max(0, (alloc[s.id] ?? 0) - s.qty)
+        const covered = Math.min(onOrder[s.id] ?? 0, need)
+        return { stock: s, toOrder: need - covered, onOrder: onOrder[s.id] ?? 0, need }
+      })
+      .filter((r) => r.need > 0)
+      .sort((a, b) => b.toOrder - a.toOrder || b.onOrder - a.onOrder || a.stock.name.localeCompare(b.stock.name))
+      .map(({ stock, toOrder, onOrder: o }) => ({ stock, toOrder, onOrder: o }))
+  }, [jobs, items, stocks, onOrder])
 
   // Stat counts
   const counts = useMemo(() => ({
@@ -42,14 +75,13 @@ export default function PipelinePage() {
     closed:     jobs.filter((j) => isClosed(j.stage, j.step)).length,
   }), [jobs])
 
-  const STALE_DAYS = 21
-
   const filtered = useMemo(() => {
-    const now = Date.now()
+    const has = (id: number, ...sev: AttentionItem['severity'][]) =>
+      (attentionByJob.get(id) ?? []).some((it) => sev.includes(it.severity))
     return jobs.filter((j) => {
       if (filter === 'active')     return !isClosed(j.stage, j.step)
-      if (filter === 'alerts')     return !!shortfalls[j.id] || (j.planned_install_date != null && !j.install_completion_date && new Date(j.planned_install_date) < new Date(new Date().toDateString()))
-      if (filter === 'stale')      return !isClosed(j.stage, j.step) && (now - new Date(j.updated_at).getTime()) > STALE_DAYS * 864e5
+      if (filter === 'alerts')     return has(j.id, 'alert', 'stock')
+      if (filter === 'stale')      return has(j.id, 'stale')
       if (filter === 'install')    return j.job_type === 'install'
       if (filter === 'service')    return j.job_type === 'service'
       if (filter === 'stock')      return !!shortfalls[j.id]
@@ -58,7 +90,7 @@ export default function PipelinePage() {
       if (filter === 'compliance') return j.stage === 4 && !isClosed(j.stage, j.step)
       return true
     })
-  }, [jobs, filter, shortfalls])
+  }, [jobs, filter, shortfalls, attentionByJob])
 
   const custMap = useMemo(() => new Map(customers.map((c) => [c.id, c])), [customers])
 
@@ -161,7 +193,9 @@ export default function PipelinePage() {
                 const cust: Customer | undefined = custMap.get(j.customer_id)
                 const closed = isClosed(j.stage, j.step)
                 const short = !!shortfalls[j.id]
-                const onOrder = !!stockStatus.onOrder[j.id]
+                const jobOnOrder = !!stockStatus.onOrder[j.id]
+                const jobAlerts = attentionByJob.get(j.id) ?? []
+                const signal = dotSeverity(jobAlerts)
                 const isSelected = j.id === openId
                 const dotCol = stepOrdinal(j.stage, j.step)
                 const stageDef = PIPELINE[j.stage]
@@ -182,10 +216,10 @@ export default function PipelinePage() {
                           {cust.email && <a href={`mailto:${cust.email}`} onClick={(e) => e.stopPropagation()}><Mail size={11} aria-hidden /></a>}
                         </div>
                       )}
-                      {(short || onOrder) && (
+                      {(short || jobOnOrder) && (
                         <div className="p-alerts">
-                          {short   && <span className="short-pill"><Package size={11} aria-hidden /> stock short</span>}
-                          {onOrder && <span className="short-pill short-pill-onorder"><Truck size={11} aria-hidden /> on order</span>}
+                          {short      && <span className="short-pill"><Package size={11} aria-hidden /> stock short</span>}
+                          {jobOnOrder && <span className="short-pill short-pill-onorder"><Truck size={11} aria-hidden /> on order</span>}
                         </div>
                       )}
                     </td>
@@ -205,9 +239,9 @@ export default function PipelinePage() {
                         >
                           {isThisCol && (
                             <div
-                              className="p-dot"
+                              className={`p-dot${signal ? ` p-dot-${signal}` : ''}`}
                               style={{ background: stageDef.color }}
-                              title={`${cust?.name ?? `Job #${j.id}`} — ${stageDef.steps[j.step]}`}
+                              title={[`${cust?.name ?? `Job #${j.id}`} — ${stageDef.steps[j.step]}`, ...jobAlerts.map((a) => a.text)].join('\n')}
                             >
                               {date && <span className="p-dot-date">{date}</span>}
                             </div>
@@ -228,6 +262,22 @@ export default function PipelinePage() {
             </tbody>
           </table>
         </div>
+
+        {/* Right column: what needs attention, until a job is opened. */}
+        {openId === null && (
+          <AttentionPanel
+            items={attention}
+            stockRows={stockRows}
+            summary={{
+              shortItems: orderData.shortItems.length,
+              unitsToOrder: orderData.totalUnitsToOrder,
+              jobsAffected: orderData.totalJobsAffected,
+            }}
+            customers={customers}
+            onOpenJob={setOpenId}
+            onOpenOrderList={onOpenOrderList}
+          />
+        )}
 
         {/* Slide-in detail panel */}
         <div className={`pipeline-detail-panel ${openId !== null ? 'panel-is-open' : ''}`}>
