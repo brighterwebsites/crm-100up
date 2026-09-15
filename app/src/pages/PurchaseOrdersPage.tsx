@@ -1,9 +1,10 @@
-import { Mail, Printer, Send, Trash2 } from 'lucide-react'
+import { Mail, Package, Printer, Send, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useData } from '../lib/data'
 import type { PurchaseOrder } from '../lib/data'
 import { fmtDate } from '../lib/format'
 import { deletePo, markPoSent, poLines, printPurchaseOrder, sendPurchaseOrder } from '../features/stock/poActions'
+import ReceiveModal from '../features/stock/ReceiveModal'
 
 const STATUS_LABEL: Record<PurchaseOrder['po_status'], string> = {
   draft: 'Draft — not sent',
@@ -38,6 +39,7 @@ export default function PurchaseOrdersPage() {
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [receiving, setReceiving] = useState(false)
 
   const filtered = useMemo(() => {
     if (!search.trim()) return purchaseOrders
@@ -154,6 +156,17 @@ export default function PurchaseOrdersPage() {
                     </button>
                   </>
                 )}
+                {selected.po_status !== 'closed' && (
+                  <button
+                    className="btn btn-gray"
+                    style={{ fontSize: 12 }}
+                    disabled={busy || !selected.supplier_id}
+                    title={selected.supplier_id ? 'Read the invoice or docket against this order' : 'This PO has no supplier, so it cannot be received against'}
+                    onClick={() => setReceiving(true)}
+                  >
+                    <Package size={13} aria-hidden /> Receive stock
+                  </button>
+                )}
                 <button
                   className="btn btn-gray"
                   style={{ fontSize: 12 }}
@@ -231,6 +244,7 @@ export default function PurchaseOrdersPage() {
           </div>
         )}
       </div>
+      {receiving && selected && <ReceiveModal po={selected} onClose={() => setReceiving(false)} />}
     </div>
   )
 }

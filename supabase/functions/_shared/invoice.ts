@@ -262,3 +262,43 @@ export function reconcile(doc: ExtractedDocument): Reconciliation {
   )
   return { price_basis: 'unknown', matched_on: null, line_total: lineTotal, warnings }
 }
+
+// ── purchase order hint ───────────────────────────────────────────────────
+
+/**
+ * When a delivery is received against a PO, the PO's lines are passed as a
+ * reading aid: product names on a docket are often abbreviated, and knowing
+ * what was ordered helps resolve them. It is a hint only. The document is the
+ * record, so the model is told to transcribe what is printed and never to fill
+ * a gap from the order; the review screen then compares the two, and a person
+ * confirms before anything is received.
+ *
+ * Returns '' when there is no usable hint. Input comes from the app, but is
+ * still bounded: at most 100 lines, names cut to 200 characters.
+ */
+export function poHintText(hint: unknown): string {
+  if (!hint || typeof hint !== 'object') return ''
+  const h = hint as { po_ref?: unknown; lines?: unknown }
+  const ref = typeof h.po_ref === 'string' ? h.po_ref.trim().slice(0, 60) : ''
+  const rows = (Array.isArray(h.lines) ? h.lines.slice(0, 100) : [])
+    .map((l) => {
+      const o = (l ?? {}) as Record<string, unknown>
+      return {
+        name: typeof o.name === 'string' ? o.name.trim().slice(0, 200) : '',
+        ordered: num(o.qty_ordered),
+        outstanding: num(o.qty_outstanding),
+      }
+    })
+    .filter((r) => r.name)
+  if (!ref || rows.length === 0) return ''
+
+  const list = rows
+    .map((r) => `- ${r.name}: ${r.ordered ?? '?'} ordered, ${r.outstanding ?? '?'} still outstanding`)
+    .join('\n')
+  return `
+
+Context: this document is expected to be a delivery or invoice against the customer's purchase order ${ref}, which lists:
+${list}
+
+Use that list ONLY to help you read product names and codes on the document. Transcribe what the document itself shows: include only lines printed on it, with the quantities and prices printed there, even where they differ from the order. Never add a line from the order that the document does not show, and never copy a quantity from the order. A person checks your result against the order afterwards.`
+}

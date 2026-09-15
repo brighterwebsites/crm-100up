@@ -156,7 +156,15 @@ export function fileToBase64(file: File): Promise<string> {
   })
 }
 
-export async function extractInvoice(file: File): Promise<ExtractionResult> {
+/** Receiving against a PO: what was ordered, passed to the reader as a hint
+ * for resolving product names. Never a source of quantities; see poHintText
+ * in supabase/functions/_shared/invoice.ts. */
+export interface PoHint {
+  po_ref: string
+  lines: { name: string; qty_ordered: number; qty_outstanding: number }[]
+}
+
+export async function extractInvoice(file: File, poHint?: PoHint): Promise<ExtractionResult> {
   if (file.size > INVOICE_MAX_BYTES) {
     throw new Error('File is larger than 10 MB. Split it or photograph fewer pages.')
   }
@@ -164,6 +172,7 @@ export async function extractInvoice(file: File): Promise<ExtractionResult> {
     file_base64: await fileToBase64(file),
     mime_type: file.type,
     filename: file.name,
+    ...(poHint ? { po_hint: poHint } : {}),
   })
   return { document: res.document, reconciliation: res.reconciliation }
 }

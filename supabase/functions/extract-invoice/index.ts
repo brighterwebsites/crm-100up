@@ -6,6 +6,7 @@ import {
   INVOICE_EXTRACT_PROMPT,
   invoiceModel,
   normaliseExtraction,
+  poHintText,
   reconcile,
 } from '../_shared/invoice.ts'
 
@@ -37,6 +38,9 @@ interface ExtractBody {
   mime_type?: string
   /** Only used as the ai_call_log input_ref, to trace a call to a document. */
   filename?: string
+  /** Receiving against a PO: { po_ref, lines: [{ name, qty_ordered,
+   *  qty_outstanding }] }. A reading aid only; see poHintText. */
+  po_hint?: unknown
 }
 
 /** The prefill should make the reply bare JSON, but a fence occasionally
@@ -90,7 +94,8 @@ Deno.serve(async (req) => {
     result = await aiComplete(admin.service, {
       purpose: 'invoice_extract',
       input:
-        'Extract the document header, totals, freight and product lines from this supplier document.',
+        'Extract the document header, totals, freight and product lines from this supplier document.' +
+        poHintText(body.po_hint),
       attachments: [{ media_type: mime, data: fileB64 }],
       systemPrompt: INVOICE_EXTRACT_PROMPT,
       model: invoiceModel(row?.config as { invoice_model?: string } | null),
