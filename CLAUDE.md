@@ -64,7 +64,8 @@ deployed — ignore it.
 
 ## What's built (new app)
 
-Pipeline board (19 steps), Customer Jobs, Customers, Job detail, Stock, Order
+Pipeline board (19 steps, with a Needs attention panel and follow-up rules:
+`docs/pipeline-attention-design.md`), Customer Jobs, Customers, Job detail, Stock, Order
 List, Purchase Orders (draft → send to supplier / mark sent, receive against
 the PO, print, delete; open POs count as stock on order), Suppliers, Receive
 Stock (AI-read invoice; ad-hoc from the Stock page via `receive_stock`, or
@@ -159,9 +160,11 @@ on mount to open Settings. Any future external return trip has to do the same.
 
    **Never hardcode step numbers.** Identify a step by `pipeline_steps.key`
    (`'install_in_progress'`, `'ces_received'`, …). The same row carries
-   `installer_can_set` (who may tick it) and `date_column` (which `jobs`
+   `installer_can_set` (who may tick it), `date_column` (which `jobs`
    column holds its date, if any; otherwise the date is in
-   `job_step_dates`). Hardcoded positions have already bitten twice: an
+   `job_step_dates`) and `follow_up_days` / `follow_up_action` (when a job
+   sitting there needs chasing; `docs/pipeline-attention-design.md`).
+   Hardcoded positions have already bitten twice: an
    off-by-one board offset, and a move-back that cleared the wrong date.
    Full model: `docs/installer-model-design.md`.
 5. **RLS discipline**: explicit `grant`, `enable row level security`, then one
