@@ -6,19 +6,19 @@
  * No modal wrapper — the parent decides how to frame it.
  */
 import {
-  ArrowLeft, ArrowRight, Calendar, ChevronDown, ClipboardCheck, ClipboardList, CircleCheck,
-  DollarSign, Link2, Mail, MessageSquare, Package, Phone, Printer, TriangleAlert,
+  ArrowLeft, ArrowRight, Calendar, ChevronDown, Circle, CircleCheck, CircleDot, ClipboardCheck,
+  ClipboardList, DollarSign, Link2, Mail, MessageSquare, Package, Phone, Printer, TriangleAlert,
   Wrench, X,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../lib/auth'
 import { useData } from '../../lib/data'
-import type { Customer, InstallationRequest, Job } from '../../lib/data'
+import type { Customer, InstallationRequest, Job, PipelineStep } from '../../lib/data'
 import { PIPELINE, isClosed, nextStepNeedsDate, stepLabel } from '../../lib/pipeline'
 import { bookedInstalls, computeJobShortfalls } from '../../lib/stockCalc'
 import { fmtDate, todayISO } from '../../lib/format'
 import { copyText } from '../../lib/clipboard'
-import { advanceJob, applyPendingNow, jobDetailsText, moveJobBack, rescheduleBooking, updateJob } from './actions'
+import { advanceJob, applyPendingNow, jobDetailsText, moveJobBack, rescheduleBooking, setStepDate, updateJob } from './actions'
 import { supabase } from '../../lib/supabaseClient'
 import { CesModal, LinkQuoteModal, printJobPo } from './modals'
 
@@ -29,7 +29,7 @@ interface Props {
 
 export default function JobDetailPanel({ jobId, onClose }: Props) {
   const { isAdmin } = useAuth()
-  const { jobs, customers, items, stocks, manufacturers, suppliers, profiles, installationRequests, refresh } = useData()
+  const { jobs, customers, items, stocks, manufacturers, suppliers, profiles, installationRequests, pipelineSteps, stepDates, refresh } = useData()
 
   const job = jobs.find((j) => j.id === jobId)
   const customer: Customer | undefined = job ? customers.find((c) => c.id === job.customer_id) : undefined
@@ -70,10 +70,6 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
   const clashes = useMemo(() => bookedInstalls(jobs, jobId), [jobs, jobId])
   const clashOnDate = clashes.filter((c) => c.date === dateVal)
   const stockName = (id: number) => stocks.find((s) => s.id === id)?.name ?? `#${id}`
-  const installerName = (uid: string | null) => {
-    if (!uid) return '— unassigned —'
-    return profiles.find((p) => p.id === uid)?.full_name || uid.slice(0, 8)
-  }
 
   // Has stock shortage?
   const hasShortage = Object.keys(shortMap).length > 0
@@ -196,6 +192,17 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
   const closed = isClosed(job.stage, job.step)
   const canCes = job.stage === 4 || (job.stage === 3 && !!job.planned_install_date)
 
+  // Who may set which step comes from the live pipeline_steps rows. The DB
+  // enforces the same rule; this only stops the UI offering a refused action.
+  const curStep = pipelineSteps.find((s) => s.stage === job.stage && s.step === job.step)
+  const nextStep = curStep && pipelineSteps.find((s) => s.ordinal === curStep.ordinal + 1)
+  const canAdvance = !closed && (isAdmin || !!nextStep?.installer_can_set)
+  const canMoveBack = (job.stage > 1 || job.step > 0) && (isAdmin || !!curStep?.installer_can_set)
+  const stepDateOf = (s: PipelineStep): string | null =>
+    s.date_column
+      ? job[s.date_column as JobDateColumn]
+      : stepDates.find((d) => d.job_id === job.id && d.step_key === s.key)?.date ?? null
+
   return (
     <div className="jdp">
       {/* ── Header ── */}
@@ -220,19 +227,19 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
       <div className="jdp-section">
         <div className="jdp-section-title">Pipeline</div>
         <div className="jdp-pipeline-row">
-          {!closed && (
+          {canAdvance && (
             <button className="btn btn-primary" style={{ fontSize: 12, padding: '7px 12px' }} onClick={handleAdvance}>
               Advance <ArrowRight size={13} aria-hidden /> {nextLabel(job)}
             </button>
           )}
-          {(job.stage > 1 || job.step > 0) && (
+          {canMoveBack && (
             <button className="btn btn-gray" style={{ fontSize: 12, padding: '7px 12px' }} onClick={() => run(() => moveJobBack(job), 'Moved back')}>
               <ArrowLeft size={13} aria-hidden /> Move back
             </button>
           )}
           {isAdmin && job.planned_install_date && !job.install_completion_date && (
             <button className="btn btn-gray" style={{ fontSize: 12, padding: '7px 12px' }} onClick={() => setReschedule(!reschedule)}>
-              <Calendar size={13} aria-hidden /> Reschedule
+              <Calendar size={13} aria-hidden /> Reschedule install
             </button>
           )}
         </div>
@@ -430,28 +437,46 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
         {!isAdmin && jobItems.length === 0 && <div className="mutedtext">No stock allocated to this job yet.</div>}
       </AccSection>
 
-      {/* ── Job details (installation_requests) ── */}
-      {isAdmin && (
-        <AccSection title="Job Details" open={openSections.jobDetails} onToggle={() => toggleSection('jobDetails')}>
-          <div className="jdp-2col">
-            <F label="Job order ref">
-              <input className="jdp-input" value={irForm.ref} onChange={(e) => setIrForm({ ...irForm, ref: e.target.value })} />
-            </F>
-            <F label="Date issued">
-              <input className="jdp-input" type="date" value={irForm.issued} onChange={(e) => setIrForm({ ...irForm, issued: e.target.value })} />
-            </F>
-            <F label="Installer">
-              <input className="jdp-input" disabled value={installerName(job.assigned_installer_id)} />
-            </F>
-            <F label="Planned install date">
-              <input className="jdp-input" disabled value={job.planned_install_date ?? ''} />
-            </F>
-          </div>
+      {/* ── Job progress: job order, then every step with its date ── */}
+      <AccSection title="Job progress" open={openSections.jobDetails} onToggle={() => toggleSection('jobDetails')}>
+        <div className="jdp-2col">
+          <F label="Job order ref">
+            <input className="jdp-input" disabled={!isAdmin} value={irForm.ref} onChange={(e) => setIrForm({ ...irForm, ref: e.target.value })} />
+          </F>
+          <F label="Date issued">
+            <input className="jdp-input" type="date" disabled={!isAdmin} value={irForm.issued} onChange={(e) => setIrForm({ ...irForm, issued: e.target.value })} />
+          </F>
+        </div>
+        {isAdmin && (
           <div className="jdp-save-row">
             <button className="btn btn-primary" style={{ fontSize: 12, padding: '7px 14px' }} onClick={saveIR}>Save job order</button>
           </div>
-        </AccSection>
-      )}
+        )}
+        {[1, 2, 3, 4].map((stageNo) => (
+          <div key={stageNo} className="stock-block" style={{ marginTop: 8 }}>
+            <div className="stock-block-title">{PIPELINE[stageNo].name}</div>
+            {pipelineSteps.filter((s) => s.stage === stageNo).map((s) => {
+              const reached = !!curStep && s.ordinal <= curStep.ordinal
+              const isCurrent = s.ordinal === curStep?.ordinal
+              const date = stepDateOf(s)
+              const Mark = isCurrent ? CircleDot : reached ? CircleCheck : Circle
+              return (
+                <div key={s.key} className="stock-line" style={{ alignItems: 'center', opacity: reached ? 1 : 0.5 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <Mark size={13} aria-hidden style={{ color: reached ? PIPELINE[stageNo].color : undefined }} />
+                    {s.step_name}
+                  </span>
+                  {reached && (isAdmin || s.installer_can_set) ? (
+                    <StepDateInput value={date ?? ''} onSave={(d) => run(() => setStepDate(job, s.key, d), `${s.step_name} date saved`)} />
+                  ) : (
+                    <span className="mutedtext">{date ? fmtDate(date) : reached ? '—' : ''}</span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        ))}
+      </AccSection>
 
       {/* ── Documents ── */}
       <div className="jdp-section">
@@ -572,6 +597,37 @@ function InlineDatePick(props: {
         <button className="btn btn-gray" style={{ fontSize: 12 }} onClick={props.onCancel}>Cancel</button>
       </div>
     </div>
+  )
+}
+
+/** The seven jobs columns a pipeline step can keep its date in
+ * (pipeline_steps.date_column is CHECK-constrained to these). */
+type JobDateColumn =
+  | 'planned_install_date' | 'install_start_date' | 'install_completion_date'
+  | 'ces_submitted' | 'ces_received' | 'rebate_submitted' | 'rebate_received'
+
+/** Saves only on an explicit Save or Enter, so stepping through a date
+ * picker or typing a year digit by digit never writes a half-typed date. */
+function StepDateInput({ value, onSave }: { value: string; onSave: (v: string) => void }) {
+  const [draft, setDraft] = useState(value)
+  useEffect(() => { setDraft(value) }, [value])
+  const dirty = draft !== '' && draft !== value
+  return (
+    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <input
+        type="date"
+        className="jdp-input"
+        style={{ width: 150, padding: '3px 6px', fontSize: 12 }}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter' && dirty) onSave(draft) }}
+      />
+      {dirty && (
+        <button className="btn btn-primary" style={{ fontSize: 11, padding: '4px 9px' }} onClick={() => onSave(draft)}>
+          Save
+        </button>
+      )}
+    </span>
   )
 }
 

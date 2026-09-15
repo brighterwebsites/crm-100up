@@ -15,6 +15,8 @@ export type PurchaseOrderItem = Tables<'purchase_order_items'>
 export type JobStockItem = Tables<'job_stock_items'>
 export type Profile = Tables<'profiles'>
 export type Assumptions = Tables<'assumptions'>
+export type PipelineStep = Tables<'pipeline_steps'>
+export type JobStepDate = Tables<'job_step_dates'>
 
 /** The 24-hour relative-weight load shape lives in assumptions.load_profile
  * as jsonb — parse defensively since Postgres returns it untyped `Json`. */
@@ -48,6 +50,10 @@ interface DataState {
   items: JobStockItem[]
   profiles: Profile[]
   assumptions: Assumptions | null
+  /** Live pipeline_steps rows, ordered. The source of truth for who may set
+   * each step and where its date lives; lib/pipeline.ts only mirrors names. */
+  pipelineSteps: PipelineStep[]
+  stepDates: JobStepDate[]
   loading: boolean
   refresh: () => Promise<void>
 }
@@ -64,6 +70,8 @@ const DataContext = createContext<DataState>({
   items: [],
   profiles: [],
   assumptions: null,
+  pipelineSteps: [],
+  stepDates: [],
   loading: true,
   refresh: async () => {},
 })
@@ -82,6 +90,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     items: [],
     profiles: [],
     assumptions: null,
+    pipelineSteps: [],
+    stepDates: [],
     loading: true,
   })
   const timer = useRef<ReturnType<typeof setTimeout>>(null)
@@ -89,7 +99,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     // RLS scopes every query: admins see everything, installers see
     // their jobs plus the shared reference tables.
-    const [jobs, customers, installationRequests, stocks, manufacturers, suppliers, purchaseOrders, purchaseOrderItems, items, profiles, assumptions] =
+    const [jobs, customers, installationRequests, stocks, manufacturers, suppliers, purchaseOrders, purchaseOrderItems, items, profiles, assumptions, pipelineSteps, stepDates] =
       await Promise.all([
         supabase.from('jobs').select('*').order('id', { ascending: false }),
         supabase.from('customers').select('*').order('name'),
@@ -102,6 +112,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         supabase.from('job_stock_items').select('*'),
         supabase.from('profiles').select('*'),
         supabase.from('assumptions').select('*').eq('id', 1).maybeSingle(),
+        supabase.from('pipeline_steps').select('*').order('ordinal'),
+        supabase.from('job_step_dates').select('*'),
       ])
     setState({
       jobs: jobs.data ?? [],
@@ -115,6 +127,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       items: items.data ?? [],
       profiles: profiles.data ?? [],
       assumptions: assumptions.data ?? null,
+      pipelineSteps: pipelineSteps.data ?? [],
+      stepDates: stepDates.data ?? [],
       loading: false,
     })
   }, [])

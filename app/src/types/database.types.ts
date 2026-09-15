@@ -509,6 +509,52 @@ export type Database = {
           },
         ]
       }
+      job_step_dates: {
+        Row: {
+          date: string
+          job_id: number
+          set_by: string | null
+          step_key: string
+          updated_at: string
+        }
+        Insert: {
+          date: string
+          job_id: number
+          set_by?: string | null
+          step_key: string
+          updated_at?: string
+        }
+        Update: {
+          date?: string
+          job_id?: number
+          set_by?: string | null
+          step_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_step_dates_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_step_dates_set_by_fkey"
+            columns: ["set_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_step_dates_step_key_fkey"
+            columns: ["step_key"]
+            isOneToOne: false
+            referencedRelation: "pipeline_steps"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       job_stock_items: {
         Row: {
           assigned_at: string | null
@@ -718,6 +764,9 @@ export type Database = {
       }
       pipeline_steps: {
         Row: {
+          date_column: string | null
+          installer_can_set: boolean
+          key: string
           ordinal: number
           stage: number
           stage_name: string
@@ -725,6 +774,9 @@ export type Database = {
           step_name: string
         }
         Insert: {
+          date_column?: string | null
+          installer_can_set?: boolean
+          key: string
           ordinal: number
           stage: number
           stage_name: string
@@ -732,6 +784,9 @@ export type Database = {
           step_name: string
         }
         Update: {
+          date_column?: string | null
+          installer_can_set?: boolean
+          key?: string
           ordinal?: number
           stage?: number
           stage_name?: string
@@ -1527,6 +1582,43 @@ export type Database = {
           p_expected_version: number
           p_job_id: number
           p_new_date: string
+        }
+        Returns: {
+          assigned_installer_id: string | null
+          ces_received: string | null
+          ces_submitted: string | null
+          created_at: string
+          customer_id: number
+          id: number
+          install_completion_date: string | null
+          install_start_date: string | null
+          installer_notes: string
+          job_type: Database["public"]["Enums"]["job_type"]
+          location: string
+          notes: string
+          planned_install_date: string | null
+          rebate_received: string | null
+          rebate_submitted: string | null
+          stage: number
+          step: number
+          system_description: string
+          updated_at: string
+          value: number
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "jobs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      set_step_date: {
+        Args: {
+          p_date: string
+          p_expected_version: number
+          p_job_id: number
+          p_step_key: string
         }
         Returns: {
           assigned_installer_id: string | null

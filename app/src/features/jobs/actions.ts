@@ -33,6 +33,20 @@ export async function rescheduleBooking(job: Job, newDate: string): Promise<Job>
   return data as Job
 }
 
+/** Change the date of a step the job has already reached. The DB decides
+ * who may (pipeline_steps.installer_can_set) and routes the booking date
+ * through reschedule_booking. */
+export async function setStepDate(job: Job, stepKey: string, date: string): Promise<Job> {
+  const { data, error } = await supabase.rpc('set_step_date', {
+    p_job_id: job.id,
+    p_expected_version: job.version,
+    p_step_key: stepKey,
+    p_date: date,
+  })
+  if (error) throw new Error(error.message)
+  return data as Job
+}
+
 export async function applyPendingNow(jobId: number): Promise<number> {
   const { data, error } = await supabase.rpc('apply_pending_bom_now', { p_job_id: jobId })
   if (error) throw new Error(error.message)
