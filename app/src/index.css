@@ -2333,6 +2333,10 @@ textarea.jdp-input {
 .date-pill-installed { background: var(--stage-1-light); color: var(--stage-1-text); border-color: transparent; }
 .date-pill-ces       { background: var(--stage-2-light); color: var(--stage-2-text); border-color: transparent; }
 .date-pill-rebate    { background: var(--stage-4-light); color: var(--stage-4-text); border-color: transparent; }
+/* On the job panel the pills are buttons: each jumps to its step in Job progress. */
+button.date-pill { font-family: inherit; cursor: pointer; }
+button.date-pill:hover { filter: brightness(0.95); }
+button.date-pill:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; }
 
 /* ── Customers page — customer detail card ───────────────────────
    Sits inside the .jdp padding — no extra wrapper needed. */

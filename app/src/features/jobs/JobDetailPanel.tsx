@@ -47,6 +47,16 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
     setOpenSections(p => ({ ...p, [k]: !p[k] }))
   }
 
+  // Date pill → its step row in Job progress. Opens the section, then
+  // scrolls once it has rendered and briefly highlights the row.
+  const [flashStep, setFlashStep] = useState<string | null>(null)
+  useEffect(() => {
+    if (!flashStep) return
+    document.getElementById(`jdp-step-${jobId}-${flashStep}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const t = setTimeout(() => setFlashStep(null), 1600)
+    return () => clearTimeout(t)
+  }, [flashStep, jobId])
+
   // ── job form state ──
   const [jobForm, setJobForm] = useState(jobFormFrom(job))
   useEffect(() => { setJobForm(jobFormFrom(job)) }, [job])
@@ -202,6 +212,12 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
     s.date_column
       ? job[s.date_column as JobDateColumn]
       : stepDates.find((d) => d.job_id === job.id && d.step_key === s.key)?.date ?? null
+  function goToStep(col: JobDateColumn) {
+    const key = pipelineSteps.find((s) => s.date_column === col)?.key
+    if (!key) return
+    setOpenSections((p) => ({ ...p, jobDetails: true }))
+    setFlashStep(key)
+  }
 
   return (
     <div className="jdp">
@@ -245,13 +261,13 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
         </div>
 
         <div className="jdp-date-pills">
-          {job.planned_install_date    && <span className="date-pill date-pill-booked"><Calendar size={11} aria-hidden /> Booked {fmtDate(job.planned_install_date)}</span>}
-          {job.install_start_date      && <span className="date-pill date-pill-started"><Wrench size={11} aria-hidden /> Started {fmtDate(job.install_start_date)}</span>}
-          {job.install_completion_date && <span className="date-pill date-pill-installed"><CircleCheck size={11} aria-hidden /> Installed {fmtDate(job.install_completion_date)}</span>}
-          {job.ces_submitted           && <span className="date-pill date-pill-ces"><ClipboardList size={11} aria-hidden /> CES sub {fmtDate(job.ces_submitted)}</span>}
-          {job.ces_received            && <span className="date-pill date-pill-ces"><ClipboardCheck size={11} aria-hidden /> CES rec {fmtDate(job.ces_received)}</span>}
-          {job.rebate_submitted        && <span className="date-pill date-pill-rebate"><DollarSign size={11} aria-hidden /> Rebate sub {fmtDate(job.rebate_submitted)}</span>}
-          {job.rebate_received         && <span className="date-pill date-pill-rebate"><DollarSign size={11} aria-hidden /> Rebate rec {fmtDate(job.rebate_received)}</span>}
+          {job.planned_install_date    && <button type="button" className="date-pill date-pill-booked" title="Show in Job progress" onClick={() => goToStep('planned_install_date')}><Calendar size={11} aria-hidden /> Booked {fmtDate(job.planned_install_date)}</button>}
+          {job.install_start_date      && <button type="button" className="date-pill date-pill-started" title="Show in Job progress" onClick={() => goToStep('install_start_date')}><Wrench size={11} aria-hidden /> Started {fmtDate(job.install_start_date)}</button>}
+          {job.install_completion_date && <button type="button" className="date-pill date-pill-installed" title="Show in Job progress" onClick={() => goToStep('install_completion_date')}><CircleCheck size={11} aria-hidden /> Installed {fmtDate(job.install_completion_date)}</button>}
+          {job.ces_submitted           && <button type="button" className="date-pill date-pill-ces" title="Show in Job progress" onClick={() => goToStep('ces_submitted')}><ClipboardList size={11} aria-hidden /> CES sub {fmtDate(job.ces_submitted)}</button>}
+          {job.ces_received            && <button type="button" className="date-pill date-pill-ces" title="Show in Job progress" onClick={() => goToStep('ces_received')}><ClipboardCheck size={11} aria-hidden /> CES rec {fmtDate(job.ces_received)}</button>}
+          {job.rebate_submitted        && <button type="button" className="date-pill date-pill-rebate" title="Show in Job progress" onClick={() => goToStep('rebate_submitted')}><DollarSign size={11} aria-hidden /> Rebate sub {fmtDate(job.rebate_submitted)}</button>}
+          {job.rebate_received         && <button type="button" className="date-pill date-pill-rebate" title="Show in Job progress" onClick={() => goToStep('rebate_received')}><DollarSign size={11} aria-hidden /> Rebate rec {fmtDate(job.rebate_received)}</button>}
         </div>
 
         {reschedule && (
@@ -461,7 +477,22 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
               const date = stepDateOf(s)
               const Mark = isCurrent ? CircleDot : reached ? CircleCheck : Circle
               return (
-                <div key={s.key} className="stock-line" style={{ alignItems: 'center', opacity: reached ? 1 : 0.5 }}>
+                <div
+                  key={s.key}
+                  id={`jdp-step-${job.id}-${s.key}`}
+                  className="stock-line"
+                  style={{
+                    alignItems: 'center',
+                    opacity: reached ? 1 : 0.5,
+                    borderRadius: 4,
+                    transition: 'background 0.6s, box-shadow 0.6s',
+                    // box-shadow widens the highlight without shifting the row.
+                    ...(flashStep === s.key && {
+                      background: PIPELINE[stageNo].light,
+                      boxShadow: `0 0 0 5px ${PIPELINE[stageNo].light}`,
+                    }),
+                  }}
+                >
                   <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                     <Mark size={13} aria-hidden style={{ color: reached ? PIPELINE[stageNo].color : undefined }} />
                     {s.step_name}
