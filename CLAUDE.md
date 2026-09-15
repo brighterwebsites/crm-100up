@@ -67,6 +67,7 @@ deployed — ignore it.
 Pipeline board (19 steps), Customer Jobs, Customers, Job detail, Stock, Order
 List, Purchase Orders (draft → send to supplier / mark sent, print, delete;
 open POs count as stock on order), Suppliers, Receive Stock (paste-invoice),
+Stock takes (printed count sheet → counts → apply; `docs/stock-take-design.md`),
 Settings (email service), Daily Load Profile.
 
 Auth with two roles: **admin** (Fred — everything) and **installer** (assigned
@@ -198,6 +199,13 @@ on mount to open Settings. Any future external return trip has to do the same.
   `stocks.name`. It fails silently when it doesn't match. This is the central
   problem `docs/quote-configurator-design.md` sets out to remove — read it
   before touching anything in the quote → stock path.
+- **On hand (`stocks.qty`) is read-only to the app.** Every change must carry a
+  reference: receiving (PO / receipt), installs (job), stock takes (ST-####).
+  `private.guard_stock_qty()` refuses direct writes by app users and lets
+  `SECURITY DEFINER` functions through, telling them apart by `current_user`,
+  so it **must stay `SECURITY INVOKER`**. Anything new that moves stock must be
+  a `SECURITY DEFINER` function that records its reference, not a table update
+  from the app. See `docs/stock-take-design.md`.
 - **`last_cost` is hand-typed.** `receive_stock` captures no unit cost, so what
   Fred paid is not what the system knows.
 - **Assumption costs and stock costs are unlinked** and drift silently
