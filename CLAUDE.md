@@ -65,7 +65,8 @@ deployed — ignore it.
 ## What's built (new app)
 
 Pipeline board (19 steps), Customer Jobs, Customers, Job detail, Stock, Order
-List, Purchase Orders (view-only), Suppliers, Receive Stock (paste-invoice),
+List, Purchase Orders (draft → send to supplier / mark sent, print, delete;
+open POs count as stock on order), Suppliers, Receive Stock (paste-invoice),
 Settings (email service), Daily Load Profile.
 
 Auth with two roles: **admin** (Fred — everything) and **installer** (assigned
