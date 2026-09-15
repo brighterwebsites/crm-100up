@@ -227,6 +227,12 @@ on mount to open Settings. Any future external return trip has to do the same.
   dance. Migration *history* discipline (convention 1) applies regardless.
   **This flips at cutover.** Once Fred depends on it, a column drop must follow
   the frontend deploy that stops using it, or the live app breaks mid-save.
+- **Customer emails are dummies while testing** (since 2026-09-15):
+  `support+{initials}{customer id}@brighterwebsites.com.au`, all landing in the
+  Brighter Websites support inbox, so no notification test can reach a real
+  customer. Originals are in `private.customer_email_backup` (not reachable
+  through the API). New customers added during testing should get a dummy
+  too. Supplier emails are dummy aliases as well. Phone numbers are still real.
 - **Free-tier auto-pause.** The Supabase org is on the free plan. If the
   project (`nmyczgnvjhwhgpgvwfdx`) sees no database activity for 7
   consecutive days, Supabase pauses it — the whole Auth/API/DB stack goes
