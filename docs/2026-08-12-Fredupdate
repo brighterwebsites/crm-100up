@@ -156,5 +156,43 @@ We can probably soonish... remove the PARITY-VERIFIED needed notification (in ou
 
 He also wants to be able to use the calculaor to quote panels only. but maybe ho
 
-and then we need to work on how we get from calculator answer to Customer and Job |  need to talk this trhough but iniitally we documented that fred didnt want to track leads and just wanted to track customers - well he didnt understand what that actually meant - essentially the  Stage 1 — Communication | First Contact is probably where the lead stage actually fits... 
+and then we need to work on how we get from calculator answer to Customer and Job |  need to talk this trhough but iniitally we documented that fred didnt want to track leads and just wanted to track customers - well he didnt understand what that actually meant - essentially the  Stage 1 — Communication | First Contact is probably where the lead stage actually fits...
 
+---
+
+## Fred's email, 2026-09-20 — SUPERSEDES the installer block above
+
+Pasted verbatim. Everything above under "9. Installer table" about installers
+ticking their own steps is **no longer the plan**; it was never attributable
+to Fred and he has now answered directly.
+
+> do not over complicate, see my answers below, but in general only me or
+> someone who manage project move customer through stages, install only need
+> to see job description he can not move or change anything, installer have to
+> call me
+>
+> it is ok and all done by me and do not over complicate, all we need stages
+> and we move customer through, we may rename or remove some of them
+>
+> ALL completed by me
+> Install complete — I do, just move it in to this stage when job done nothing else.
+> CES submitted — again just I do, just after CES submitted.
+> Inspector review — I move it here when had inspection reported.
+> Fixes complete — I move it here when we rectify defects and resubmitted to inspector.
+> CES received — move here when CES received.
+> Rebate submitted — move here when I submit for rebate.
+> Rebate received — Yes when rebate received we just move it here and actually this is stage when job is get closed.
+> Date Job Booked — Installer can not do anything, installer only can see job description nothing else.
+> Installation in progress + Install complete + Other installer stages — NO
+> Alerts/Notifications: NO alerts
+
+**Implemented 2026-09-20** in `20260920100001_installers_read_only.sql`:
+every step is admin-only. The mechanism is intact, so this is reversible with
+one `update` if he changes his mind — which Vanessa expects he may. He has
+given two different installer counts (five, then one, possibly one team of
+five) and may be trimming scope to get delivery sooner.
+
+**Still to confirm with him:** "NO alerts" clearly kills automated
+notifications. Does it also mean the Needs attention panel and pulsing dots on
+his own board — shipped in `2b0ff99`, emailed to him 2026-09-15 — should go?
+Left in place until he says. One line will settle it.

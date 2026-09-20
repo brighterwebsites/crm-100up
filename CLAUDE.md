@@ -13,7 +13,7 @@ and both are currently real:
 |---|---|---|
 | **What** | `100UP_suite_V46.html` — single self-contained HTML file, inline JS/CSS, `localStorage` only | `app/` — React + TypeScript + Vite, Supabase backend, deployed to Cloudflare |
 | **Holds** | All six Quote Designer calculators | The whole CRM half, plus four of the six calculators |
-| **Status** | Still the only way to produce a quote *end to end* — the new Calculator can price a system but can't hand it to a job yet | Deployed and multi-user, but **not in business use yet** — Fred checks in on progress |
+| **Status** | Still what Fred quotes on, and still the only tool for 3 Phase / Ground Mount BOM | Deployed and multi-user. **Quotes now close end to end** (Sprint 1, 2026-09-20): the Calculator hands a system to a customer and job. **Not in business use yet** — Fred checks in on progress |
 
 Fred quotes in the old file, then pastes the result into the new app via the
 "Link quote" screen. **Do not treat either as dead.** The old file is the
@@ -57,7 +57,7 @@ deployed — ignore it.
 | Doc | Why |
 |---|---|
 | `docs/2026-09-20_mvp-plan.md` | Current plan: repo state, the three sprints to cutover, and what was decided without asking Fred. **Start here.** |
-| `docs/2026-08-12-Fredupdate` | Fred's own written answers — installer model, job refs, per-step permissions, parity accepted. His words, not a summary |
+| `docs/2026-08-12-Fredupdate` | Vanessa's update **to** Fred with his replies interleaved. **Attribution is not marked** — the installer block is unsourced and the block after the final `---` is hers (it says "He also wants..."). Fred's 2026-09-20 email supersedes the installer block entirely |
 | `docs/2026-07-29_status-gap-and-decisions.md` | Older status and gap register, plus the original 37 decision questions. Much is now answered — read the two above first |
 | `docs/bugs.md` | Defects in both codebases, what's fixed and what's carried forward |
 | `docs/quote-configurator-design.md` | Target design for Assumptions → product-driven configurator (proposed, not built) |
@@ -75,9 +75,23 @@ against a PO via `receive_goods` with the PO's lines as a reading hint),
 Stock takes (printed count sheet → counts → apply; `docs/stock-take-design.md`),
 Settings (email service), Daily Load Profile.
 
-Auth with two roles: **admin** (Fred — everything) and **installer** (assigned
-jobs only; can edit `installer_notes` and nothing else — Fred's `notes` are
-read-only to them). Writes are enforced in the database (RLS plus the
+Auth with two roles: **admin** (Fred — everything) and **installer**. As of
+Fred's email of 2026-09-20 the installer role is **read-only except for their
+own notes**: assigned jobs only, can edit `installer_notes` and nothing else
+(Fred's `notes` are read-only to them), and **cannot advance, move back, or
+set any date**. His words: *"install only need to see job description he can
+not move or change anything, installer have to call me"*, and every pipeline
+step is *"ALL completed by me"*. He also said **"NO alerts"** — do not build
+notification triggers.
+
+`20260920100001` sets `installer_can_set = false` on every step to implement
+this. **It is a data change on purpose** — the mechanism (`installer_can_set`,
+`set_step_date`, the per-step checks in the RPCs, the UI that reads them) is
+untouched, so re-enabling an installer step later is one `update`, not a
+rebuild. Vanessa's read is that Fred will likely want some of it back. Don't
+"clean up" the unused machinery.
+
+Writes are enforced in the database (RLS plus the
 allowlist in `private.guard_jobs_update()`), not the UI. **Reads are not yet:**
 installers can read every cost and pricing table through the API, whatever the
 UI shows them — `docs/bugs.md` #14, a blocker before real installers log in.
@@ -93,16 +107,19 @@ editing screen, so cost changes no longer have to go through the old file.
 Still `StubPage` placeholders in `Shell.tsx`: **3 Phase** and **Ground Mount
 BOM**. Both stay stubs through cutover by decision — V46 still does them.
 
-**The quote loop does not close.** The Link-quote modal instructs the user to
-press *Send system to CRM* in the calculator, but that button was never ported
-to `CalculatorPage.tsx` — it exists only in V46 (payload built at line 2719).
-The receiving half (parse → fuzzy-match stock → set job value → apply) is
-complete in `features/jobs/modals.tsx`. Joining them is the MVP gate; see
-`docs/2026-09-20_mvp-plan.md`.
+**The quote loop closes** as of 2026-09-20. The Calculator has "Copy quote for
+CRM" and "Create job from this quote"; the payload lives in
+`app/src/lib/quotePayload.ts` and is **v2, carrying `stockId`** so a quote
+raised in the new app never touches `normalizePart`'s fuzzy matcher. Name
+matching survives only as the fallback for a v1 payload pasted out of V46.
+**Known gap:** "Create job from this quote" always creates a *new* customer —
+no lookup — so quoting an existing household twice duplicates it
+(`docs/feature-wishlist.md` W3).
 
-Also open: real cost capture on receipt, notifications (email now sends, but
-nothing triggers it automatically), and `scripts/import_from_export.py` is out
-of date against the current schema — **a hard blocker on cutover**.
+Also open: real cost capture on receipt, and `scripts/import_from_export.py`
+is out of date against the current schema — **a hard blocker on cutover**.
+**Notifications are closed, not open** — Fred said "NO alerts" on 2026-09-20.
+Email still sends on demand; nothing should trigger it automatically.
 
 ## Integrations
 

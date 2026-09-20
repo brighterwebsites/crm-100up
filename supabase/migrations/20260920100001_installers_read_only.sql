@@ -1,0 +1,42 @@
+-- 100UP CRM — installers are read-only. No step is installer-settable.
+--
+-- Fred, by email 2026-09-20, answering the installer-model questions:
+--
+--   "do not over complicate ... in general only me or someone who manage
+--    project move customer through stages, install only need to see job
+--    description he can not move or change anything, installer have to call me"
+--
+-- and then, step by step: Install complete — "I do". CES submitted — "again
+-- just I do". Inspector review — "I move it here". Fixes complete — "I move
+-- it here". CES received, Rebate submitted, Rebate received — all "I". Date
+-- Job Booked — "Installer can not do anything, installer only can see job
+-- description nothing else." Installation in progress + Install complete +
+-- other installer stages — "NO".
+--
+-- Four steps were seeded installer-settable in 20260915110001 on the earlier
+-- reading of what he wanted: install_in_progress, install_complete,
+-- ces_submitted, fixes_complete. All four are now false, and so is everything
+-- else. An installer can see a job and write their own installer_notes; they
+-- cannot advance it, move it back, or set any date.
+--
+-- WHAT THIS DELIBERATELY DOES NOT DO: it does not remove the mechanism.
+-- `installer_can_set`, `set_step_date`, the per-step checks in
+-- advance_job_stage / move_job_back and the UI that reads them all stay
+-- exactly as they are. This is a DATA change, so the day Fred decides an
+-- installer should tick "install complete" after all — which is the way this
+-- is expected to go, and what the second-tenant plan assumes — it is one
+-- update statement and an unhide, not a rebuild. Reverting the code would
+-- throw away work that is already correct and already enforced in the
+-- database.
+--
+-- Note for later, not acted on: Fred also said of Rebate received "actually
+-- this is stage when job is get closed", which implies the separate
+-- job_closed step may be redundant. He added "we may rename or remove some of
+-- them". Left alone until he says which.
+
+update public.pipeline_steps set installer_can_set = false
+where installer_can_set;
+
+-- Belt and braces: if a future seed adds a step, it defaults to false
+-- already (20260915110001 declares `not null default false`), so a new step
+-- is admin-only unless someone deliberately opts it in.

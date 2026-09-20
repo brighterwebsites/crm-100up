@@ -263,6 +263,16 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
               <Calendar size={13} aria-hidden /> Reschedule install
             </button>
           )}
+          {/* With every step admin-only (20260920100001) an installer has no
+              control to render here, which would otherwise leave an empty row
+              that reads as broken rather than as deliberate. Fred's own
+              instruction is the explanation to show: "installer have to call
+              me". */}
+          {!isAdmin && !canAdvance && !canMoveBack && (
+            <div className="mutedtext" style={{ fontSize: 11 }}>
+              The office moves jobs through the stages — call Fred if this job is ready to move on.
+            </div>
+          )}
         </div>
 
         <div className="jdp-date-pills">
