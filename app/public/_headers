@@ -1,0 +1,12 @@
+# Keep the CRM out of search engines.
+#
+# The strongest layer, because Google and Bing honour X-Robots-Tag without
+# parsing the HTML at all — which matters here: this is a single-page app, so
+# a crawler fetching / gets the shell (title, root div) before any Supabase
+# session check has run. Auth hides the DATA; it does nothing about indexing
+# the shell.
+#
+# Cloudflare Workers static assets serves this file's rules; Vite copies
+# everything in public/ into dist/ verbatim.
+/*
+  X-Robots-Tag: noindex, nofollow, noarchive

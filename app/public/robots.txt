@@ -1,0 +1,5 @@
+# 100UP CRM — private application, nothing here is for search.
+# Belt to the X-Robots-Tag braces in public/_headers: well-behaved crawlers
+# stop before fetching, the header covers the ones that don't.
+User-agent: *
+Disallow: /

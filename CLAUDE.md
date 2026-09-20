@@ -136,8 +136,12 @@ matching survives only as the fallback for a v1 payload pasted out of V46.
 no lookup — so quoting an existing household twice duplicates it
 (`docs/feature-wishlist.md` W3).
 
-Also open: real cost capture on receipt, and `scripts/import_from_export.py`
-is out of date against the current schema — **a hard blocker on cutover**.
+Also open: real cost capture on receipt. `scripts/import_from_export.py` was
+**reworked 2026-09-20** and is no longer a cutover blocker — it now treats the
+product catalogue as read-only, writing only `stocks.qty`, and aborts if the
+export references a stock id the catalogue does not have. Run it as
+`postgres`, not an app user: `private.guard_stock_qty()` keys off
+`current_user`.
 **Notifications are deferred, not cancelled** — Fred said "NO alerts" on
 2026-09-20, meaning not yet. Leave them undeveloped; he is expected to want
 them later. Email still sends on demand; nothing triggers it automatically.
@@ -323,7 +327,7 @@ on mount to open Settings. Any future external return trip has to do the same.
 | `100UP_suite_V46.html` | Legacy app — behavioural spec for the calculator rebuild |
 | `100UP_assumptions_2026-06-20.json` | The 45 assumption values, as seeded into `public.assumptions` |
 | `100UP_stock-crm_2026-06-25.json` | Legacy data export — 18 jobs, 17 stock items, 3 suppliers |
-| `scripts/import_from_export.py` | Cutover importer — **out of date, needs rework** |
+| `scripts/import_from_export.py` | Cutover importer. Reworked 2026-09-20: catalogue is read-only, `--truncate` uses ordered DELETEs (a cascading truncate would take `stocks` with `suppliers`) |
 | `archive/` | Superseded iterations — never the source of truth |
 
 ## Working in this repo
