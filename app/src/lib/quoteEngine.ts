@@ -216,11 +216,22 @@ export function priceSystem(
   // Candidate inverter tiers: this config's, matching the quote's phase.
   // Phase comes from the product, which is what makes an incompatible
   // selection structurally impossible rather than merely discouraged.
-  const candidates = config.inverters
+  const forPhase = config.inverters
     .map((t) => ({ tier: t, s: byId.get(t.stock_id) }))
     .filter((c): c is { tier: typeof config.inverters[0]; s: Stock } =>
-      !!c.s && c.s.active && c.s.phase === input.phase &&
-      (input.forceSizeClass == null || c.tier.size_class === input.forceSizeClass))
+      !!c.s && c.s.active && c.s.phase === input.phase)
+
+  // Forcing a size class is tier-RELATIVE, not a product pin: "Force 12/10kW"
+  // means "each brand's bigger option" so the two columns stay comparable.
+  // A brand that has no product in the forced class must still answer with
+  // something, or its column silently blanks — which is the failure the
+  // size_class design exists to prevent. V46 does this by construction: its
+  // three-phase Deye path prices the 12kW in every mode. So fall back to the
+  // config's remaining tiers for this phase rather than returning nothing.
+  const forced = input.forceSizeClass == null
+    ? forPhase
+    : forPhase.filter((c) => c.tier.size_class === input.forceSizeClass)
+  const candidates = forced.length ? forced : forPhase
   if (!candidates.length) return null
 
   const evaluate = (tier: typeof config.inverters[0], inv: Stock) => {

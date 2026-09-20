@@ -225,6 +225,19 @@ on mount to open Settings. Any future external return trip has to do the same.
   Fred paid is not what the system knows.
 - **Assumption costs and stock costs are unlinked** and drift silently
   (`docs/bugs.md` #3).
+- **The Deye 10kW three-phase is never quoted.** Fred, 2026-09-20: a
+  three-phase inverter splits its rating across the phases, so a 10kW 3P gives
+  ~3.33 kW per phase — not enough off-grid. The Deye three-phase option is the
+  **12kW** (`AI-W5.1-12P3-AU-B`) and nothing else. V46 has always agreed
+  (its 3ph Deye path hardcodes 12kW); `20260920090001` removes the 10P3 tier
+  the configurator's blanket seed had picked up. **The `stocks` row stays** —
+  real product, CES catalogue entry, historical jobs. There is no Deye 15kW;
+  the 15kW is Sigenergy's `EC 15.0 TP`.
+- **A forced inverter size class falls back to the config's other tiers.**
+  Forcing a class is tier-*relative* ("each brand's bigger option"), so a brand
+  with no product in that class must still answer or its column silently
+  blanks. `quoteEngine.ts` falls back rather than returning null. Don't
+  "simplify" that back into a hard filter.
 - **CES manufacturer names**: Deye and Jinko are verified against CEC listings.
   **Sigenergy and Trina are not** — don't treat them as authoritative.
 - **The V46 cost breakdown double-counts** the mounting kit and Deye PDU/Base
