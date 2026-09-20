@@ -159,18 +159,20 @@ before touching anything.
 |---|---|---|
 | `email` | CyberPersons transactional send (`send-email`), logged to `email_sends` | **Working, key entered** (confirmed 2026-09-20 — Settings shows the saved-key placeholder, which only renders when `integrations.secret` is non-empty) |
 | `anthropic` | `aiComplete` in `_shared/ai.ts`; invoice reading on Receive Stock (`extract-invoice`), logged to `ai_call_log` | **Working, key entered** (same evidence) |
-| `gmail` | OAuth connection only (`gmail-oauth-start` / `-callback`). Stores a refresh token. **No sync yet** — no poller, no message table | Connection only |
+| `gmail` | OAuth connection only (`gmail-oauth-start` / `-callback`). Stores a refresh token. **No sync yet** — no poller, no message table | Connected, nothing depends on it. Ported cheaply from BW-CRM for later: visibility of mail to and from customers, and AI scanning of supplier invoices and receipts. **Not a cutover item** |
 
 **Two different email systems, easily confused:**
 
-| | What it sends | Where it is configured |
-|---|---|---|
-| **CRM email connector** (`integrations`, provider `email`) | Application mail — the `send-email` Edge Function, logged to `email_sends` | Settings → Integrations, *in the app* |
-| **Supabase Auth SMTP** | Invites, password resets, confirmations | Supabase **Dashboard** → Authentication → SMTP Settings |
+| | What it sends | Where it is configured | State |
+|---|---|---|---|
+| **CRM email connector** (`integrations`, provider `email`) | Application mail — the `send-email` Edge Function, logged to `email_sends` | Settings → Integrations, *in the app* | Configured |
+| **Supabase Auth SMTP** | Invites, password resets, confirmations | Supabase **Dashboard** → Authentication → SMTP Settings | Configured (2026-09-20) |
 
-They share nothing. Configuring one does not configure the other, and Auth's
-built-in sender is heavily rate-limited until custom SMTP is enabled — which
-is why invites fail in bursts while the CRM's own email works fine.
+They share nothing, and neither is visible from the other. Configuring one
+does not configure the other, and Auth's built-in sender is heavily
+rate-limited until custom SMTP is enabled — which is how the CRM's own email
+can work perfectly while invites fail in bursts. **Both are now set up**, so
+don't re-raise either as outstanding.
 
 Gmail OAuth needs four Edge Function secrets: `GOOGLE_OAUTH_CLIENT_ID`,
 `GOOGLE_OAUTH_CLIENT_SECRET`, `GMAIL_OAUTH_REDIRECT_URI`, `CRM_APP_URL`.
