@@ -9,7 +9,8 @@ that picking it up later does not mean re-deriving it.
 
 ---
 
-## W1 — File supplier documents to Google Drive
+## W1 — File supplier documents to Google Drive | CLOSED
+
 
 **Raised** 2026-08-12 (Vanessa), while designing goods receipts.
 
@@ -46,6 +47,9 @@ ref makes the file findable without the CRM, which is the point.
   navigate back to is only half the feature.
 - What happens when filing fails? It must not block the receipt: the stock
   movement is the real work, filing is bookkeeping.
+
+
+**Closed** 2026-09-19 not required
 
 ---
 

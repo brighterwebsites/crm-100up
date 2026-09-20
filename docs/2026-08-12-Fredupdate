@@ -67,7 +67,8 @@ The old “paste invoice → qty goes up” path threw away the unit price and c
 
 * Today a system can pass by coasting down from a full battery over 31 days, even when the array cannot meet the load. Undersized arrays look fine if the bank is huge enough.  
 * **Q:** should a pass require end-of-month SOC ≥ start (or a repeated July), not merely “didn’t hit empty”?  
-* This will move quoted system sizes. It is current V46 behaviour, faithfully ported — changing it is a product call, not a bug-fix.
+* This will move quoted system sizes. It is current V46 behaviour, faithfully ported — changing it is a product call, not a bug-fix.  
+* **Emailed to Fred 2026-09-15** — waiting on his answer.
 
 **2\. Warn when the array cannot carry the load?**
 
@@ -86,6 +87,8 @@ CRM keeps extracted data, not the file. Drive folder by supplier/year is the aud
 
  (essentially if you connect gmail (integration already exists), we can also connect gdrive  the integration part shares the same credentials so its a natural extenstion, would also allow you to generate a pdf for a customer and save it to gdrive if you needed too).
 
+ Closed not needed (01/09/2026)
+
 **8\. New stock item mid-receipt?**
 
 Old flow could create a stock row from a misread invoice line. Safer: item must exist first. Confirm.
@@ -94,9 +97,44 @@ Old flow could create a stock row from a misread invoice line. Safer: item must 
 
 flagged not speced \- think we need it. what do you actually needs: a list of installers, assign jobs, contact details, email installer (create in a way installers can log in and see jobs assigned to them \- if so what details do they see vs what they shouldnt see) 
 
+
+
+Assinging an installer and booking in the date should not be forced as needing to happen at the same time but ideally "Install booking date" and assigning the installer at the same time would be conveneient. 
+
+Job order ref - should probably auto fill and lock  at some point - maybe on either installer or date booked is ever first assigned to the job
+and I think Date issued should be locked and set when the job has a date + installer (ie when the job first appears in the installers list of jobs?)
+
+Also Instalers should be able to see the job ref number somewhere... 
+
+I feel like all the dates that the job progresses should be visible in like a partially editable accordian like an audit trail you can see - perhaps for now edits should be in that audit table as follows 
+First contact	admin only 
+Info collection	admin only 
+System proposals	admin only 
+Customer selects admin only 
+Quote in Xero	admin only 
+Send quote	admin only 
+Deposit received admin only 
+Booked 17 June 2026 admin only 
+Started 19 June 2026 Installer and admin
+Installed 9 July 2026 Installer and admin
+CES sub 15 Sept 2026 Installer and admin
+Inspector review requested admin
+Insepctor review completed admin
+Fixes complete Installer and admin
+CES rec 15 Sept 2026 admin only 
+Rebate sub 15 Sept 2026 admin only 
+Rebate rec 15 Sept 2026 admin only 
+
+There is a a reschedule button, but I think that should be renamed to reschedul install 
+
+Job Details > Date issued - seems to show up as (date) started in the pills below Pipeline advance/moove back buttons 
+If that is the date started then that field(and the ones the installer should be able to set or edit) should probably be avilable to the installer too?
+
+so how do we make that work (so installers only see or access what they should)
+
 **Known Bugs**
 
-* Calculator: typing 0 freezes recalc **(bug \#11)**  
+* Calculator: typing 0 freezes recalc **(bug \#11)**  (simple idea to resolve set min 1 and max numbers for all calc fields that cause an error or issue)
 * Cost provenance on last\_cost (wishlist W2) Receipts will write it; Stock page still allows hand-edit. Two writers, no stamp. Parked for now.  
 * Cost breakdown double-count in V46 **(bug \#6)** Display only; quoted totals were correct. New calculator should not copy this.  
 * **Bug \#8 (optimise \+ ground ignored force mode) — no historical underpricing.** Last paid price must stay visible next to planning price. Qty on hand stays beside cost on purpose.
@@ -105,4 +143,17 @@ flagged not speced \- think we need it. what do you actually needs: a list of in
 
 * CRM subdomain noindex/seo protection for 100up.com.au domain  
 * Auth emails still on throttled Supabase SMTP Needed before go-live, not this week.
+
+
+
+
+---
+
+then next we need to work on the calculators/esitimators and how that transfers into customers/jobs... but 
+
+We can probably soonish... remove the PARITY-VERIFIED needed notification (in our notes it should be marked accepted - Whiel there  are known bugs or things to resolve - within the pararmers tested and how fred plans to use it works fine - easiest fix for one bug is where 0 value break things (like Daily load kWh if we just need to make 1 the min value accepted it should be fine. ) 
+
+He also wants to be able to use the calculaor to quote panels only. but maybe ho
+
+and then we need to work on how we get from calculator answer to Customer and Job |  need to talk this trhough but iniitally we documented that fred didnt want to track leads and just wanted to track customers - well he didnt understand what that actually meant - essentially the  Stage 1 — Communication | First Contact is probably where the lead stage actually fits... 
 
