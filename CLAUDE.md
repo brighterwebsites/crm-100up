@@ -106,13 +106,26 @@ admin.
 
 ## What's not built
 
-**Four of the six Quote Designer tools are now built** — Quick Estimate,
-Calculator, Assumptions and Simulation, plus Daily Load Profile, all on
-`app/src/lib/quoteEngine.ts` (a faithful V46 port). Assumptions has a full
-editing screen, so cost changes no longer have to go through the old file.
+**All six Quote Designer tools are built** as of 2026-09-20 — Quick Estimate,
+Calculator, 3 Phase, Assumptions, Simulation and Ground Mount BOM, plus Daily
+Load Profile. No `StubPage` is rendered anywhere now (the component is still
+on disk for the next placeholder).
 
-Still `StubPage` placeholders in `Shell.tsx`: **3 Phase** and **Ground Mount
-BOM**. Both stay stubs through cutover by decision — V46 still does them.
+`CalculatorPage` serves **both** the single-phase and three-phase tools via a
+`phase` prop — the engine has always taken phase as an input, picking
+inverter tiers by the product's own phase, applying the 3Φ oversize rule and
+filtering `system_config_components` by `phase_scope`. V46 kept these as two
+tabs with two near-identical sets of cost functions, which is how they
+drifted. Don't split them again; the only per-phase difference is the
+starting numbers. Shell renders it twice **with keys** — without them React
+reconciles the two positions as one component and carries state across.
+
+Ground Mount BOM is `lib/groundMountBom.ts` (pure geometry, faithful port of
+`calcGmBom`) plus a screen. It prices off the 20 `gm_component` rows in
+`stocks`, matched on the part code in `stocks.model` — an exact join, not a
+name regex — so there is no per-part cost editor: change the price on the
+Stock page. Quantities and weights stay in code because they are geometry and
+spec, not inventory.
 
 **The quote loop closes** as of 2026-09-20. The Calculator has "Copy quote for
 CRM" and "Create job from this quote"; the payload lives in

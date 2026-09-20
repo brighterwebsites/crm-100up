@@ -13,7 +13,6 @@ import SuppliersPage from '../features/suppliers/SuppliersPage'
 import PipelinePage from './PipelinePage'
 import CustomerJobsPage from './CustomerJobsPage'
 import CustomersPage from './CustomersPage'
-import StubPage from './StubPage'
 import DailyLoadProfilePage from './DailyLoadProfilePage'
 import PurchaseOrdersPage from './PurchaseOrdersPage'
 import SettingsPage, { type GmailReturn } from './SettingsPage'
@@ -21,6 +20,7 @@ import AssumptionsPage from './AssumptionsPage'
 import CalculatorPage from './CalculatorPage'
 import QuickEstimatePage from './QuickEstimatePage'
 import SimulationPage from './SimulationPage'
+import GroundMountBomPage from './GroundMountBomPage'
 
 type Page =
   | 'pipeline'
@@ -239,7 +239,7 @@ function ShellInner() {
               the single-phase state when you switch to 3 Phase. */}
           {isAdmin && page === 'qd-system-calc'    && <CalculatorPage key="calc-single" onOpenJob={handleOpenJob} phase="single" />}
           {isAdmin && page === 'qd-3phase'         && <CalculatorPage key="calc-three"  onOpenJob={handleOpenJob} phase="three" />}
-          {isAdmin && page === 'qd-gm-bom'         && <StubPage icon={Pickaxe} title="Ground Mount BOM" note="Ground mount bill-of-materials generator — not ported yet." />}
+          {isAdmin && page === 'qd-gm-bom'         && <GroundMountBomPage />}
           {isAdmin && page === 'qd-assumptions'    && <AssumptionsPage />}
           {isAdmin && page === 'qd-simulation'     && <SimulationPage />}
           {isAdmin && page === 'qd-daily-load-profile' && <DailyLoadProfilePage />}
