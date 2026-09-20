@@ -12,8 +12,8 @@ and both are currently real:
 | | Legacy | Current build |
 |---|---|---|
 | **What** | `100UP_suite_V46.html` — single self-contained HTML file, inline JS/CSS, `localStorage` only | `app/` — React + TypeScript + Vite, Supabase backend, deployed to Cloudflare |
-| **Holds** | The six Quote Designer calculators | The whole CRM half |
-| **Status** | Still the only way to produce a quote | Deployed and multi-user, but **not in business use yet** — Fred checks in on progress |
+| **Holds** | All six Quote Designer calculators | The whole CRM half, plus four of the six calculators |
+| **Status** | Still the only way to produce a quote *end to end* — the new Calculator can price a system but can't hand it to a job yet | Deployed and multi-user, but **not in business use yet** — Fred checks in on progress |
 
 Fred quotes in the old file, then pastes the result into the new app via the
 "Link quote" screen. **Do not treat either as dead.** The old file is the
@@ -56,7 +56,9 @@ deployed — ignore it.
 
 | Doc | Why |
 |---|---|
-| `docs/2026-07-29_status-gap-and-decisions.md` | Current status, gap register, and the 37 open decision questions for Fred. **Start here.** |
+| `docs/2026-09-20_mvp-plan.md` | Current plan: repo state, the three sprints to cutover, and what was decided without asking Fred. **Start here.** |
+| `docs/2026-08-12-Fredupdate` | Fred's own written answers — installer model, job refs, per-step permissions, parity accepted. His words, not a summary |
+| `docs/2026-07-29_status-gap-and-decisions.md` | Older status and gap register, plus the original 37 decision questions. Much is now answered — read the two above first |
 | `docs/bugs.md` | Defects in both codebases, what's fixed and what's carried forward |
 | `docs/quote-configurator-design.md` | Target design for Assumptions → product-driven configurator (proposed, not built) |
 | `docs/schema-restructure-proposal.md` | Phase 2 schema design — partly implemented; check migrations for what actually landed |
@@ -83,16 +85,24 @@ Public signups are disabled; users are created by an admin.
 
 ## What's not built
 
-All six Quote Designer tools — Quick Estimate, Calculator, 3 Phase,
-Assumptions, Ground Mount BOM, Simulation. They appear as `StubPage`
-placeholders in `Shell.tsx`. Assumptions data **is** in the database
-(`public.assumptions`, seeded) but has no editing screen, so cost changes must
-still be made in the old file.
+**Four of the six Quote Designer tools are now built** — Quick Estimate,
+Calculator, Assumptions and Simulation, plus Daily Load Profile, all on
+`app/src/lib/quoteEngine.ts` (a faithful V46 port). Assumptions has a full
+editing screen, so cost changes no longer have to go through the old file.
 
-Also open: receive-against-PO, real cost capture on receipt, notifications
-(email now sends, but nothing triggers it automatically), and
-`scripts/import_from_export.py` is out of date against the current schema —
-**a hard blocker on cutover**.
+Still `StubPage` placeholders in `Shell.tsx`: **3 Phase** and **Ground Mount
+BOM**. Both stay stubs through cutover by decision — V46 still does them.
+
+**The quote loop does not close.** The Link-quote modal instructs the user to
+press *Send system to CRM* in the calculator, but that button was never ported
+to `CalculatorPage.tsx` — it exists only in V46 (payload built at line 2719).
+The receiving half (parse → fuzzy-match stock → set job value → apply) is
+complete in `features/jobs/modals.tsx`. Joining them is the MVP gate; see
+`docs/2026-09-20_mvp-plan.md`.
+
+Also open: real cost capture on receipt, notifications (email now sends, but
+nothing triggers it automatically), and `scripts/import_from_export.py` is out
+of date against the current schema — **a hard blocker on cutover**.
 
 ## Integrations
 
