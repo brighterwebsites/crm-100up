@@ -83,8 +83,32 @@ const DataContext = createContext<DataState>({
   refresh: async () => {},
 })
 
+/** `stocks_visible` types every column nullable — Postgres cannot prove
+ *  non-nullness through a view — but the view returns the real value for
+ *  every identity and spec column and a literal 0 for the redacted ones. This
+ *  restores the Stock shape so callers need no installer-specific branch.
+ *  The zeros are the point: an installer's UI shows part names and never a
+ *  cost. See migration 20260920110001 and docs/bugs.md #14. */
+function redactedStocks(rows: Tables<'stocks_visible'>[]): Stock[] {
+  return rows.map((r) => ({
+    id: r.id ?? 0,
+    name: r.name ?? '',
+    model: r.model ?? '',
+    category: r.category ?? 'other',
+    product_type: r.product_type ?? 'other',
+    phase: r.phase ?? 'na',
+    active: r.active ?? true,
+    verified: r.verified ?? false,
+    manufacturer_id: r.manufacturer_id,
+    kw: r.kw, kva: r.kva, kwh: r.kwh, usable_kwh: r.usable_kwh, watts: r.watts,
+    qty: 0, last_cost: 0, last_landed_cost: 0, planning_cost: 0,
+    planning_cost_updated_at: null,
+    preferred_supplier_id: null,
+  }))
+}
+
 export function DataProvider({ children }: { children: ReactNode }) {
-  const { session } = useAuth()
+  const { session, isAdmin } = useAuth()
   const [state, setState] = useState<Omit<DataState, 'refresh'>>({
     jobs: [],
     manufacturers: [],
@@ -108,12 +132,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     // RLS scopes every query: admins see everything, installers see
     // their jobs plus the shared reference tables.
+    //
+    // Since 20260920110001 the cost and procurement tables are admin-only, so
+    // for an installer most of these return an empty array rather than data
+    // they should never have had (docs/bugs.md #14). That is the fix working,
+    // not a failure — the screens that would use them are admin-only too.
+    //
+    // `stocks` is the exception, because an installer still needs the NAMES of
+    // the parts on their job. They read `stocks_visible`, which carries the
+    // same columns with every cost redacted to 0 and rows limited to their own
+    // jobs' allocations.
     const [jobs, customers, installationRequests, stocks, manufacturers, suppliers, purchaseOrders, purchaseOrderItems, items, profiles, assumptions, pipelineSteps, stepDates, stockTakes, stockTakeLines] =
       await Promise.all([
         supabase.from('jobs').select('*').order('id', { ascending: false }),
         supabase.from('customers').select('*').order('name'),
         supabase.from('installation_requests').select('*'),
-        supabase.from('stocks').select('*').order('name'),
+        isAdmin
+          ? supabase.from('stocks').select('*').order('name')
+          : supabase.from('stocks_visible').select('*').order('name'),
         supabase.from('manufacturers').select('*').order('brand'),
         supabase.from('suppliers').select('*').order('name'),
         supabase.from('purchase_orders').select('*').order('created_at', { ascending: false }),
@@ -130,7 +166,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       jobs: jobs.data ?? [],
       customers: customers.data ?? [],
       installationRequests: installationRequests.data ?? [],
-      stocks: stocks.data ?? [],
+      stocks: isAdmin
+        ? ((stocks.data ?? []) as Stock[])
+        : redactedStocks(stocks.data ?? []),
       manufacturers: manufacturers.data ?? [],
       suppliers: suppliers.data ?? [],
       purchaseOrders: purchaseOrders.data ?? [],
@@ -144,7 +182,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       stockTakeLines: stockTakeLines.data ?? [],
       loading: false,
     })
-  }, [])
+  }, [isAdmin])
 
   useEffect(() => {
     if (!session) return

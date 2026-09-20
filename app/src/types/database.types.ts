@@ -320,6 +320,13 @@ export type Database = {
             referencedRelation: "stocks"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "goods_receipt_items_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks_visible"
+            referencedColumns: ["id"]
+          },
         ]
       }
       goods_receipts: {
@@ -604,6 +611,13 @@ export type Database = {
             referencedRelation: "stocks"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "job_stock_items_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks_visible"
+            referencedColumns: ["id"]
+          },
         ]
       }
       jobs: {
@@ -760,6 +774,13 @@ export type Database = {
             referencedRelation: "stocks"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "panel_settings_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks_visible"
+            referencedColumns: ["id"]
+          },
         ]
       }
       pipeline_steps: {
@@ -895,6 +916,13 @@ export type Database = {
             referencedRelation: "stocks"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "purchase_order_items_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks_visible"
+            referencedColumns: ["id"]
+          },
         ]
       }
       purchase_orders: {
@@ -1010,6 +1038,13 @@ export type Database = {
             referencedRelation: "stocks"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "simulation_presets_inverter_stock_id_fkey"
+            columns: ["inverter_stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks_visible"
+            referencedColumns: ["id"]
+          },
         ]
       }
       sizing_rules: {
@@ -1070,6 +1105,13 @@ export type Database = {
             columns: ["stock_id"]
             isOneToOne: false
             referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_take_lines_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks_visible"
             referencedColumns: ["id"]
           },
           {
@@ -1373,6 +1415,13 @@ export type Database = {
             referencedRelation: "stocks"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "system_config_batteries_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks_visible"
+            referencedColumns: ["id"]
+          },
         ]
       }
       system_config_components: {
@@ -1421,6 +1470,13 @@ export type Database = {
             referencedRelation: "stocks"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "system_config_components_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks_visible"
+            referencedColumns: ["id"]
+          },
         ]
       }
       system_config_inverters: {
@@ -1464,6 +1520,13 @@ export type Database = {
             columns: ["stock_id"]
             isOneToOne: false
             referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_config_inverters_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks_visible"
             referencedColumns: ["id"]
           },
         ]
@@ -1529,6 +1592,90 @@ export type Database = {
             columns: ["stock_id"]
             isOneToOne: false
             referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipt_items_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks_visible"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stocks_visible: {
+        Row: {
+          active: boolean | null
+          category: Database["public"]["Enums"]["ces_category"] | null
+          id: number | null
+          kva: number | null
+          kw: number | null
+          kwh: number | null
+          last_cost: number | null
+          last_landed_cost: number | null
+          manufacturer_id: number | null
+          model: string | null
+          name: string | null
+          phase: Database["public"]["Enums"]["electrical_phase"] | null
+          planning_cost: number | null
+          planning_cost_updated_at: string | null
+          preferred_supplier_id: number | null
+          product_type: Database["public"]["Enums"]["product_type"] | null
+          qty: number | null
+          usable_kwh: number | null
+          verified: boolean | null
+          watts: number | null
+        }
+        Insert: {
+          active?: boolean | null
+          category?: Database["public"]["Enums"]["ces_category"] | null
+          id?: number | null
+          kva?: number | null
+          kw?: number | null
+          kwh?: number | null
+          last_cost?: never
+          last_landed_cost?: never
+          manufacturer_id?: number | null
+          model?: string | null
+          name?: string | null
+          phase?: Database["public"]["Enums"]["electrical_phase"] | null
+          planning_cost?: never
+          planning_cost_updated_at?: never
+          preferred_supplier_id?: never
+          product_type?: Database["public"]["Enums"]["product_type"] | null
+          qty?: never
+          usable_kwh?: number | null
+          verified?: boolean | null
+          watts?: number | null
+        }
+        Update: {
+          active?: boolean | null
+          category?: Database["public"]["Enums"]["ces_category"] | null
+          id?: number | null
+          kva?: number | null
+          kw?: number | null
+          kwh?: number | null
+          last_cost?: never
+          last_landed_cost?: never
+          manufacturer_id?: number | null
+          model?: string | null
+          name?: string | null
+          phase?: Database["public"]["Enums"]["electrical_phase"] | null
+          planning_cost?: never
+          planning_cost_updated_at?: never
+          preferred_supplier_id?: never
+          product_type?: Database["public"]["Enums"]["product_type"] | null
+          qty?: never
+          usable_kwh?: number | null
+          verified?: boolean | null
+          watts?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stocks_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "manufacturers"
             referencedColumns: ["id"]
           },
         ]

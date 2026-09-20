@@ -91,11 +91,18 @@ untouched, so re-enabling an installer step later is one `update`, not a
 rebuild. Vanessa's read is that Fred will likely want some of it back. Don't
 "clean up" the unused machinery.
 
-Writes are enforced in the database (RLS plus the
-allowlist in `private.guard_jobs_update()`), not the UI. **Reads are not yet:**
-installers can read every cost and pricing table through the API, whatever the
-UI shows them — `docs/bugs.md` #14, a blocker before real installers log in.
-Public signups are disabled; users are created by an admin.
+Writes are enforced in the database (RLS plus the allowlist in
+`private.guard_jobs_update()`), not the UI. **Reads are too, as of
+`20260920110001`** — 22 `*_select_all` policies moved from `using (true)` to
+`using (private.is_admin())`, closing `docs/bugs.md` #14. Installers keep the
+part names on their own job through **`public.stocks_visible`**, a redacting
+view: same columns as `stocks`, every cost and `qty` forced to 0, rows limited
+to their assigned jobs. `data.tsx` reads `stocks` when admin and the view when
+not. **Don't add a new table with `using (true)`** — and if an installer
+screen ever needs a new field, widen the view rather than the policy. The fix
+has not yet been re-tested with a live installer login; do that before issuing
+a real installer account. Public signups are disabled; users are created by an
+admin.
 
 ## What's not built
 
@@ -118,8 +125,11 @@ no lookup — so quoting an existing household twice duplicates it
 
 Also open: real cost capture on receipt, and `scripts/import_from_export.py`
 is out of date against the current schema — **a hard blocker on cutover**.
-**Notifications are closed, not open** — Fred said "NO alerts" on 2026-09-20.
-Email still sends on demand; nothing should trigger it automatically.
+**Notifications are deferred, not cancelled** — Fred said "NO alerts" on
+2026-09-20, meaning not yet. Leave them undeveloped; he is expected to want
+them later. Email still sends on demand; nothing triggers it automatically.
+"NO alerts" does **not** cover the Needs attention panel or pulsing dots —
+those mirror V46 and stay.
 
 ## Integrations
 
