@@ -234,8 +234,11 @@ function ShellInner() {
           {isAdmin && page === 'purchase-orders' && <PurchaseOrdersPage />}
           {isAdmin && page === 'suppliers'     && <SuppliersPage />}
           {isAdmin && page === 'qd-quick-estimate' && <QuickEstimatePage />}
-          {isAdmin && page === 'qd-system-calc'    && <CalculatorPage onOpenJob={handleOpenJob} />}
-          {isAdmin && page === 'qd-3phase'         && <StubPage icon={Plug} title="3 Phase System" note="Three-phase system sizing tool — not ported yet." />}
+          {/* Same component, two tools. The keys matter: without them React
+              reconciles these two positions as one CalculatorPage and keeps
+              the single-phase state when you switch to 3 Phase. */}
+          {isAdmin && page === 'qd-system-calc'    && <CalculatorPage key="calc-single" onOpenJob={handleOpenJob} phase="single" />}
+          {isAdmin && page === 'qd-3phase'         && <CalculatorPage key="calc-three"  onOpenJob={handleOpenJob} phase="three" />}
           {isAdmin && page === 'qd-gm-bom'         && <StubPage icon={Pickaxe} title="Ground Mount BOM" note="Ground mount bill-of-materials generator — not ported yet." />}
           {isAdmin && page === 'qd-assumptions'    && <AssumptionsPage />}
           {isAdmin && page === 'qd-simulation'     && <SimulationPage />}

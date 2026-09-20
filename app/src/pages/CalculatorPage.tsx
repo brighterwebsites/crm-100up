@@ -1,6 +1,17 @@
 /**
- * CalculatorPage — single-phase system quoting, rebuilt on the product
- * catalogue. Phase C step 5.
+ * CalculatorPage — system quoting, rebuilt on the product catalogue.
+ * Phase C step 5.
+ *
+ * **One component serves both the single-phase and three-phase tools.** V46
+ * kept them as two tabs with two near-identical sets of cost functions
+ * (costForWithConfig vs costFor3phWithConfig, and so on for ground and dual),
+ * which is how they drifted. Here the engine already takes `phase` as an
+ * input: it picks inverter tiers by the product's own phase, applies the
+ * three-phase solar oversize rule, and filters system_config_components by
+ * `phase_scope` — so the Sigenergy gateway attaches per phase without a
+ * branch. The only real difference left is the starting numbers, three-phase
+ * being a bigger install, and V46 agrees (load 40 not 20, 60 panels not 36,
+ * sweep 20-120 not 12-80).
  *
  * Parity: ACCEPTED BY OWNER, 2026-09-20. Fred signed the engine off in
  * practice — "within the parameters tested and how Fred plans to use it, it
@@ -18,20 +29,25 @@ import { copyText } from '../lib/clipboard'
 import { assignQuoteBom, createJob, updateJob } from '../features/jobs/actions'
 import { fmtMoney, fmtMoneyExact } from '../lib/format'
 
-export default function CalculatorPage({ onOpenJob }: { onOpenJob?: (id: number) => void }) {
+export default function CalculatorPage(
+  { onOpenJob, phase = 'single' }:
+  { onOpenJob?: (id: number) => void; phase?: 'single' | 'three' },
+) {
   const { stocks, assumptions } = useData()
+  const isThree = phase === 'three'
 
   const [configs, setConfigs] = useState<ConfigBundle[]>([])
   const [settings, setSettings] = useState<EngineSettings | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Inputs — defaults chosen to match gate scenario 1.
-  const [dailyKwh, setDailyKwh] = useState(20)
-  const [panels, setPanels] = useState(36)
-  const [gmPanels, setGmPanels] = useState(0)
+  // Single-phase defaults match gate scenario 1; three-phase matches V46's
+  // own starting values on the 3 Phase tab.
+  const [dailyKwh, setDailyKwh] = useState(isThree ? 40 : 20)
+  const [panels, setPanels] = useState(isThree ? 60 : 36)
+  const [gmPanels, setGmPanels] = useState(isThree ? 20 : 0)
   const [panelMode, setPanelMode] = useState<'fixed' | 'optimise'>('fixed')
-  const [minPanels, setMinPanels] = useState(12)
-  const [maxPanels, setMaxPanels] = useState(80)
+  const [minPanels, setMinPanels] = useState(isThree ? 20 : 12)
+  const [maxPanels, setMaxPanels] = useState(isThree ? 120 : 80)
   const [panelStep, setPanelStep] = useState(1)
   const [mount, setMount] = useState<'roof' | 'ground'>('roof')
   const [autoBattery, setAutoBattery] = useState(true)
@@ -81,7 +97,7 @@ export default function CalculatorPage({ onOpenJob }: { onOpenJob?: (id: number)
     if (!settings) return []
     const gm = mount === 'ground' ? gmPanels : 0
     return configs.map((cfg) => {
-      const common = { phase: 'single' as const, minInverters, forceSizeClass }
+      const common = { phase, minInverters, forceSizeClass }
 
       if (panelMode === 'optimise') {
         const r = optimisePanels(cfg, common, stocks, settings, {
@@ -104,7 +120,7 @@ export default function CalculatorPage({ onOpenJob }: { onOpenJob?: (id: number)
     })
   }, [configs, settings, stocks, panels, gmPanels, mount, panelMode, minPanels, maxPanels,
       panelStep, autoBattery, manualUnits, startUnits, maxUnits, dailyKwh, minInverters,
-      forceSizeClass])
+      forceSizeClass, phase])
 
   /** Size classes present on this phase, labelled with what each brand
    *  actually resolves to — so "larger" reads as "12 / 10 kW", the wording
@@ -116,14 +132,14 @@ export default function CalculatorPage({ onOpenJob }: { onOpenJob?: (id: number)
       const kws = configs
         .flatMap((c) => c.inverters.filter((i) => i.size_class === key))
         .map((i) => byId.get(i.stock_id))
-        .filter((s) => s && s.phase === 'single')
+        .filter((s) => s && s.phase === phase)
         .map((s) => s!.kw)
       if (!kws.length) continue
       const uniq = [...new Set(kws)].sort((a, b) => (a ?? 0) - (b ?? 0))
       out.push({ key, label: `Force ${key} (${uniq.join(' / ')} kW)` })
     }
     return out
-  }, [configs, stocks])
+  }, [configs, stocks, phase])
 
   if (loading) return <div className="placeholder">Loading calculator…</div>
   if (!settings) return <div className="placeholder">Settings not configured — see Assumptions.</div>
@@ -227,6 +243,7 @@ export default function CalculatorPage({ onOpenJob }: { onOpenJob?: (id: number)
 
       <div className="calc-badges">
         <span className="calc-badge">Auto-run</span>
+        <span className="calc-badge">{isThree ? 'Three phase' : 'Single phase'}</span>
         <span className="calc-badge">{configs.map((c) => c.label).join(' & ') || 'No configs'}</span>
         <span className="calc-badge">July worst-case &middot; Ballarat VIC</span>
       </div>
@@ -256,6 +273,7 @@ export default function CalculatorPage({ onOpenJob }: { onOpenJob?: (id: number)
                 <SendToCrm
                   r={result}
                   stocks={stocks}
+                  phase={phase}
                   roofPanels={Math.max(0, panels - (mount === 'ground' ? gmPanels : 0))}
                   gmPanels={mount === 'ground' ? gmPanels : 0}
                   onOpenJob={onOpenJob}
@@ -281,10 +299,11 @@ export default function CalculatorPage({ onOpenJob }: { onOpenJob?: (id: number)
  *  auto-assign when the install is booked. That is the existing rule, not a
  *  special case for this screen. */
 function SendToCrm({
-  r, stocks, roofPanels, gmPanels, onOpenJob,
+  r, stocks, phase, roofPanels, gmPanels, onOpenJob,
 }: {
   r: QuoteResult
   stocks: { id: number; name: string }[]
+  phase: 'single' | 'three'
   roofPanels: number
   gmPanels: number
   onOpenJob?: (id: number) => void
@@ -298,7 +317,7 @@ function SendToCrm({
 
   const payload = () =>
     buildQuotePayload(r, stocks as Parameters<typeof buildQuotePayload>[1], {
-      phase: 'single', roofPanels, gmPanels,
+      phase, roofPanels, gmPanels,
     })
 
   async function copy() {
