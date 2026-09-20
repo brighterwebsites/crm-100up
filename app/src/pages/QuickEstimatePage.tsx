@@ -2,8 +2,8 @@
  * QuickEstimatePage — bedroom/occupant ballpark, ported from V46 §qe onto
  * the product-driven engine. Same "5 kWh base + 5 kWh/person" formula, same
  * fully-off-grid-vs-generator-assisted comparison, same Sigenergy/Deye price
- * range. Shares priceSystem/optimisePanels with CalculatorPage, so it is
- * NOT parity-verified until that page is (docs/phase-b-parity-gate.md).
+ * range. Shares priceSystem/optimisePanels with CalculatorPage, whose parity
+ * Fred accepted on 2026-09-20 (docs/phase-b-parity-gate.md).
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Copy } from 'lucide-react'
@@ -132,13 +132,6 @@ export default function QuickEstimatePage() {
 
   return (
     <div>
-      <div className="calc-warning">
-        <strong>[NOT PARITY-VERIFIED]</strong> Shares its pricing engine with
-        the System Calculator, which has not yet been checked against the
-        V46 calculator (docs/phase-b-parity-gate.md). Don't send this to a
-        customer until that's signed off.
-      </div>
-
       <div className="card settings-card" style={{ marginBottom: 14 }}>
         <div className="card-title">Household</div>
         <div className="calc-inputs">

@@ -2,18 +2,23 @@
  * CalculatorPage — single-phase system quoting, rebuilt on the product
  * catalogue. Phase C step 5.
  *
- * NOT YET PARITY-VERIFIED. docs/phase-b-parity-gate.md defines ten scenarios
- * this must reproduce against V46 before it is used for a real quote. Until
- * that is signed off the page says so, loudly, at the top.
+ * Parity: ACCEPTED BY OWNER, 2026-09-20. Fred signed the engine off in
+ * practice — "within the parameters tested and how Fred plans to use it, it
+ * works fine" — rather than buying the ten-scenario run in
+ * docs/phase-b-parity-gate.md. The known divergences are listed there; the
+ * material one (bug #8) is fixed here and caused no historical underpricing.
  */
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { useData, loadProfileArray } from '../lib/data'
 import { supabase } from '../lib/supabaseClient'
 import { findMinUnits, optimisePanels, priceSystem } from '../lib/quoteEngine'
 import type { ConfigBundle, CostGroup, EngineSettings, QuoteResult } from '../lib/quoteEngine'
+import { buildQuotePayload } from '../lib/quotePayload'
+import { copyText } from '../lib/clipboard'
+import { assignQuoteBom, createJob, updateJob } from '../features/jobs/actions'
 import { fmtMoney, fmtMoneyExact } from '../lib/format'
 
-export default function CalculatorPage() {
+export default function CalculatorPage({ onOpenJob }: { onOpenJob?: (id: number) => void }) {
   const { stocks, assumptions } = useData()
 
   const [configs, setConfigs] = useState<ConfigBundle[]>([])
@@ -125,18 +130,12 @@ export default function CalculatorPage() {
 
   return (
     <div>
-      <div className="calc-warning">
-        <strong>[NOT PARITY-VERIFIED]</strong> This engine has not yet been checked
-        against the V46 calculator. Do not send a quote from it until the parity
-        gate is signed off — figures may differ from the tool you use today.
-      </div>
-
       <div className="card settings-card" style={{ marginBottom: 14 }}>
         <div className="card-title">System inputs</div>
         <div className="calc-inputs">
           <Field label="Daily load kWh">
-            <input className="jdp-input num" type="number" step="0.5" value={dailyKwh}
-              onChange={(e) => setDailyKwh(e.target.value === '' ? 0 : Number(e.target.value))} />
+            <input className="jdp-input num" type="number" step="0.5" min={1} value={dailyKwh}
+              onChange={(e) => setDailyKwh(Math.max(1, Number(e.target.value) || 1))} />
           </Field>
           <Field label="Panels">
             <select className="jdp-input" value={panelMode}
@@ -147,18 +146,18 @@ export default function CalculatorPage() {
           </Field>
           {panelMode === 'fixed' ? (
             <Field label="Total panels">
-              <input className="jdp-input num" type="number" value={panels}
-                onChange={(e) => setPanels(e.target.value === '' ? 0 : Number(e.target.value))} />
+              <input className="jdp-input num" type="number" min={1} value={panels}
+                onChange={(e) => setPanels(Math.max(1, Number(e.target.value) || 1))} />
             </Field>
           ) : (
             <>
               <Field label="Min panels">
-                <input className="jdp-input num" type="number" value={minPanels}
-                  onChange={(e) => setMinPanels(e.target.value === '' ? 0 : Number(e.target.value))} />
+                <input className="jdp-input num" type="number" min={1} value={minPanels}
+                  onChange={(e) => setMinPanels(Math.max(1, Number(e.target.value) || 1))} />
               </Field>
               <Field label="Max panels">
-                <input className="jdp-input num" type="number" value={maxPanels}
-                  onChange={(e) => setMaxPanels(e.target.value === '' ? 0 : Number(e.target.value))} />
+                <input className="jdp-input num" type="number" min={1} value={maxPanels}
+                  onChange={(e) => setMaxPanels(Math.max(1, Number(e.target.value) || 1))} />
               </Field>
               <Field label="Panel step">
                 <input className="jdp-input num" type="number" min={1} value={panelStep}
@@ -178,8 +177,8 @@ export default function CalculatorPage() {
               label="Ground-mounted panels"
               hint={panelMode === 'optimise' ? 'Held fixed; the sweep varies the roof count' : undefined}
             >
-              <input className="jdp-input num" type="number" value={gmPanels}
-                onChange={(e) => setGmPanels(e.target.value === '' ? 0 : Number(e.target.value))} />
+              <input className="jdp-input num" type="number" min={0} value={gmPanels}
+                onChange={(e) => setGmPanels(Math.max(0, Number(e.target.value) || 0))} />
             </Field>
           )}
           <Field
@@ -254,11 +253,122 @@ export default function CalculatorPage() {
                   </div>
                 </div>
                 <Breakdown r={result} />
+                <SendToCrm
+                  r={result}
+                  stocks={stocks}
+                  roofPanels={Math.max(0, panels - (mount === 'ground' ? gmPanels : 0))}
+                  gmPanels={mount === 'ground' ? gmPanels : 0}
+                  onOpenJob={onOpenJob}
+                />
               </>
             )}
           </div>
         ))}
       </div>
+    </div>
+  )
+}
+
+/** The calculator → CRM handoff, the half V46 had and the rebuild didn't.
+ *
+ *  Two routes, because they answer different moments. **Copy** reproduces
+ *  V46's clipboard flow for a customer who already has a job — paste it into
+ *  Link quote. **Create job** is the shorter path for a fresh enquiry: it
+ *  makes the customer and the job and lands the BOM on it in one step, which
+ *  is the trip Fred asked about ("how that transfers into customers/jobs").
+ *
+ *  A new job has no booking date, so its parts land as `pending` and
+ *  auto-assign when the install is booked. That is the existing rule, not a
+ *  special case for this screen. */
+function SendToCrm({
+  r, stocks, roofPanels, gmPanels, onOpenJob,
+}: {
+  r: QuoteResult
+  stocks: { id: number; name: string }[]
+  roofPanels: number
+  gmPanels: number
+  onOpenJob?: (id: number) => void
+}) {
+  const [naming, setNaming] = useState(false)
+  const [name, setName] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<string | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+  const [newJobId, setNewJobId] = useState<number | null>(null)
+
+  const payload = () =>
+    buildQuotePayload(r, stocks as Parameters<typeof buildQuotePayload>[1], {
+      phase: 'single', roofPanels, gmPanels,
+    })
+
+  async function copy() {
+    setErr(null)
+    const ok = await copyText(JSON.stringify(payload()))
+    setMsg(ok
+      ? 'Quote copied — open the customer in the CRM and click "Link quote".'
+      : 'Could not reach the clipboard.')
+  }
+
+  async function create() {
+    setErr(null); setBusy(true)
+    try {
+      const q = payload()
+      const byId = new Map(stocks.map((s) => [s.id, s]))
+      const job = await createJob(name)
+      const unmatched = await assignQuoteBom(
+        job.id,
+        null,
+        (q.bom ?? []).map((l) => ({
+          qty: l.qty,
+          stock: l.stockId != null ? byId.get(l.stockId) ?? null : null,
+          name: l.name,
+        })),
+      )
+      await updateJob(job, { system_description: q.system ?? '', value: q.price ?? 0 })
+      setNewJobId(job.id)
+      setNaming(false)
+      setMsg(
+        `Job #${job.id} created for ${name.trim() || 'New customer'} — parts will assign when the install is booked.` +
+        (unmatched.length ? ` ${unmatched.length} line(s) had no stock item: ${unmatched.join(', ')}` : '')
+      )
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="row" style={{ marginTop: 12, flexWrap: 'wrap', gap: 8 }}>
+      <button className="btn btn-gray" onClick={copy}>Copy quote for CRM</button>
+      {!naming ? (
+        <button className="btn btn-primary" onClick={() => { setNaming(true); setMsg(null) }}>
+          Create job from this quote
+        </button>
+      ) : (
+        <>
+          <input
+            className="jdp-input"
+            style={{ maxWidth: 200 }}
+            placeholder="Customer name…"
+            value={name}
+            autoFocus
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !busy) create() }}
+          />
+          <button className="btn btn-primary" disabled={busy} onClick={create}>
+            {busy ? 'Creating…' : 'Create'}
+          </button>
+          <button className="btn btn-gray" disabled={busy} onClick={() => setNaming(false)}>
+            Cancel
+          </button>
+        </>
+      )}
+      {newJobId != null && onOpenJob && (
+        <button className="btn btn-gray" onClick={() => onOpenJob(newJobId)}>Open job</button>
+      )}
+      {msg && <span className="mutedtext" style={{ fontSize: 11 }}>{msg}</span>}
+      {err && <span className="login-error">{err}</span>}
     </div>
   )
 }

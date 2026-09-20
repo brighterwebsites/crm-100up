@@ -87,6 +87,53 @@ export async function createJob(name: string): Promise<Job> {
   return job
 }
 
+/** Write a quote's matched BOM lines onto a job as stock items.
+ *
+ *  Shared by "Link quote" (paste a payload onto an existing job) and the
+ *  Calculator's "Create job from this quote". Both need the same rule and the
+ *  same merge behaviour, and having two copies of it is how they drift.
+ *
+ *  A booked job takes its parts immediately; an unbooked one gets a pending
+ *  BOM that auto-assigns at the planned-install step. Quantities merge into an
+ *  existing row for the same stock item and status rather than stacking up
+ *  duplicate lines.
+ *
+ *  Unmatched lines are returned, not silently created: inventing a stock item
+ *  from a quote is how the catalogue fills up with near-duplicates. */
+export async function assignQuoteBom(
+  jobId: number,
+  plannedInstallDate: string | null,
+  lines: { qty: number; stock: { id: number } | null; name: string }[],
+): Promise<string[]> {
+  const status = plannedInstallDate ? 'assigned' : 'pending'
+  for (const l of lines) {
+    if (!l.stock) continue
+    const { data: existing } = await supabase
+      .from('job_stock_items')
+      .select('*')
+      .eq('job_id', jobId)
+      .eq('stock_id', l.stock.id)
+      .eq('status', status)
+    if (existing && existing.length > 0) {
+      const { error } = await supabase
+        .from('job_stock_items')
+        .update({ qty: existing[0].qty + l.qty })
+        .eq('id', existing[0].id)
+      if (error) throw new Error(error.message)
+    } else {
+      const { error } = await supabase.from('job_stock_items').insert({
+        job_id: jobId,
+        stock_id: l.stock.id,
+        qty: l.qty,
+        status,
+        assigned_at: status === 'assigned' ? new Date().toISOString() : null,
+      })
+      if (error) throw new Error(error.message)
+    }
+  }
+  return lines.filter((l) => !l.stock).map((l) => l.name)
+}
+
 /** Port of copyJobDetails (line 7553) — plain text for email/SMS. */
 export function jobDetailsText(job: Job, customer: Customer, items: JobStockItem[], stocks: Stock[]): string {
   const lines: string[] = []

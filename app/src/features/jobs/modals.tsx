@@ -4,7 +4,9 @@ import type { Customer, InstallationRequest, Job, JobStockItem, Manufacturer, St
 import { supabase } from '../../lib/supabaseClient'
 import { copyHtml, copyText } from '../../lib/clipboard'
 import { matchStock, normalizePart } from '../../lib/normalizePart'
-import { buildCes, updateJob } from './actions'
+import { QUOTE_TYPE } from '../../lib/quotePayload'
+import type { QuotePayload } from '../../lib/quotePayload'
+import { assignQuoteBom, buildCes, updateJob } from './actions'
 
 /* ── CES summary modal (copy-to-email HTML table) ─────────────── */
 
@@ -141,14 +143,8 @@ export function JobOrderModal({
 /* ── Link calculator quote (paste-JSON bridge, port of openLinkQuote/
       parseLinkQuote/applyLinkQuote lines 5614-5790) ─────────────── */
 
-interface QuotePayload {
-  v: number
-  type: string
-  brand?: string
-  price?: number
-  system?: string
-  bom?: { name: string; qty: number; cat?: string; mapNeeded?: boolean }[]
-}
+/* QuotePayload now lives in lib/quotePayload.ts — the Calculator builds one
+   and this modal consumes it, so the shape belongs to neither end. */
 
 export function LinkQuoteModal({
   job,
@@ -166,11 +162,16 @@ export function LinkQuoteModal({
   const [setValue, setSetValue] = useState(true)
   const [parsed, setParsed] = useState<QuotePayload | null>(null)
 
+  /* A v2 payload from the rebuilt Calculator carries the stock id on every
+     line, so it needs no matching at all. Name matching stays for v1 payloads
+     pasted out of V46, which have nothing else to go on. */
   const mapped = useMemo(() => {
     if (!parsed?.bom) return []
+    const byId = new Map(stocks.map((s) => [s.id, s]))
     return parsed.bom.map((line) => ({
       line,
-      stock: matchStock(line.name, stocks),
+      stock: (line.stockId != null ? byId.get(line.stockId) : undefined)
+        ?? matchStock(line.name, stocks),
       canonical: normalizePart(line.name).name ?? line.name,
     }))
   }, [parsed, stocks])
@@ -179,7 +180,7 @@ export function LinkQuoteModal({
     setErr(null)
     try {
       const q = JSON.parse(raw) as QuotePayload
-      if (q.type !== '100up-quote') throw new Error('Not a 100UP quote payload — copy it from the calculator’s "Send to CRM" button.')
+      if (q.type !== QUOTE_TYPE) throw new Error('Not a 100UP quote payload — copy it from the calculator’s "Send to CRM" button.')
       setParsed(q)
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Could not parse the pasted JSON.')
@@ -190,43 +191,19 @@ export function LinkQuoteModal({
     if (!parsed) return
     setErr(null)
     try {
-      // Same rule as applyLinkQuote: booked jobs get stock assigned
-      // immediately; unbooked jobs get a pending BOM that auto-assigns at
-      // the planned-install step.
       const status = job.planned_install_date ? 'assigned' : 'pending'
-      for (const m of mapped) {
-        if (!m.stock) continue // unmatched lines are reported, not silently created
-        const { data: existing } = await supabase
-          .from('job_stock_items')
-          .select('*')
-          .eq('job_id', job.id)
-          .eq('stock_id', m.stock.id)
-          .eq('status', status)
-        if (existing && existing.length > 0) {
-          const { error } = await supabase
-            .from('job_stock_items')
-            .update({ qty: existing[0].qty + m.line.qty })
-            .eq('id', existing[0].id)
-          if (error) throw new Error(error.message)
-        } else {
-          const { error } = await supabase.from('job_stock_items').insert({
-            job_id: job.id,
-            stock_id: m.stock.id,
-            qty: m.line.qty,
-            status,
-            assigned_at: status === 'assigned' ? new Date().toISOString() : null,
-          })
-          if (error) throw new Error(error.message)
-        }
-      }
+      const unmatched = await assignQuoteBom(
+        job.id,
+        job.planned_install_date,
+        mapped.map((m) => ({ qty: m.line.qty, stock: m.stock, name: m.line.name })),
+      )
       await updateJob(job, {
         system_description: parsed.system ?? job.system_description,
         ...(setValue && parsed.price ? { value: parsed.price } : {}),
       })
-      const unmatched = mapped.filter((m) => !m.stock)
       onDone(
         unmatched.length
-          ? `Quote linked — ${unmatched.length} line(s) had no matching stock item: ${unmatched.map((m) => m.line.name).join(', ')}`
+          ? `Quote linked — ${unmatched.length} line(s) had no matching stock item: ${unmatched.join(', ')}`
           : status === 'pending'
             ? 'Quote linked — parts will auto-assign when the install is booked.'
             : 'Quote linked — parts assigned.'

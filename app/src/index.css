@@ -1985,9 +1985,10 @@ textarea.jdp-input {
 }
 
 /* ── calculator ──────────────────────────────────────────
-   The unverified banner is deliberately loud. Until the parity gate is signed
-   off this engine has not been proven against V46, and a quote sent from it
-   could be wrong — that risk should be impossible to miss. */
+   A loud inline warning. The parity banner it was written for came off on
+   2026-09-20 when Fred accepted the engine; it now carries the Simulation
+   page's "array cannot sustain this load" notice, which is the same kind of
+   thing — a result that looks fine but should not be acted on as-is. */
 .calc-warning {
   background: var(--stage-3-light);
   color: var(--stage-3-text);

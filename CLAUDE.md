@@ -225,6 +225,17 @@ on mount to open Settings. Any future external return trip has to do the same.
   Fred paid is not what the system knows.
 - **Assumption costs and stock costs are unlinked** and drift silently
   (`docs/bugs.md` #3).
+- **V46's `ASSUMPTION_META` notes are not authoritative.** Some were
+  AI-written and at least one **reversed Fred's actual rule**. The
+  `deyeSingleInverterCost` row was labelled "Deye 10kW · AI-W5.1-10P3" with
+  the note "10kW exists only as three-phase" — on a **single-phase** cost
+  variable, mapped in `ASSUMPTION_STOCK_LINKS` to the three-phase stock row.
+  Every part of that was wrong, and it cost two separate investigations
+  (`docs/bugs.md` #9, then the 2026-09-20 three-phase question). Corrected
+  2026-09-20 to `AI-W5.1-10P1`. **Treat any V46 note asserting a product fact
+  as unverified** — check the catalogue or ask Fred. The rebuilt app can't
+  reproduce this class of error: inverter costs come from
+  `stocks.planning_cost` per product, so the label *is* the product.
 - **The Deye 10kW three-phase is never quoted.** Fred, 2026-09-20: a
   three-phase inverter splits its rating across the phases, so a 10kW 3P gives
   ~3.33 kW per phase — not enough off-grid. The Deye three-phase option is the
