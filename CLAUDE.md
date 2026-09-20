@@ -157,9 +157,20 @@ before touching anything.
 
 | Provider | Used for | State |
 |---|---|---|
-| `email` | CyberPersons transactional send (`send-email`), logged to `email_sends` | Working — needs an API key entered |
-| `anthropic` | `aiComplete` in `_shared/ai.ts`; invoice reading on Receive Stock (`extract-invoice`), logged to `ai_call_log` | Working — needs an API key entered |
+| `email` | CyberPersons transactional send (`send-email`), logged to `email_sends` | **Working, key entered** (confirmed 2026-09-20 — Settings shows the saved-key placeholder, which only renders when `integrations.secret` is non-empty) |
+| `anthropic` | `aiComplete` in `_shared/ai.ts`; invoice reading on Receive Stock (`extract-invoice`), logged to `ai_call_log` | **Working, key entered** (same evidence) |
 | `gmail` | OAuth connection only (`gmail-oauth-start` / `-callback`). Stores a refresh token. **No sync yet** — no poller, no message table | Connection only |
+
+**Two different email systems, easily confused:**
+
+| | What it sends | Where it is configured |
+|---|---|---|
+| **CRM email connector** (`integrations`, provider `email`) | Application mail — the `send-email` Edge Function, logged to `email_sends` | Settings → Integrations, *in the app* |
+| **Supabase Auth SMTP** | Invites, password resets, confirmations | Supabase **Dashboard** → Authentication → SMTP Settings |
+
+They share nothing. Configuring one does not configure the other, and Auth's
+built-in sender is heavily rate-limited until custom SMTP is enabled — which
+is why invites fail in bursts while the CRM's own email works fine.
 
 Gmail OAuth needs four Edge Function secrets: `GOOGLE_OAUTH_CLIENT_ID`,
 `GOOGLE_OAUTH_CLIENT_SECRET`, `GMAIL_OAUTH_REDIRECT_URI`, `CRM_APP_URL`.
