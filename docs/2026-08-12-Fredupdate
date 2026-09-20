@@ -68,7 +68,8 @@ The old “paste invoice → qty goes up” path threw away the unit price and c
 * Today a system can pass by coasting down from a full battery over 31 days, even when the array cannot meet the load. Undersized arrays look fine if the bank is huge enough.  
 * **Q:** should a pass require end-of-month SOC ≥ start (or a repeated July), not merely “didn’t hit empty”?  
 * This will move quoted system sizes. It is current V46 behaviour, faithfully ported — changing it is a product call, not a bug-fix.  
-* **Emailed to Fred 2026-09-15** — waiting on his answer.
+* **Emailed to Fred 2026-09-15.**  
+* **ANSWERED 2026-09-20 — no change.** Fred: yes the battery starts full, and that is fine. This is an internal tool, he has never guaranteed a figure off it, and it is a simulator. The V46 pass rule stands. The “array cannot sustain this load” warning (Q2 below) turned out to be already built. Closed — `docs/bugs.md` #10.
 
 **2\. Warn when the array cannot carry the load?**
 

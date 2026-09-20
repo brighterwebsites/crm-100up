@@ -90,6 +90,54 @@ silently) and #4 (`receive_stock` captures no unit cost — being fixed by the
 goods receipt work, which is what creates this question).
 
 
+---
+
+## W3 — Quote → customer: look up, then send, not just create
+
+**Raised** 2026-09-20 (Vanessa), immediately after the Calculator's
+"Create job from this quote" shipped. **For after Sprint 2/3**, once Fred has
+a closer MVP in front of him — not now.
+
+Two separate things, and the second probably supersedes the first.
+
+### The gap as built
+
+"Create job from this quote" calls `createJob(name)`, which **always inserts a
+new customer**. There is no way to attach the quote to a customer who already
+exists. Quote the same household twice — a revision, a second system, a
+follow-up after six months — and the CRM grows a duplicate customer with a
+name that matches and an id that doesn't.
+
+Minimum fix: a customer lookup on that button. Search existing customers,
+pick one, or create new. `createJob` splits into "create customer + job" and
+"create job for customer id".
+
+### The workflow that probably makes more sense
+
+Rather than a button that quietly creates CRM rows, the real moment is
+**sending the quote to the customer**. So:
+
+> **Send quote to customer** → modal carrying the customer's name and email
+> (looked up, or entered for a new one) → **Send**, plus **create
+> contact / estimate** as part of the same action.
+
+That reframes it. Creating the customer and the job stops being a separate
+administrative step Fred has to remember, and becomes a side effect of the
+thing he actually wants to do. The CRM records exist because a quote went
+out, which is also the point at which they are worth having.
+
+**Why this is parked, not built now.** It needs the email connector keyed up
+(Sprint 3.3), it wants a decision on what the customer actually receives —
+the Quick Estimate's customer text, a PDF, a link — and it overlaps the lead
+question Fred reopened ("Stage 1 / First Contact is probably where the lead
+stage actually fits"). Building the lookup alone is cheap and safe; building
+the send flow before those three settle means building it twice.
+
+**Related**: `docs/2026-09-20_mvp-plan.md` §4 Sprint 3, and the lead-capture
+direction further down this file — an estimator lead and a quoted customer
+are the same person arriving by different doors, and should probably not end
+up as two records.
+
 
 ## VAnessa Notes to Add above
 Needs to be added to correct docs/sections
