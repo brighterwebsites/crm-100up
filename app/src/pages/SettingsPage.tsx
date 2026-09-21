@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../lib/auth'
 import { useData } from '../lib/data'
 import { supabase } from '../lib/supabaseClient'
+import { fmtAgo } from '../lib/format'
+import type { Tables } from '../types/database.types'
 import {
   getAiUsageThisMonth,
   getIntegrationStatus,
@@ -22,6 +24,15 @@ export interface GmailReturn {
 }
 
 /** Shared busy/error/message plumbing — all three cards do the same dance. */
+type JobEventRow = Tables<'job_events'>
+interface UserActivity {
+  id: string
+  full_name: string
+  role: string
+  last_sign_in_at: string | null
+  created_at: string
+}
+
 function useCardState() {
   const [busy, setBusy] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
@@ -572,11 +583,126 @@ function MaintenanceCard() {
   )
 }
 
+// ── Who is using it ──────────────────────────────────────────────────────
+
+const EVENT_LABEL: Record<string, string> = {
+  stage_advanced: 'advanced',
+  stage_moved_back: 'moved back',
+  booking_rescheduled: 'rescheduled the install for',
+  step_date_changed: 'changed a date on',
+}
+
+/**
+ * Two questions, two sources, because neither answers the other.
+ *
+ * `auth.users.last_sign_in_at` (via the admin-only user_activity() function —
+ * PostgREST cannot serve the auth schema) covers someone who logged in and
+ * only looked around, which is most of early testing. It is NOT liveness: a
+ * session lasts days, so "this morning" is equally consistent with using it
+ * now and closing the laptop at nine.
+ *
+ * `job_events` covers what was actually changed, with an actor and a
+ * timestamp on every stage move, reschedule and date edit. Together they are
+ * close enough to "is Fred in there, and what has he touched".
+ */
+function ActivityCard() {
+  const { jobs, customers, profiles } = useData()
+  const [users, setUsers] = useState<UserActivity[]>([])
+  const [events, setEvents] = useState<JobEventRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [err, setErr] = useState<string | null>(null)
+
+  const load = async () => {
+    setLoading(true)
+    try {
+      const [u, e] = await Promise.all([
+        supabase.rpc('user_activity'),
+        supabase.from('job_events').select('*').order('created_at', { ascending: false }).limit(25),
+      ])
+      if (u.error) throw new Error(u.error.message)
+      if (e.error) throw new Error(e.error.message)
+      setUsers((u.data ?? []) as UserActivity[])
+      setEvents((e.data ?? []) as JobEventRow[])
+      setErr(null)
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Could not load activity')
+    } finally {
+      setLoading(false)
+    }
+  }
+  useEffect(() => { void load() }, [])
+
+  // `actor` has no foreign key to profiles, so the join happens here.
+  const nameOf = (id: string | null) =>
+    profiles.find((p) => p.id === id)?.full_name || (id ? 'someone' : 'the system')
+  const jobLabel = (jobId: number) => {
+    const job = jobs.find((j) => j.id === jobId)
+    const cust = job && customers.find((c) => c.id === job.customer_id)
+    return cust?.name ? `${cust.name} (#${jobId})` : `job #${jobId}`
+  }
+
+  return (
+    <div className="card settings-card">
+      <div className="card-title">Who is using the CRM</div>
+      <p className="settings-hint" style={{ marginTop: 0 }}>
+        Sign-in times and recent changes. A sign-in lasts for days, so the time below is the
+        last time someone entered their password — not proof they are looking at it now. The
+        changes underneath are the better signal.
+      </p>
+      <Notices err={err} msg={null} />
+      {loading ? (
+        <p className="mutedtext">Loading…</p>
+      ) : (
+        <>
+          <table className="table" style={{ marginBottom: 16 }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left' }}>Person</th>
+                <th style={{ textAlign: 'left' }}>Role</th>
+                <th style={{ textAlign: 'left' }}>Last signed in</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id}>
+                  <td style={{ textAlign: 'left' }}>{u.full_name || '(no name set)'}</td>
+                  <td style={{ textAlign: 'left' }}>{u.role}</td>
+                  <td style={{ textAlign: 'left' }}>{fmtAgo(u.last_sign_in_at)}</td>
+                </tr>
+              ))}
+              {users.length === 0 && (
+                <tr><td colSpan={3} className="mutedtext">No users.</td></tr>
+              )}
+            </tbody>
+          </table>
+
+          <div className="settings-sub">Recent changes</div>
+          {events.length === 0 && <p className="mutedtext">Nothing yet.</p>}
+          {events.map((ev) => (
+            <div key={ev.id} className="stock-line">
+              <span>
+                <strong>{nameOf(ev.actor)}</strong>{' '}
+                {EVENT_LABEL[ev.event_type] ?? ev.event_type.replace(/_/g, ' ')}{' '}
+                {jobLabel(ev.job_id)}
+              </span>
+              <span className="mutedtext">{fmtAgo(ev.created_at)}</span>
+            </div>
+          ))}
+          <div className="settings-actions">
+            <button className="btn btn-gray" onClick={() => void load()}>Refresh</button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function SettingsPage({ gmailReturn }: { gmailReturn?: GmailReturn }) {
   return (
     <div>
       <h2 style={{ margin: '0 0 16px' }}>Settings</h2>
       <div className="settings-stack">
+        <ActivityCard />
         <MaintenanceCard />
         <EmailCard />
         <AnthropicCard />

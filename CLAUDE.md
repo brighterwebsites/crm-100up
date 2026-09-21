@@ -327,12 +327,17 @@ on mount to open Settings. Any future external return trip has to do the same.
   dance. Migration *history* discipline (convention 1) applies regardless.
   **This flips at cutover.** Once Fred depends on it, a column drop must follow
   the frontend deploy that stops using it, or the live app breaks mid-save.
-- **Customer emails are dummies while testing** (since 2026-09-15):
-  `support+{initials}{customer id}@brighterwebsites.com.au`, all landing in the
-  Brighter Websites support inbox, so no notification test can reach a real
-  customer. Originals are in `private.customer_email_backup` (not reachable
-  through the API). New customers added during testing should get a dummy
-  too. Supplier emails are dummy aliases as well. Phone numbers are still real.
+- **Customer emails are REAL again** (restored 2026-09-21,
+  `20260921110001`). They were dummies from 2026-09-15 so that no test could
+  reach a customer; that protection now lives in the right place — the
+  `send-email` Edge Function redirects every recipient while test mode is on,
+  server-side and fail-safe. Scrambling the data was the blunt version, and it
+  cost Fred seeing a fake address where his customer's should be.
+  **The ordering is enforced, not trusted**: the restore migration refuses to
+  run if email test mode is explicitly off. `private.customer_email_backup`
+  stays as the record of what was scrubbed. Supplier emails are still dummy
+  aliases. Phone numbers were always real, and now normalise to `+61…` E.164
+  on entry (`app/src/lib/contact.ts`).
 - **Free-tier auto-pause.** The Supabase org is on the free plan. If the
   project (`nmyczgnvjhwhgpgvwfdx`) sees no database activity for 7
   consecutive days, Supabase pauses it — the whole Auth/API/DB stack goes

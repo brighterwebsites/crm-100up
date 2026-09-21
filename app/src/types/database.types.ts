@@ -2016,6 +2016,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      user_activity: {
+        Args: never
+        Returns: {
+          created_at: string
+          full_name: string
+          id: string
+          last_sign_in_at: string
+          role: string
+        }[]
+      }
     }
     Enums: {
       ces_category: "battery" | "inverter" | "panel" | "other"
