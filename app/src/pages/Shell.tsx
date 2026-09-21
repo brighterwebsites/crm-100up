@@ -172,9 +172,13 @@ function ShellInner() {
       {/* ── Top header ── */}
       {/* Above the header, and above the sidebar, because both banners are
           about the whole app rather than the page you happen to be on. */}
-      <ModeBanner />
-      <UpdateBanner />
-      <MaintenanceBanner />
+      {/* One strip, its own grid row. Each banner renders null when it has
+          nothing to say, so the row usually collapses to zero height. */}
+      <div className="app-banners">
+        <ModeBanner />
+        <UpdateBanner />
+        <MaintenanceBanner />
+      </div>
       <header className="app-header">
         <div className="header-left">
           <button className="sidebar-toggle-btn" onClick={() => setSidebarOpen(!sidebarOpen)} title="Toggle sidebar">

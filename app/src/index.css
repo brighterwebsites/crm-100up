@@ -999,16 +999,29 @@ button {
 
 .shell-layout {
   display: grid;
-  grid-template-rows: 48px 1fr;
+  /* Row 1 is the banner strip. `auto` so it collapses to nothing when no
+     banner is showing, which is the normal case — the app-wide banners
+     (testing mode, update available, work in progress) render null most of
+     the time. Anything added as a direct child of this grid MUST declare its
+     row and column: the header, sidebar and main all do, and an unplaced
+     child gets auto-placed into an implicit row below the app. */
+  grid-template-rows: auto 48px 1fr;
   grid-template-columns: auto 1fr;
   height: 100vh;
   overflow: hidden;
 }
 
+/* The banner strip. Spans both columns so it sits above the sidebar too — it
+   is about the whole application, not the page you are on. */
+.app-banners {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
 /* ── app header ── */
 .app-header {
   grid-column: 1 / -1;
-  grid-row: 1;
+  grid-row: 2;
   background: var(--nav-bg);
   color: var(--nav-ink);
   display: flex;
@@ -1048,7 +1061,7 @@ button {
 
 /* ── sidebar ── */
 .sidebar {
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 1;
   background: var(--nav-bg);
   width: 220px;
@@ -1169,7 +1182,7 @@ button {
 
 /* ── app main ── */
 .app-main {
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 2;
   overflow: hidden;
   display: flex;
