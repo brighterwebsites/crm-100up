@@ -15,7 +15,7 @@
  * both would train people to ignore it.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { RefreshCw, TriangleAlert } from 'lucide-react'
+import { FlaskConical, RefreshCw, TriangleAlert } from 'lucide-react'
 import { STALE_CHECK_MS, isStale } from '../../lib/appVersion'
 import { useData } from '../../lib/data'
 
@@ -70,6 +70,31 @@ export function MaintenanceBanner() {
       <span>
         {notice.message ||
           'Updates are being made to the system right now — some things may briefly not work.'}
+      </span>
+    </div>
+  )
+}
+
+/**
+ * Permanent until cutover. Not "we are still building" — Fred can see that.
+ * The thing he cannot see is that everything he types in here is thrown away
+ * at go-live: the cutover import deletes every operational row and rewrites
+ * stock quantities from the V46 export. So the banner says the one thing that
+ * would actually cost him something if he got it wrong.
+ *
+ * Deliberately not dismissible. The moment it can be closed it gets closed on
+ * day one and never seen again, which is the opposite of what it is for.
+ */
+export function ModeBanner() {
+  const { notice } = useData()
+  if (!notice || notice.mode !== 'testing') return null
+  return (
+    <div className="app-banner app-banner-mode">
+      <FlaskConical size={14} aria-hidden />
+      <span>
+        <strong>Development &amp; testing — not live yet.</strong> Anything entered here is
+        for testing and will be <strong>deleted at go-live</strong>. Keep quoting and
+        recording real jobs in the old system until we agree a cutover date.
       </span>
     </div>
   )

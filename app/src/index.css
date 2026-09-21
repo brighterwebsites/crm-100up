@@ -2604,3 +2604,20 @@ button.date-pill:focus-visible { outline: 2px solid currentColor; outline-offset
 @media print {
   .app-banner { display: none; }
 }
+
+/* Testing-mode banner. Neutral-dark rather than alarm-coloured: it is
+   permanent until cutover, and a red bar that never goes away stops being
+   read within a day. It needs to be unmissable and calm, not urgent. */
+.app-banner-mode {
+  background: var(--nav-bg);
+  color: var(--nav-ink);
+  border-bottom: 1px solid var(--badge-bg);
+}
+.app-banner-mode strong { color: #fff; }
+
+/* Authorship marker in the job list. Quiet on purpose — it is orientation
+   ("that one's Fred's"), not a status, and it disappears at cutover. */
+.created-by {
+  font-style: italic;
+  opacity: 0.75;
+}

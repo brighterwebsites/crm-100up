@@ -533,9 +533,49 @@ function MaintenanceCard() {
       setMsg(active ? `Banner is up for the next ${hours} hour${hours === 1 ? '' : 's'}.` : 'Banner cleared.')
     })
 
+  const setMode = (mode: 'testing' | 'live') =>
+    run('mode', async () => {
+      const { error } = await supabase
+        .from('app_notice')
+        .update({ mode, updated_at: new Date().toISOString() })
+        .eq('id', 1)
+      if (error) throw new Error(error.message)
+      await refresh()
+      setMsg(mode === 'live'
+        ? 'The testing banner is gone. The CRM now presents itself as live.'
+        : 'Testing banner is back up.')
+    })
+
+  const mode = notice?.mode ?? 'testing'
+
   return (
     <div className="card settings-card">
-      <div className="card-title">Work-in-progress banner</div>
+      <div className="card-title">Development mode</div>
+      <p className="settings-hint" style={{ marginTop: 0 }}>
+        While this is on, everyone sees a permanent banner saying the CRM is not live and
+        that anything entered here will be deleted at go-live. That is the true state of
+        things until the cutover import has run — it clears every job, customer, order and
+        stock movement and reloads them from the V46 export.
+      </p>
+      <div className={mode === 'testing' ? 'calc-warning' : 'cost-drift'} style={{ marginBottom: 14 }}>
+        <strong>{mode === 'testing' ? 'Testing — the banner is showing.' : 'LIVE — no banner.'}</strong>{' '}
+        {mode === 'testing'
+          ? 'Switch this off only once cutover is done and the real data is in.'
+          : 'Only correct if the cutover import has already run.'}
+      </div>
+      <div className="settings-actions">
+        {mode === 'testing' ? (
+          <button className="btn btn-gray" disabled={Boolean(busy)} onClick={() => void setMode('live')}>
+            {busy === 'mode' ? 'Saving…' : 'Mark as live (cutover done)'}
+          </button>
+        ) : (
+          <button className="btn btn-gray" disabled={Boolean(busy)} onClick={() => void setMode('testing')}>
+            {busy === 'mode' ? 'Saving…' : 'Back to testing'}
+          </button>
+        )}
+      </div>
+
+      <div className="settings-sub">Work-in-progress banner</div>
       <p className="settings-hint" style={{ marginTop: 0 }}>
         Shows a notice to everyone signed in, straight away — no reload needed. Use it when
         you are actively changing things. A deploy on its own needs nothing here: the app

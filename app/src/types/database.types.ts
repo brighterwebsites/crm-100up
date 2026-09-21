@@ -55,6 +55,7 @@ export type Database = {
           active: boolean
           id: number
           message: string
+          mode: string
           until: string | null
           updated_at: string
           updated_by: string | null
@@ -63,6 +64,7 @@ export type Database = {
           active?: boolean
           id?: number
           message?: string
+          mode?: string
           until?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -71,6 +73,7 @@ export type Database = {
           active?: boolean
           id?: number
           message?: string
+          mode?: string
           until?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -144,6 +147,7 @@ export type Database = {
           address: string
           contact_method: string
           created_at: string
+          created_by: string | null
           email: string
           id: number
           name: string
@@ -155,6 +159,7 @@ export type Database = {
           address?: string
           contact_method?: string
           created_at?: string
+          created_by?: string | null
           email?: string
           id?: number
           name: string
@@ -166,6 +171,7 @@ export type Database = {
           address?: string
           contact_method?: string
           created_at?: string
+          created_by?: string | null
           email?: string
           id?: number
           name?: string
@@ -173,7 +179,15 @@ export type Database = {
           updated_at?: string
           version?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_sends: {
         Row: {
@@ -664,6 +678,7 @@ export type Database = {
           ces_received: string | null
           ces_submitted: string | null
           created_at: string
+          created_by: string | null
           customer_id: number
           id: number
           install_completion_date: string | null
@@ -687,6 +702,7 @@ export type Database = {
           ces_received?: string | null
           ces_submitted?: string | null
           created_at?: string
+          created_by?: string | null
           customer_id: number
           id?: number
           install_completion_date?: string | null
@@ -710,6 +726,7 @@ export type Database = {
           ces_received?: string | null
           ces_submitted?: string | null
           created_at?: string
+          created_by?: string | null
           customer_id?: number
           id?: number
           install_completion_date?: string | null
@@ -732,6 +749,13 @@ export type Database = {
           {
             foreignKeyName: "jobs_assigned_installer_id_fkey"
             columns: ["assigned_installer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1733,6 +1757,7 @@ export type Database = {
           ces_received: string | null
           ces_submitted: string | null
           created_at: string
+          created_by: string | null
           customer_id: number
           id: number
           install_completion_date: string | null
@@ -1876,6 +1901,7 @@ export type Database = {
           ces_received: string | null
           ces_submitted: string | null
           created_at: string
+          created_by: string | null
           customer_id: number
           id: number
           install_completion_date: string | null
@@ -1950,6 +1976,7 @@ export type Database = {
           ces_received: string | null
           ces_submitted: string | null
           created_at: string
+          created_by: string | null
           customer_id: number
           id: number
           install_completion_date: string | null
@@ -1991,6 +2018,7 @@ export type Database = {
           ces_received: string | null
           ces_submitted: string | null
           created_at: string
+          created_by: string | null
           customer_id: number
           id: number
           install_completion_date: string | null

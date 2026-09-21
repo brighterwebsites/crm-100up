@@ -4,6 +4,9 @@ Tracks bugs found in the legacy `100UP_suite_V46.html` calculator suite and
 the CRM app, whether they've been carried into the new build, and their
 resolution status.
 
+Incomplete features and UI that is not fully working (not defects) live in
+`docs/refinements.md`.
+
 | # | Tool / Screen | Issue | Resolution | Status |
 |---|---|---|---|---|
 | 1 | Simulation Trace (V46) | Typing `0` into Daily load, Number of panels, or Battery kWh silently reverts to the hardcoded default (20 / 30 / 27) instead of using 0. Caused by `Number(value) \|\| default` — `0` is falsy in JS so the fallback always wins. Symptom: table stays at "Load (kWh) 20" even after zeroing the field, and results reflect the default scenario, not zero. Standby W is unaffected (its fallback is also 0). | Patched in `100UP_suite_V46.html` (`runSimTrace()`) to use a proper finite-number check instead of `\|\|`. Will be built correctly from scratch in the CRM port (no `\|\|`-on-numeric-input pattern). | Fixed (V46) / To-build-correctly (CRM port) |

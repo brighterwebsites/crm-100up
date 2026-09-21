@@ -1,8 +1,9 @@
 # Feature wishlist
 
 Ideas raised and deliberately parked. Not commitments, and not bugs — see
-`docs/bugs.md` for defects and `docs/2026-07-29_status-gap-and-decisions.md`
-for the open decision register.
+`docs/bugs.md` for defects, `docs/refinements.md` for incomplete / not-fully-
+working features, and `docs/2026-07-29_status-gap-and-decisions.md` for the
+open decision register.
 
 Each entry records the idea, why it was parked, and enough of the thinking
 that picking it up later does not mean re-deriving it.

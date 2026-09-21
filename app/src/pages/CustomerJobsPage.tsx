@@ -16,8 +16,8 @@ interface Props {
 }
 
 export default function CustomerJobsPage({ installerOnly, initialJobId }: Props) {
-  const { profile, isAdmin } = useAuth()
-  const { jobs, customers, items, stocks, purchaseOrders, purchaseOrderItems, refresh } = useData()
+  const { profile, isAdmin, session } = useAuth()
+  const { jobs, customers, items, stocks, purchaseOrders, purchaseOrderItems, profiles, notice, refresh } = useData()
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<number | null>(initialJobId ?? null)
   const [newName, setNewName] = useState('')
@@ -29,6 +29,13 @@ export default function CustomerJobsPage({ installerOnly, initialJobId }: Props)
   )
   const shortfalls = stockStatus.short
   const custMap = useMemo(() => new Map(customers.map((c) => [c.id, c])), [customers])
+
+  // Testing-only authorship marker. `notice.mode` drives it so it disappears
+  // by itself at cutover rather than needing a code change.
+  const isTesting = notice?.mode !== 'live'
+  const myId = session?.user.id
+  const creatorName = (id: string) =>
+    profiles.find((p) => p.id === id)?.full_name || 'someone else'
 
   const visibleJobs = useMemo(() => {
     let list = installerOnly
@@ -140,6 +147,16 @@ export default function CustomerJobsPage({ installerOnly, initialJobId }: Props)
                   {onOrder && <span className="short-pill short-pill-onorder" style={{ marginLeft: 6 }} title="Stock on order"><Truck size={11} aria-hidden /></span>}
                 </div>
                 {j.location && <div className="master-item-sub">{j.location}</div>}
+                {/* Who made this record. Only shown while in testing, and only
+                    for jobs someone actually created in the CRM — the legacy
+                    import left created_by null and guessing would be worse
+                    than saying nothing. Answers "is this one of Fred's test
+                    jobs or one of mine?" without a test/real flag system. */}
+                {isTesting && j.created_by && j.created_by !== myId && (
+                  <div className="master-item-sub created-by">
+                    added by {creatorName(j.created_by)}
+                  </div>
+                )}
                 <div className="master-item-stage">{stageChip(j)}</div>
               </button>
             )

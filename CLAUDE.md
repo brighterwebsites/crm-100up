@@ -58,8 +58,9 @@ deployed — ignore it.
 |---|---|
 | `docs/2026-09-20_mvp-plan.md` | Current plan: repo state, the three sprints to cutover, and what was decided without asking Fred. **Start here.** |
 | `docs/2026-08-12-Fredupdate` | Vanessa's update **to** Fred with his replies interleaved. **Attribution is not marked** — the installer block is unsourced and the block after the final `---` is hers (it says "He also wants..."). Fred's 2026-09-20 email supersedes the installer block entirely |
-| `docs/2026-07-29_status-gap-and-decisions.md` | Older status and gap register, plus the original 37 decision questions. Much is now answered — read the two above first |
+| `docs/2026-07-29_status-gap-and-decisions.md` | Status and gap register with 37 decision questions, written deliberately for a client meeting. Much is now answered — read the two above first, but it is a good account of how the project looked in July |
 | `docs/bugs.md` | Defects in both codebases, what's fixed and what's carried forward |
+| `docs/refinements.md` | Incomplete features / UI not fully working — not bugs. Log new ones here. |
 | `docs/quote-configurator-design.md` | Target design for Assumptions → product-driven configurator (proposed, not built) |
 | `docs/schema-restructure-proposal.md` | Phase 2 schema design — partly implemented; check migrations for what actually landed |
 | `supabase/migrations/*.sql` | **Ground truth for the schema.** Docs can be stale; migrations are not |
@@ -282,6 +283,20 @@ on mount to open Settings. Any future external return trip has to do the same.
   Fred paid is not what the system knows.
 - **Assumption costs and stock costs are unlinked** and drift silently
   (`docs/bugs.md` #3).
+- **The CRM presents itself as NOT LIVE until cutover.** `app_notice.mode`
+  (`testing` | `live`) drives a permanent banner telling Fred that anything he
+  enters is deleted at go-live and to keep real work in V46. That is the
+  literal truth: `scripts/import_from_export.py --truncate` clears every
+  operational table and rewrites `stocks.qty` from the V46 export, so test
+  jobs, test stock movements, test POs and test stock takes are all
+  self-clearing. **Nothing in the CRM is real** — the only thing that can
+  actually be lost is real work typed into the wrong system. Flip the mode in
+  Settings → Development mode, once, after the import has run.
+- **`jobs.created_by` / `customers.created_by`** answer "is this Fred's or
+  mine?" (default `auth.uid()`; null on legacy-imported rows). The job list
+  shows "added by …" while in testing mode only. There is deliberately **no
+  test/real flag** — nothing is real, so there is no split to make, only an
+  authorship question.
 - **Fred is testing live, so deploys land under an open tab.** Two banners
   handle it (`app/src/features/notice/Banners.tsx`). The **update** banner is
   automatic: Vite compiles a build id into the bundle and emits a matching
