@@ -133,7 +133,9 @@ export default function PipelinePage({ onOpenOrderList }: { onOpenOrderList?: ()
       <div className="quick-filters">
         <span>Show:</span>
         {([
-          ['active',  'All jobs'],
+          // Wired to 'active', which excludes closed jobs — so "All jobs"
+          // was describing something it does not do. (refinements.md R3)
+          ['active',  'All Open Jobs'],
           ['alerts',  'Alerts'],
           ['stale',   'Stale'],
           ['install', 'New install'],

@@ -34,7 +34,7 @@ an existing ref. The step-date write still has to go through `set_step_date`
 
 ---
 
-## R2 — Customers → Customer details: no working way to save edits
+## R2 — Customers → Customer details: no working way to save edits | RESOLVED, AND IT WAS A BUG
 
 **Screen:** Customers → pick a customer → Customer Details card.
 
@@ -56,12 +56,20 @@ when this is picked up:
 - `CustomerDetail` initialises form state from `customer` once and is not
   keyed on `customer.id`, so switching customers can show a stale form.
 
-Reproduce before changing anything: edit name/phone/email/address on
-Customers, click Save, refresh, confirm whether the row actually changed.
+**Resolved 2026-09-21 — and the cause was worse than the report.** Reproduced
+as suggested, and the third hypothesis above was right: `CustomerDetail` was
+not keyed on `customer.id`. It seeds its form with `useState`, which runs only
+on mount, so switching customers kept the previous one's values on screen
+while `customer.id` had moved on — and Save wrote those values onto the newly
+selected customer. Not "edits don't save": **edits saved to the wrong row**.
+
+Filed as `docs/bugs.md` #17 and fixed with `key={selectedCustomer.id}`. The
+Save button's position at the bottom of the card (the layout spec put it at
+the top) is real but was not the cause; left as-is.
 
 ---
 
-## R3 — Pipeline filter “All jobs” should read “All Open Jobs”
+## R3 — Pipeline filter “All jobs” should read “All Open Jobs” | DONE
 
 **Screen:** Pipeline → Show: filters.
 
@@ -71,8 +79,10 @@ Open Jobs**.
 
 Default board filter is already `active` (open only). That part is correct.
 
-**Related, not this item:** the Closed stat tile is wired to filter key
-`all`, which shows *every* job, not closed ones. That is why “JobClosed Tile
+**Done 2026-09-21.** Relabelled **All Open Jobs**.
+
+**Related, and now also fixed:** the Closed stat tile was wired to filter key
+`all`, which showed *every* job, not closed ones — `docs/bugs.md` #16. That is why “JobClosed Tile
 doesnt work” is sitting in the scratch notes at the bottom of
 `docs/feature-wishlist.md`. Separate defect; do not fold it into a rename.
 

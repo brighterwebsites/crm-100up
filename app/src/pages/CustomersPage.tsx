@@ -79,7 +79,15 @@ export default function CustomersPage() {
       <div className="detail-area">
         {!selectedCustomer && <div className="detail-empty">Select a customer</div>}
         {selectedCustomer && !selectedJobId && (
+          /* key is load-bearing, not tidiness. CustomerDetail seeds its form
+             from `customer` with useState, which only runs on mount — so
+             without a key, switching customers reuses the instance, keeps the
+             PREVIOUS customer's field values, and Save writes them onto the
+             newly selected row. Silent cross-customer overwrite (bugs.md #17).
+             Keying also clears the stale error/saved state, which a
+             useEffect on [customer] would not. */
           <CustomerDetail
+            key={selectedCustomer.id}
             customer={selectedCustomer}
             jobs={customerJobs}
             onSelectJob={(id) => setSelectedJobId(id)}

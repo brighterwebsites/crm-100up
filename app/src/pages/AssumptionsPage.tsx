@@ -369,12 +369,15 @@ export default function AssumptionsPage() {
           <div className="settings-pending">
             <Wrench size={15} aria-hidden />
             <div>
-              <strong>Not built yet — next up.</strong>
+              <strong>Edited on the Stock page, not here.</strong>
               <div className="settings-hint" style={{ marginTop: 4 }}>
-                Choosing inverters, batteries and add-on components (gateway,
-                mounting kit, stack base) happens per system option, so it lives
-                in the configurator rather than here. Their costs and specs are
-                already on the <strong>Stock</strong> page and are edited there.
+                Inverters, batteries and add-on components (gateway, mounting
+                kit, stack base) are <strong>already wired up and in use</strong> —
+                the calculators price from them today. Their costs and specs live
+                on the <strong>Stock</strong> page and are edited there.
+                What is not built is a screen <em>here</em> for re-pointing which
+                product fills which slot; that needs the full configurator and is
+                scheduled after go-live.
               </div>
               <div className="settings-hint" style={{ marginTop: 6 }}>
                 Standby draw moves here from the simulation settings at the same
