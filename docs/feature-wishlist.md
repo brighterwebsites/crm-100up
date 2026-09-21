@@ -163,11 +163,17 @@ token*. A remote MCP server needs a Worker, auth and the tools, and **Fred's
 own Claude subscription pays for the model**, with a better chat UI than we
 would build. Same tool layer either way, so nothing is wasted.
 
-**The catch:** it depends on Fred having Claude Pro/Max and being willing to
-add a custom connector in Claude.ai settings — a real ask for someone whose
-watchword is "don't over-complicate". One question to him decides the order.
-Either way MCP-first serves Vanessa immediately (CRM querying from Claude
-Code).
+**Answered 2026-09-21: Fred has Claude Max**, and ChatGPT Pro. That settles
+the order — MCP-first. The ChatGPT half matters more than it looks: MCP is a
+protocol, not a Claude feature, so an MCP server lets him use whichever
+assistant he prefers, where an in-app chat picks for him permanently.
+
+Remaining risk is only that adding a custom connector is a real ask for
+someone whose watchword is "don't over-complicate" — mitigated by setting it
+up with him once. Either way MCP-first serves Vanessa immediately (CRM
+querying from Claude Code).
+
+**Full design: `docs/ai-in-crm-design.md`.**
 
 **Security, the part to get right.** A long-lived admin token pasted into
 Claude.ai is a credential living in Anthropic's cloud, fronting a public

@@ -59,6 +59,7 @@ deployed — ignore it.
 | `docs/2026-09-20_mvp-plan.md` | Current plan: repo state, the three sprints to cutover, and what was decided without asking Fred. **Start here.** |
 | `docs/2026-08-12-Fredupdate` | Vanessa's update **to** Fred with his replies interleaved. **Attribution is not marked** — the installer block is unsourced and the block after the final `---` is hers (it says "He also wants..."). Fred's 2026-09-20 email supersedes the installer block entirely |
 | `docs/2026-07-29_status-gap-and-decisions.md` | Status and gap register with 37 decision questions, written deliberately for a client meeting. Much is now answered — read the two above first, but it is a good account of how the project looked in July |
+| `docs/ai-in-crm-design.md` | AI/MCP design — post-cutover, nothing built. MCP server before in-app chat, and the security model that matters |
 | `docs/bugs.md` | Defects in both codebases, what's fixed and what's carried forward |
 | `docs/refinements.md` | Incomplete features / UI not fully working — not bugs. Log new ones here. |
 | `docs/quote-configurator-design.md` | Target design for Assumptions → product-driven configurator (proposed, not built) |
