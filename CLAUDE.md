@@ -106,6 +106,15 @@ has not yet been re-tested with a live installer login; do that before issuing
 a real installer account. Public signups are disabled; users are created by an
 admin.
 
+**Test accounts are not recorded in this repo, and should not be.** No
+password ever goes in here. To see which accounts exist, their sign-in
+emails, roles and when each last signed in: **Settings → Who is using the
+CRM**, backed by the admin-only `public.user_activity()`. To reset a password
+or create an account: Supabase dashboard → Authentication → Users.
+"Installer One" is the test installer referenced in `docs/bugs.md` #14 and
+`docs/installer-model-design.md` — the name is in the docs, the address is in
+the app, the password is in Vanessa's password manager.
+
 ## What's not built
 
 **All six Quote Designer tools are built** as of 2026-09-20 — Quick Estimate,
