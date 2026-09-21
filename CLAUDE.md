@@ -282,6 +282,15 @@ on mount to open Settings. Any future external return trip has to do the same.
   Fred paid is not what the system knows.
 - **Assumption costs and stock costs are unlinked** and drift silently
   (`docs/bugs.md` #3).
+- **Fred is testing live, so deploys land under an open tab.** Two banners
+  handle it (`app/src/features/notice/Banners.tsx`). The **update** banner is
+  automatic: Vite compiles a build id into the bundle and emits a matching
+  `version.json`, and the app offers a Reload when they differ. Don't remove
+  the `emit-version-json` plugin from `vite.config.ts` or the check silently
+  stops working — `isStale()` fails safe to "not stale", so a missing
+  `version.json` shows nothing rather than erroring. The **maintenance**
+  banner is manual (`public.app_notice`, set in Settings), realtime-published
+  so it reaches an open tab without a refresh, and always carries an expiry.
 - **V46's `ASSUMPTION_META` notes are not authoritative.** Some were
   AI-written and at least one **reversed Fred's actual rule**. The
   `deyeSingleInverterCost` row was labelled "Deye 10kW · AI-W5.1-10P3" with
