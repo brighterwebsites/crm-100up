@@ -21,6 +21,7 @@ import CalculatorPage from './CalculatorPage'
 import QuickEstimatePage from './QuickEstimatePage'
 import SimulationPage from './SimulationPage'
 import { MaintenanceBanner, ModeBanner, UpdateBanner } from '../features/notice/Banners'
+import { FeedbackButton } from '../features/feedback/FeedbackDesk'
 import GroundMountBomPage from './GroundMountBomPage'
 
 type Page =
@@ -259,6 +260,10 @@ function ShellInner() {
           )}
         </main>
       </div>
+
+      {/* Fixed, so it is reachable from every screen, and handed the current
+          page so the report carries where he was without asking him. */}
+      <FeedbackButton screen={page} />
     </div>
   )
 }

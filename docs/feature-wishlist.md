@@ -139,6 +139,72 @@ direction further down this file — an estimator lead and a quoted customer
 are the same person arriving by different doors, and should probably not end
 up as two records.
 
+---
+
+## W4 — AI in the CRM, and a Claude.ai MCP connector
+
+**Raised** 2026-09-20 in `.cursor/plans/feedback_and_crm_ai_bb3bbf3e.plan.md`.
+**Post-cutover.** The feedback desk that plan paired this with was built on
+2026-09-21; this half still needs its spec (`docs/ai-in-crm-design.md`).
+
+Baseline today: Anthropic via `aiComplete` → `extract-invoice` only, logged to
+`ai_call_log`, key in `integrations`.
+
+**One tool layer, two surfaces.** Read tools over the existing RLS and RPCs;
+consequential writes go through the `SECURITY DEFINER` functions that already
+guard them (`guard_jobs_update`, `guard_stock_qty`), never raw table patches
+from a model.
+
+**Revision to the original plan: build the MCP surface first.** The plan had
+in-app chat as the product and MCP as the same tools exposed externally. In
+cost terms that is backwards — in-app chat needs a chat UI, thread
+persistence, streaming and tool-call rendering, *and the CRM pays for every
+token*. A remote MCP server needs a Worker, auth and the tools, and **Fred's
+own Claude subscription pays for the model**, with a better chat UI than we
+would build. Same tool layer either way, so nothing is wasted.
+
+**The catch:** it depends on Fred having Claude Pro/Max and being willing to
+add a custom connector in Claude.ai settings — a real ask for someone whose
+watchword is "don't over-complicate". One question to him decides the order.
+Either way MCP-first serves Vanessa immediately (CRM querying from Claude
+Code).
+
+**Security, the part to get right.** A long-lived admin token pasted into
+Claude.ai is a credential living in Anthropic's cloud, fronting a public
+HTTPS endpoint with database access. Bug #14's lesson was that *reads* are
+what gets missed. So: a restricted identity rather than admin, an explicit
+column **allowlist** (not a denylist), per-tool logging like `ai_call_log`,
+and rate limits. Never `integrations.secret`, `private.*`, or raw prompts.
+
+**Out of scope, and worth saying to Fred plainly:** the AI does not change the
+running system — no repo edits, no Git, no Cloudflare, no migrations. That
+needs review, RLS and human judgement, and wiring it into an in-browser agent
+is a large security surface for little gain. The MCP path can grow *data* and
+*business-action* tools; it must not become a deploy bot.
+
+**Phases:** 1 read-only · 2 narrow writes mapped to existing RPCs, confirmed
+in UI · 3 actions (`send_email`, draft CES).
+
+---
+
+## W5 — Feedback desk screenshots | NOT BUILT, deliberately
+
+**Raised and deferred** 2026-09-21, when the feedback desk shipped without
+them.
+
+Screenshots would be the first Supabase Storage use in this project — a
+private bucket, signed URLs, RLS on `storage.objects`, upload UI and image
+handling. That is roughly half the build effort of the whole feedback desk
+for a fraction of its value.
+
+It also cuts against a decision already made: W1 (file supplier documents to
+Drive) was closed "not needed", and `supplier_documents` deliberately stores
+*extracted data, not files*. **"The CRM does not hold files"** is an existing
+principle here, and screenshots would be the first exception to it.
+
+The auto-captured `screen` field plus Fred's own description has to prove
+insufficient first. Purely additive if it does.
+
 
 ## VAnessa Notes to Add above
 Needs to be added to correct docs/sections

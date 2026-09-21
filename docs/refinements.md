@@ -168,3 +168,40 @@ stock row currently attached to a system config, plus every `gm_component`
 the Ground Mount BOM will pick up. No editors required. The real editor
 belongs in the configurator (`docs/quote-configurator-design.md`); this is
 the stop-gap so Fred can see what the quotes are standing on.
+
+---
+
+## R7 — Pipeline job panel: jump to any step (dropdown next to Advance)
+
+**Screen:** Pipeline (and Customer Jobs) → job detail panel → Pipeline
+controls, beside the green Advance button.
+
+Add a dropdown to move the job to **any** step, not only the next one.
+Admin only. Installers stay on Advance / Move back (and as of
+`20260920100001` they have neither).
+
+**Date policy — leave skipped step dates empty.** Do not fill previous /
+jumped-over steps with today. Stamp only the **destination** step (today, or
+the prompted date if landing on booked / install start / install complete —
+same three prompts Advance already uses). Fred can fill real dates afterwards
+in Job progress via `set_step_date`. Filling skipped steps with today would
+fabricate CES, rebate and booking history that overdue, clash detection and
+follow-up rules treat as real.
+
+Jumping **back** still clears dates that belong to steps after the new
+position (same rule as `move_job_back`).
+
+**Stock gates still fire when crossed**, even if their dates stay empty.
+Otherwise a jump from quoting to Install complete leaves parts on the shelf,
+which is the bug these RPCs exist to prevent. Crossing `date_booked` applies
+pending BOM; crossing `install_in_progress` consumes (forward) or restores
+(back). Identify those steps by `pipeline_steps.key`, never by number.
+
+**As built:** `advance_job_stage` already has admin-only `p_override_stage` /
+`p_override_step`, unused by the UI. It only stamps the landing step (empty
+skipped dates — that part is right) but it does **not** fire stock gates for
+steps jumped *past*, and it does **not** restore stock or clear later dates
+on a backward jump. Do not wire the dropdown to that override as-is. New
+RPC (`move_job_to_step`, keyed), or fix the override before exposing it.
+
+Stage/step/dates stay RPC-only (`docs/installer-model-design.md`).

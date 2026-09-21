@@ -2634,3 +2634,73 @@ button.date-pill:focus-visible { outline: 2px solid currentColor; outline-offset
   font-style: italic;
   opacity: 0.75;
 }
+
+/* ── feedback desk ────────────────────────────────────────────────────
+   Fixed bottom-right: reachable from every screen, and clear of the header
+   controls (Backup, Sign out) it would otherwise compete with. */
+.feedback-fab {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 999px;
+  background: var(--nav-bg);
+  color: var(--nav-ink);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+}
+.feedback-fab:hover { background: #17203150; background: #1a2333; }
+
+.feedback-modal { max-width: 620px; width: 100%; }
+
+.feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.feedback-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+
+.feedback-item {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--card);
+}
+.feedback-open    { border-left-color: var(--signal); }
+.feedback-started { border-left-color: var(--stage-2); }
+.feedback-done    { border-left-color: var(--primary); opacity: 0.72; }
+.feedback-wont_do { border-left-color: var(--muted); opacity: 0.6; }
+
+.feedback-item-head { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.feedback-icon-bug  { color: var(--danger); }
+.feedback-icon-idea { color: var(--stage-4); }
+
+.feedback-chip-open    { background: var(--stage-3-light); color: var(--stage-3-text); }
+.feedback-chip-started { background: var(--stage-2-light); color: var(--stage-2-text); }
+.feedback-chip-done    { background: var(--stage-1-light); color: var(--stage-1-text); }
+.feedback-chip-wont_do { background: #ececec; color: var(--muted); }
+
+.feedback-details { font-size: 13px; margin-top: 5px; white-space: pre-wrap; }
+.feedback-meta { font-size: 11px; color: var(--muted); margin-top: 6px; }
+.feedback-note {
+  font-size: 12px;
+  margin-top: 7px;
+  padding: 7px 9px;
+  background: var(--bg);
+  border-radius: 6px;
+}
+.feedback-actions { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+
+@media print { .feedback-fab { display: none; } }

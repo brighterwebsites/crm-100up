@@ -262,6 +262,56 @@ export type Database = {
           },
         ]
       }
+      feedback_items: {
+        Row: {
+          admin_note: string
+          created_at: string
+          created_by: string | null
+          details: string
+          id: number
+          kind: Database["public"]["Enums"]["feedback_kind"]
+          resolved_at: string | null
+          screen: string
+          status: Database["public"]["Enums"]["feedback_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          admin_note?: string
+          created_at?: string
+          created_by?: string | null
+          details?: string
+          id?: number
+          kind?: Database["public"]["Enums"]["feedback_kind"]
+          resolved_at?: string | null
+          screen?: string
+          status?: Database["public"]["Enums"]["feedback_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          admin_note?: string
+          created_at?: string
+          created_by?: string | null
+          details?: string
+          id?: number
+          kind?: Database["public"]["Enums"]["feedback_kind"]
+          resolved_at?: string | null
+          screen?: string
+          status?: Database["public"]["Enums"]["feedback_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_items_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fixed_site_costs: {
         Row: {
           active: boolean
@@ -2058,6 +2108,8 @@ export type Database = {
     Enums: {
       ces_category: "battery" | "inverter" | "panel" | "other"
       electrical_phase: "single" | "three" | "na"
+      feedback_kind: "bug" | "idea"
+      feedback_status: "open" | "started" | "done" | "wont_do"
       inverter_size_class: "small" | "medium" | "large"
       job_stock_item_status: "pending" | "assigned" | "consumed"
       job_type: "install" | "service"
@@ -2210,6 +2262,8 @@ export const Constants = {
     Enums: {
       ces_category: ["battery", "inverter", "panel", "other"],
       electrical_phase: ["single", "three", "na"],
+      feedback_kind: ["bug", "idea"],
+      feedback_status: ["open", "started", "done", "wont_do"],
       inverter_size_class: ["small", "medium", "large"],
       job_stock_item_status: ["pending", "assigned", "consumed"],
       job_type: ["install", "service"],
