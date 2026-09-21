@@ -176,6 +176,13 @@ rate-limited until custom SMTP is enabled — which is how the CRM's own email
 can work perfectly while invites fail in bursts. **Both are now set up**, so
 don't re-raise either as outstanding.
 
+**Email test mode does NOT cover Auth mail.** The redirect lives inside the
+`send-email` Edge Function, and Supabase Auth never calls it. So while test
+mode is on, CRM email is safely caged and **an invite or password reset still
+goes to the real address**. That is correct — those are internal and should
+send — but do not read "test mode is on" as "nothing can leave the system".
+Inviting a real installer sends a real email.
+
 Gmail OAuth needs four Edge Function secrets: `GOOGLE_OAUTH_CLIENT_ID`,
 `GOOGLE_OAUTH_CLIENT_SECRET`, `GMAIL_OAUTH_REDIRECT_URI`, `CRM_APP_URL`.
 
