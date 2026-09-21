@@ -150,6 +150,7 @@ export type Database = {
           provider_message_id: string | null
           provider_status: string | null
           purchase_order_id: number | null
+          redirected_to: string
           screen_type: string
           sent_at: string
           status: string
@@ -165,6 +166,7 @@ export type Database = {
           provider_message_id?: string | null
           provider_status?: string | null
           purchase_order_id?: number | null
+          redirected_to?: string
           screen_type?: string
           sent_at?: string
           status?: string
@@ -180,6 +182,7 @@ export type Database = {
           provider_message_id?: string | null
           provider_status?: string | null
           purchase_order_id?: number | null
+          redirected_to?: string
           screen_type?: string
           sent_at?: string
           status?: string

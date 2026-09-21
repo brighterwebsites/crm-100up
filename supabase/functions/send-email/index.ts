@@ -12,6 +12,26 @@ interface EmailConfig {
   from_address?: string
   reply_to?: string
   enabled?: boolean
+  /** Test mode redirects every recipient to `test_redirect_to`.
+   *
+   *  FAIL-SAFE: anything other than an explicit `false` means ON. An absent
+   *  or half-written config redirects rather than sends. Real sending is a
+   *  deliberate act at cutover, not something you get by forgetting — which
+   *  matters while Fred is testing against live customer records. */
+  test_mode?: boolean
+  test_redirect_to?: string
+}
+
+/** Banner prepended to a redirected message so the person receiving it can
+ *  see, in the message itself, who it would have gone to. */
+function testBanner(to: string, cc: string, html: boolean): string {
+  const line = `TEST MODE - not delivered to the customer. Intended To: ${to}${cc ? ` | Cc: ${cc}` : ''}`
+  return html
+    ? `<div style="background:#fdeede;border-left:4px solid #e8720c;padding:10px 14px;margin-bottom:16px;font:13px/1.5 system-ui,sans-serif;color:#8f4405"><strong>TEST MODE</strong> - this was not delivered to the customer.<br>Intended To: <strong>${to}</strong>${cc ? `<br>Cc: <strong>${cc}</strong>` : ''}</div>`
+    : `${line}
+${'-'.repeat(60)}
+
+`
 }
 
 type ScreenType = 'customer' | 'job' | 'purchase_order' | 'test'
@@ -205,6 +225,34 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'No "from" address configured in Settings → Integrations.' }, 503)
   }
 
+  // ── Test mode ────────────────────────────────────────────────────────
+  // Everything the CRM sends passes through here, so this is the one place
+  // that can guarantee nothing reaches a real customer. Enforced server-side
+  // precisely so no UI path — current or future — can route around it.
+  const testMode = config.test_mode !== false
+  const redirectTo = (config.test_redirect_to ?? '').trim()
+  if (testMode && !redirectTo) {
+    return jsonResponse(
+      {
+        error:
+          'Test mode is on but no redirect address is set. Add one in Settings -> Integrations, ' +
+          'or switch test mode off to send for real.',
+      },
+      503,
+    )
+  }
+
+  // The INTENDED recipients are what gets logged and shown; the redirect only
+  // changes where the bytes go.
+  const sends = testMode ? [{ to: redirectTo }] : resolved.sends
+  const subject = testMode ? `[TEST -> ${resolved.logTo}] ${body.subject}` : body.subject
+  const html = testMode && body.html
+    ? testBanner(resolved.logTo, resolved.logCc, true) + body.html
+    : body.html
+  const text = testMode && body.text
+    ? testBanner(resolved.logTo, resolved.logCc, false) + body.text
+    : body.text
+
   // Shared across the success and failure log paths. Absent metadata means a
   // Settings test send, which is still worth a dated row proving the key works.
   const logBase = {
@@ -215,19 +263,20 @@ Deno.serve(async (req) => {
     to_address: resolved.logTo,
     cc_address: resolved.logCc,
     subject: body.subject,
+    redirected_to: testMode ? redirectTo : '',
   }
 
   const messageIds: string[] = []
   let lastStatus: string | null = null
 
-  for (const send of resolved.sends) {
+  for (const send of sends) {
     const res = await sendOne(
       row.secret,
       config.from_address,
       config.reply_to,
-      body.subject,
-      body.html,
-      body.text,
+      subject,
+      html,
+      text,
       send.to,
       send.cc,
     )
@@ -237,7 +286,7 @@ Deno.serve(async (req) => {
       // because the earlier recipients did receive it and a resend would
       // double up on them.
       const partial = messageIds.length > 0
-        ? ` (${messageIds.length} of ${resolved.sends.length} recipient sends had already succeeded)`
+        ? ` (${messageIds.length} of ${sends.length} recipient sends had already succeeded)`
         : ''
       await logSend(admin.service, {
         ...logBase,
@@ -266,5 +315,11 @@ Deno.serve(async (req) => {
     message_id: messageId,
     message_ids: messageIds,
     status: lastStatus,
+    // The caller surfaces this, so a send that went to the test inbox never
+    // looks like one that reached the customer.
+    test_mode: testMode,
+    redirected_to: testMode ? redirectTo : '',
+    intended_to: resolved.logTo,
+    intended_cc: resolved.logCc,
   })
 })

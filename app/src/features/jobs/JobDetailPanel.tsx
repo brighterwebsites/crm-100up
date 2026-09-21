@@ -20,6 +20,7 @@ import { fmtDate, todayISO } from '../../lib/format'
 import { copyText } from '../../lib/clipboard'
 import { advanceJob, applyPendingNow, jobDetailsText, moveJobBack, rescheduleBooking, setStepDate, updateJob } from './actions'
 import { supabase } from '../../lib/supabaseClient'
+import { checkContact, checkEmail, checkPhone } from '../../lib/contact'
 import { CesModal, LinkQuoteModal } from './modals'
 
 interface Props {
@@ -40,6 +41,7 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
   const [dateAsk, setDateAsk] = useState<null | { field: string; label: string }>(null)
   const [dateVal, setDateVal] = useState(todayISO())
   const [reschedule, setReschedule] = useState(false)
+  const [contactErr, setContactErr] = useState<{ phone?: string; email?: string }>({})
   const [showCes, setShowCes] = useState(false)
   const [showLink, setShowLink] = useState(false)
   const [openSections, setOpenSections] = useState({ customer: true, install: true, stock: true, jobDetails: true })
@@ -133,6 +135,18 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
 
   async function saveJobAndCustomer() {
     if (!job) return
+    // Contact details are only editable by an admin here, so only check them
+    // when there are any to check. The normalised values are held locally and
+    // pushed back into the form state — the save must not depend on a setState
+    // that has not landed yet.
+    let contact = { phone: custForm.phone, email: custForm.email }
+    if (isAdmin && customer) {
+      const c = checkContact(custForm.phone, custForm.email)
+      setContactErr({ phone: c.phone.error ?? undefined, email: c.email.error ?? undefined })
+      if (c.firstError) { setErr(c.firstError); return }
+      contact = { phone: c.phone.value, email: c.email.value }
+      setCustForm((f) => ({ ...f, ...contact }))
+    }
     const jobPatch = isAdmin
       ? {
           location: jobForm.location,
@@ -151,8 +165,8 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
           .from('customers')
           .update({
             name: custForm.name,
-            phone: custForm.phone,
-            email: custForm.email,
+            phone: contact.phone,
+            email: contact.email,
             contact_method: custForm.contact_method,
             address: custForm.address,
           })
@@ -331,14 +345,18 @@ export default function JobDetailPanel({ jobId, onClose }: Props) {
           </F>
           <F label="Phone">
             <div className="jdp-contact-row">
-              <input className="jdp-input" disabled={!isAdmin} value={custForm.phone} onChange={(e) => setCustForm({ ...custForm, phone: e.target.value })} />
+              <input className={`jdp-input${contactErr.phone ? ' input-invalid' : ''}`} disabled={!isAdmin} value={custForm.phone}
+                onChange={(e) => setCustForm({ ...custForm, phone: e.target.value })}
+                onBlur={() => { const r = checkPhone(custForm.phone); setCustForm((f) => ({ ...f, phone: r.value })); setContactErr((e) => ({ ...e, phone: r.error ?? undefined })) }} />
               {custForm.phone && <a className="jdp-contact-link" href={`tel:${custForm.phone}`}><Phone size={13} aria-hidden /></a>}
               {custForm.phone && <a className="jdp-contact-link" href={`sms:${custForm.phone}`}><MessageSquare size={13} aria-hidden /></a>}
             </div>
           </F>
           <F label="Email">
             <div className="jdp-contact-row">
-              <input className="jdp-input" disabled={!isAdmin} value={custForm.email} onChange={(e) => setCustForm({ ...custForm, email: e.target.value })} />
+              <input className={`jdp-input${contactErr.email ? ' input-invalid' : ''}`} disabled={!isAdmin} value={custForm.email}
+                onChange={(e) => setCustForm({ ...custForm, email: e.target.value })}
+                onBlur={() => { const r = checkEmail(custForm.email); setCustForm((f) => ({ ...f, email: r.value })); setContactErr((e) => ({ ...e, email: r.error ?? undefined })) }} />
               {custForm.email && <a className="jdp-contact-link" href={`mailto:${custForm.email}`}><Mail size={13} aria-hidden /></a>}
             </div>
           </F>

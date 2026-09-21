@@ -61,6 +61,8 @@ function EmailCard() {
   const [replyTo, setReplyTo] = useState('')
   const [enabled, setEnabled] = useState(true)
   const [testTo, setTestTo] = useState('')
+  const [testMode, setTestMode] = useState(true)
+  const [testRedirect, setTestRedirect] = useState('')
   const { busy, msg, err, setMsg, setErr, run } = useCardState()
 
   useEffect(() => { void load() }, [])
@@ -73,6 +75,9 @@ function EmailCard() {
       setFromAddress(s.config.from_address ?? '')
       setReplyTo(s.config.reply_to ?? '')
       setEnabled(s.config.enabled !== false)
+      // Mirrors the Edge Function: anything but an explicit false is ON.
+      setTestMode(s.config.test_mode !== false)
+      setTestRedirect(s.config.test_redirect_to ?? '')
       setTestTo((prev) => prev || session?.user.email || '')
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Could not load the email integration')
@@ -85,7 +90,10 @@ function EmailCard() {
     run('save', async () => {
       await saveIntegration({
         provider: 'email',
-        config: { from_address: fromAddress.trim(), reply_to: replyTo.trim(), enabled },
+        config: {
+          from_address: fromAddress.trim(), reply_to: replyTo.trim(), enabled,
+          test_mode: testMode, test_redirect_to: testRedirect.trim(),
+        },
         ...(apiKey.trim() ? { secret: apiKey.trim() } : {}),
       })
       setApiKey('')
@@ -108,7 +116,11 @@ function EmailCard() {
         subject: '100UP CRM — test email',
         html: '<p>This is a test email from 100UP CRM Settings → Integrations.</p>',
       })
-      setMsg(res.message_id ? `Sent (message id: ${res.message_id})` : 'Sent')
+      setMsg(
+        res.test_mode
+          ? `Sent to the test inbox (${res.redirected_to}) — intended for ${res.intended_to}. Nothing reached a customer.`
+          : res.message_id ? `Sent for real (message id: ${res.message_id})` : 'Sent for real',
+      )
     })
 
   return (
@@ -146,6 +158,36 @@ function EmailCard() {
               <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} style={{ width: 'auto' }} />
               Enabled
             </label>
+          </div>
+
+          {/* Test mode. Loud on purpose: the two failure modes are believing
+              a customer got an email when they didn't, and believing they
+              didn't when they did. Both are worse than an ugly banner. */}
+          <div className={testMode ? 'calc-warning' : 'cost-drift'} style={{ marginTop: 14 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600 }}>
+              <input type="checkbox" checked={testMode} onChange={(e) => setTestMode(e.target.checked)} style={{ width: 'auto' }} />
+              {testMode ? 'TEST MODE — no email reaches a real recipient' : 'LIVE — emails go to real customers, suppliers and installers'}
+            </label>
+            {testMode ? (
+              <>
+                <p style={{ margin: '8px 0 6px' }}>
+                  Every recipient is rewritten to the address below. The real To and Cc are kept in
+                  the subject, in a banner on the message, and in the email history — so you can
+                  check who it <em>would</em> have gone to.
+                </p>
+                <input
+                  placeholder="support+crmtest@brighterwebsites.com.au"
+                  value={testRedirect}
+                  onChange={(e) => setTestRedirect(e.target.value)}
+                  style={{ width: '100%', maxWidth: 380 }}
+                />
+              </>
+            ) : (
+              <p style={{ margin: '8px 0 0' }}>
+                Turn this back on before any further testing. Real sending should only be on once
+                Fred is running the business from here.
+              </p>
+            )}
           </div>
           <div className="settings-actions">
             {status?.configured && (

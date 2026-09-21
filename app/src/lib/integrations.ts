@@ -19,6 +19,12 @@ export interface EmailIntegrationConfig {
   from_address?: string
   reply_to?: string
   enabled?: boolean
+  /** Redirect every recipient to `test_redirect_to` instead of the real one.
+   *  Enforced in the send-email Edge Function, so no UI path can bypass it.
+   *  **Anything other than an explicit `false` means ON** — an absent config
+   *  redirects rather than sends. */
+  test_mode?: boolean
+  test_redirect_to?: string
 }
 
 export interface AnthropicIntegrationConfig {
@@ -69,6 +75,13 @@ interface SendResult {
   message_id?: string | null
   message_ids?: string[]
   status?: string | null
+  /** True when test mode rewrote the recipients. The caller MUST surface it:
+   *  a send that went to the test inbox must never read as one that reached
+   *  the customer. */
+  test_mode?: boolean
+  redirected_to?: string
+  intended_to?: string
+  intended_cc?: string
 }
 
 export function sendTestEmail(params: { to: string; subject: string; html: string }) {

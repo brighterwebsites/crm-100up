@@ -4,6 +4,7 @@ import { useData } from '../lib/data'
 import type { Customer } from '../lib/data'
 import { PIPELINE, isClosed, stepLabel } from '../lib/pipeline'
 import { supabase } from '../lib/supabaseClient'
+import { checkContact, checkEmail, checkPhone } from '../lib/contact'
 import JobDetailPanel from '../features/jobs/JobDetailPanel'
 
 export default function CustomersPage() {
@@ -123,13 +124,33 @@ function CustomerDetail({
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [ok, setOk] = useState(false)
+  const [fieldErr, setFieldErr] = useState<{ phone?: string; email?: string }>({})
+
+  /** Normalise on blur, not per keystroke — rewriting 04 to +614 mid-type
+   *  fights the person entering it. */
+  function blurPhone() {
+    const r = checkPhone(form.phone)
+    setForm((f) => ({ ...f, phone: r.value }))
+    setFieldErr((e) => ({ ...e, phone: r.error ?? undefined }))
+  }
+  function blurEmail() {
+    const r = checkEmail(form.email)
+    setForm((f) => ({ ...f, email: r.value }))
+    setFieldErr((e) => ({ ...e, email: r.error ?? undefined }))
+  }
 
   async function save() {
+    // Re-check on save: a field never blurred still has to be valid.
+    const c = checkContact(form.phone, form.email)
+    setFieldErr({ phone: c.phone.error ?? undefined, email: c.email.error ?? undefined })
+    if (c.firstError) { setErr(c.firstError); return }
+    const clean = { ...form, phone: c.phone.value, email: c.email.value }
+    setForm(clean)
     setSaving(true)
     setErr(null)
     const { error } = await supabase
       .from('customers')
-      .update({ ...form })
+      .update(clean)
       .eq('id', customer.id)
     setSaving(false)
     if (error) { setErr(error.message); return }
@@ -159,11 +180,15 @@ function CustomerDetail({
           </div>
           <div className="jdp-field">
             <span className="jdp-label">Phone</span>
-            <input className="jdp-input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            <input className={`jdp-input${fieldErr.phone ? ' input-invalid' : ''}`} value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })} onBlur={blurPhone} />
+            {fieldErr.phone && <span className="field-error">{fieldErr.phone}</span>}
           </div>
           <div className="jdp-field">
             <span className="jdp-label">Email</span>
-            <input className="jdp-input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            <input className={`jdp-input${fieldErr.email ? ' input-invalid' : ''}`} value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })} onBlur={blurEmail} />
+            {fieldErr.email && <span className="field-error">{fieldErr.email}</span>}
           </div>
           <div className="jdp-field jdp-full">
             <span className="jdp-label">Address</span>

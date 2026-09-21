@@ -2556,3 +2556,18 @@ button.date-pill:focus-visible { outline: 2px solid currentColor; outline-offset
 .po-lines-card .table-wrap {
   border-radius: 0;
 }
+
+/* ── contact field validation ─────────────────────────────────────────
+   Phone and email are normalised on blur (lib/contact.ts) and re-checked on
+   save. The message sits under the field rather than in the panel-level error
+   strip, so it points at the input that caused it. */
+.input-invalid {
+  border-color: var(--signal) !important;
+}
+.field-error {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--signal);
+}
