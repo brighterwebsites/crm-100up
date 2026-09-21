@@ -242,8 +242,11 @@ The Quick System Estimate (V46 section #qe) is a bedroom/occupant-based system s
 
 Corrected facts, replacing assumptions this entry was originally written on:
 - There is no "100UP MU plugin." The real repo is `brighterwebsites/100up-tools`
-  (local: `F:\GIT_REPOS_INDIV\100up-conversion-tools`, currently a stale
-  uncloned copy — re-clone before editing). It's a normal plugin, deployed at
+  (local: **`F:\GIT_REPOS_INDIV\100up-tools`** — re-cloned 2026-09-15 and
+  now the real thing. The `100up-conversion-tools` path in earlier drafts was
+  a stale, pre-restructure copy with no `.git`; archived to
+  `100up-conversion-tools.stale-20260915` and not to be edited — it predates
+  the rename to `100up-solar.php` and the `includes/` restructure). It's a normal plugin, deployed at
   `/wp-content/plugins/100up-tools-claude-quiz-system-layout-x8kj4s/` on
   `100up.com.au`. `main` is the correct branch — confirmed byte-identical to
   what's live (checked via SSH, `hunpu_deploy_v1` key despite the `.mcp.json`
