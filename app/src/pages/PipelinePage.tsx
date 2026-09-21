@@ -11,7 +11,7 @@ import JobDetailPanel from '../features/jobs/JobDetailPanel'
 import AttentionPanel from '../features/pipeline/AttentionPanel'
 import type { StockRow } from '../features/pipeline/AttentionPanel'
 
-type Filter = 'all' | 'active' | 'alerts' | 'stale' | 'install' | 'service' | 'stock' | 'comms' | 'quoting' | 'compliance'
+type Filter = 'all' | 'active' | 'closed' | 'alerts' | 'stale' | 'install' | 'service' | 'stock' | 'comms' | 'quoting' | 'compliance'
 
 // All stage+step columns in order
 const COLUMNS = Object.entries(PIPELINE).flatMap(([stageStr, s]) =>
@@ -80,6 +80,7 @@ export default function PipelinePage({ onOpenOrderList }: { onOpenOrderList?: ()
       (attentionByJob.get(id) ?? []).some((it) => sev.includes(it.severity))
     return jobs.filter((j) => {
       if (filter === 'active')     return !isClosed(j.stage, j.step)
+      if (filter === 'closed')     return isClosed(j.stage, j.step)
       if (filter === 'alerts')     return has(j.id, 'alert', 'stock')
       if (filter === 'stale')      return has(j.id, 'stale')
       if (filter === 'install')    return j.job_type === 'install'
@@ -107,7 +108,9 @@ export default function PipelinePage({ onOpenOrderList }: { onOpenOrderList?: ()
     { key: 'quoting', label: 'Quoting',       n: counts.quoting,    color: PIPELINE[2].color },
     { key: 'install', label: 'Installation',  n: counts.install,    color: PIPELINE[3].color },
     { key: 'compliance', label: 'Compliance', n: counts.compliance, color: PIPELINE[4].color },
-    { key: 'all',     label: 'Closed',      n: counts.closed,     color: '#3a4150' },
+    // Was keyed 'all', so clicking the Closed tile showed EVERY job while the
+    // tile's own count said otherwise. The count was always right.
+    { key: 'closed',  label: 'Closed',      n: counts.closed,     color: '#3a4150' },
   ]
 
   return (
