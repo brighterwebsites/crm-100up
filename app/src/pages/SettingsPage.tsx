@@ -28,6 +28,7 @@ type JobEventRow = Tables<'job_events'>
 interface UserActivity {
   id: string
   full_name: string
+  email: string
   role: string
   last_sign_in_at: string | null
   created_at: string
@@ -698,6 +699,7 @@ function ActivityCard() {
             <thead>
               <tr>
                 <th style={{ textAlign: 'left' }}>Person</th>
+                <th style={{ textAlign: 'left' }}>Sign-in email</th>
                 <th style={{ textAlign: 'left' }}>Role</th>
                 <th style={{ textAlign: 'left' }}>Last signed in</th>
               </tr>
@@ -706,12 +708,13 @@ function ActivityCard() {
               {users.map((u) => (
                 <tr key={u.id}>
                   <td style={{ textAlign: 'left' }}>{u.full_name || '(no name set)'}</td>
+                  <td style={{ textAlign: 'left' }} className="num">{u.email}</td>
                   <td style={{ textAlign: 'left' }}>{u.role}</td>
                   <td style={{ textAlign: 'left' }}>{fmtAgo(u.last_sign_in_at)}</td>
                 </tr>
               ))}
               {users.length === 0 && (
-                <tr><td colSpan={3} className="mutedtext">No users.</td></tr>
+                <tr><td colSpan={4} className="mutedtext">No users.</td></tr>
               )}
             </tbody>
           </table>
