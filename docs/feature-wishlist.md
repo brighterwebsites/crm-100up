@@ -211,6 +211,44 @@ principle here, and screenshots would be the first exception to it.
 The auto-captured `screen` field plus Fred's own description has to prove
 insufficient first. Purely additive if it does.
 
+---
+
+## W6 — A quote as a record, rather than a thing that happened to a job
+
+**Raised** 2026-09-21, from a repo review. **Not a Fred requirement** — he has
+never asked for it, which is why it is here and not in `refinements.md`.
+
+`docs/design/quote-configurator-design.md` designed `quotes` and
+`quote_lines`. **Neither exists**, and after Sprint 1 it is worth being clear
+about what that does and does not cost.
+
+**What works without them.** The Calculator prices a system and hands it to a
+customer and job in one action, BOM included, stock ids and all. Fred can
+quote and get a job out of it. That loop is closed.
+
+**What is missing is the quote as an entity:**
+
+- **No history.** Re-quote a customer and the first one is gone — the BOM is
+  written onto the job, so the previous version is simply overwritten.
+- **No cost snapshot.** A job records what it was quoted at, not what the
+  parts cost on the day. When `planning_cost` moves, a six-month-old job
+  silently re-prices if anything recalculates from it. Solar pricing moves.
+- **No status.** No sent / accepted / expired, so nothing can chase an
+  unanswered quote, and the pipeline's Quoting stage carries that meaning
+  implicitly instead.
+- **No line-level record** of why a price was what it was.
+
+**Why it is parked rather than planned.** Fred quotes, wins or loses, and
+moves on; he has not once asked to see a superseded quote. Building a quote
+entity now would mean changing the quote → job path that was just built, for
+a capability nobody has requested. The 18-month cost snapshot is the part
+most likely to be missed later, and it is also the cheapest to retrofit — a
+`quoted_costs` jsonb on the job would capture it without a schema argument.
+
+**Related:** [[W3]] (send quote to customer) is the near-term shape and may
+make this unnecessary — if a quote is a thing you *send*, the sent artefact
+is the record. Decide W3 first.
+
 
 ## VAnessa Notes to Add above
 Needs to be added to correct docs/sections
