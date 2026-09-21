@@ -1,6 +1,6 @@
 -- 100UP CRM — real manufacturers table, replacing free-text on stocks.
 --
--- Reverses the PARK in docs/schema-restructure-proposal.md §7. That deferral
+-- Reverses the PARK in docs/archive/schema-restructure-proposal.md §7. That deferral
 -- was reasonable when the open question was "what else is stored per
 -- manufacturer"; the data has since answered it.
 --
@@ -45,7 +45,7 @@ alter table public.stocks
 -- cec_verified follows CLAUDE.md: Deye verified; Sigenergy unconfirmed. Jinko
 -- is marked UNVERIFIED despite CLAUDE.md listing it as verified, because the
 -- stored value was the short name 'Jinko', not a legal entity — the full
--- string below is the documented example from docs/Assumptions.md and has not
+-- string below is the documented example from docs/archive/2026-07_layout-specs/Assumptions.md and has not
 -- been confirmed against a listing. Do not treat it as authoritative.
 insert into public.manufacturers (brand, legal_name, cec_verified) values
   ('Sigenergy', 'Sigenergy Technology Co., Ltd',          false),

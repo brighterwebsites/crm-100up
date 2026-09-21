@@ -1,7 +1,7 @@
 -- 100UP CRM — turn `stocks` into a product catalogue.
 --
--- Step 0 of docs/quote-configurator-design.md (§3), A3 of
--- docs/phase-a-implementation-plan.md. Schema only: no data is classified
+-- Step 0 of docs/design/quote-configurator-design.md (§3), A3 of
+-- docs/archive/phase-a-implementation-plan.md. Schema only: no data is classified
 -- here (that is A4) and nothing reads these columns yet.
 --
 -- WHY: today a product's identity is a NAME STRING. The calculator generates
@@ -39,7 +39,7 @@ alter table public.stocks
   -- inverter in a single-phase system.
   add column phase        public.electrical_phase not null default 'na',
   -- Plain text, not a manufacturers FK. That normalisation stays PARKED
-  -- (docs/schema-restructure-proposal.md §7); nothing here forecloses it.
+  -- (docs/archive/schema-restructure-proposal.md §7); nothing here forecloses it.
   add column brand        text not null default '',
 
   -- Planning price: what quotes are costed at. Deliberately SEPARATE from

@@ -1,4 +1,4 @@
-// Scenario 1 of docs/phase-b-parity-gate.md, computed by the new engine and
+// Scenario 1 of docs/archive/phase-b-parity-gate.md, computed by the new engine and
 // compared against V46's arithmetic worked through by hand from the same data.
 import { applyBatteryParity, priceSystem } from '../src/lib/quoteEngine'
 import type { ConfigBundle, EngineSettings } from '../src/lib/quoteEngine'

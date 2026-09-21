@@ -1,7 +1,7 @@
 # Quote Configurator — Design & Mapping
 
 **Status: proposed, nothing built.** This replaces the "port the Assumptions table"
-line item in `docs/2026-07-29_status-gap-and-decisions.md` §7 Phase A/B with a
+line item in `docs/archive/2026-07-29_status-gap-and-decisions.md` §7 Phase A/B with a
 concrete target shape.
 
 **One-line summary.** Stop treating Assumptions as a flat table of 45 numbers.
@@ -138,7 +138,7 @@ alter table public.stocks
 ```
 
 `brand` is a plain text column, not a `manufacturers` table — that
-normalisation stays **PARKED** per `docs/schema-restructure-proposal.md` §7.
+normalisation stays **PARKED** per `docs/archive/schema-restructure-proposal.md` §7.
 Nothing here forecloses it.
 
 **"Refresh from last cost"** is a per-product action (and a bulk action on the
@@ -915,7 +915,7 @@ them). Do **not** add a `leads` table.
 **3. Store the quote structured, not as a blob.** A blob can't answer
 conversion rate, quote-to-win time, or quoted-vs-actual margin — the exact
 things a stored quote is for. It's also the pattern already rejected once:
-`jobs.job_order` was a blob and `docs/schema-restructure-proposal.md` §2 broke
+`jobs.job_order` was a blob and `docs/archive/schema-restructure-proposal.md` §2 broke
 it into a real table for this reason. Structured costs no more to build.
 
 **Why Fred "doesn't need quote tracking" and still needs quote records.**
@@ -1008,4 +1008,4 @@ One follow-on, low stakes, decide at build time:
 - `supabase/migrations/20260719010001_assumptions.sql` — the table this replaces
 - `supabase/migrations/20260719020001_merge_stock_specs.sql` — current `stocks` shape
 - `docs/bugs.md` #3, #5, #6
-- `docs/2026-07-29_status-gap-and-decisions.md` §4.1, §4.5, Theme A
+- `docs/archive/2026-07-29_status-gap-and-decisions.md` §4.1, §4.5, Theme A

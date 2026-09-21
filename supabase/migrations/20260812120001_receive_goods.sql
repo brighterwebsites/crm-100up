@@ -19,7 +19,7 @@
 -- ── shared: GST normalisation ─────────────────────────────────────────────
 -- Line prices are stored ex-GST always. What arrives depends on how the
 -- supplier prints their invoice, which is determined by reconciling the
--- document totals (docs/goods-receipt-design.md §4) rather than guessed.
+-- document totals (docs/design/goods-receipt-design.md §4) rather than guessed.
 --
 --   ex_gst   store as printed
 --   inc_gst  divide out GST, but only on lines that actually attract it

@@ -1,6 +1,6 @@
 // "Needs attention": the follow-up rules behind the Pipeline's right-hand
 // panel, its pulsing dots and its Alerts / Stale filters.
-// Design and the six rules: docs/pipeline-attention-design.md.
+// Design and the six rules: docs/design/pipeline-attention-design.md.
 //
 // Four rules are per step and live in pipeline_steps (follow_up_days,
 // follow_up_action), so Fred's thresholds are data. Two are date-based and

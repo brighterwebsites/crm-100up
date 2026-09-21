@@ -16,7 +16,7 @@
 -- cleanly; it would have aborted the whole atomic receive at commit time,
 -- with the failure surfacing from a trigger two frames removed from the cause.
 --
--- Design decision is accept and flag, never block (docs/goods-receipt-design.md
+-- Design decision is accept and flag, never block (docs/design/goods-receipt-design.md
 -- §5): the goods are physically on the shelf, and refusing to record them
 -- makes stock wrong to protect a number that is only advisory. The over-receipt
 -- is surfaced in the UI by comparing qty_received against qty_ordered — no

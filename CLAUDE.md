@@ -42,7 +42,7 @@ Three related repos, opened together via `100up-crm.code-workspace`:
 `100up-tools` matters here because the public estimator is meant to consume
 **this** repo's pricing: the `assumptions` table is the single source of truth
 and gets pushed to WordPress, never edited independently on the WP side. Spec
-lives in `docs/wp-quick-system-estimate-spec.md`. Branch `main` is current;
+lives in `docs/design/wp-quick-system-estimate-spec.md`. Branch `main` is current;
 the `combined` branch holds an accidental nested duplicate and was never
 deployed — ignore it.
 
@@ -54,27 +54,31 @@ deployed — ignore it.
 
 ## Read these before starting work
 
+**`docs/README.md` is the index.** It explains the four live registers and
+which one a new item belongs in — that decision is the one people get wrong.
+
 | Doc | Why |
 |---|---|
-| `docs/2026-09-20_mvp-plan.md` | Current plan: repo state, the three sprints to cutover, and what was decided without asking Fred. **Start here.** |
-| `docs/2026-08-12-Fredupdate` | Vanessa's update **to** Fred with his replies interleaved. **Attribution is not marked** — the installer block is unsourced and the block after the final `---` is hers (it says "He also wants..."). Fred's 2026-09-20 email supersedes the installer block entirely |
-| `docs/2026-07-29_status-gap-and-decisions.md` | Status and gap register with 37 decision questions, written deliberately for a client meeting. Much is now answered — read the two above first, but it is a good account of how the project looked in July |
-| `docs/ai-in-crm-design.md` | AI/MCP design — post-cutover, nothing built. MCP server before in-app chat, and the security model that matters |
-| `docs/bugs.md` | Defects in both codebases, what's fixed and what's carried forward |
-| `docs/refinements.md` | Incomplete features / UI not fully working — not bugs. Log new ones here. |
-| `docs/quote-configurator-design.md` | Target design for Assumptions → product-driven configurator (proposed, not built) |
-| `docs/schema-restructure-proposal.md` | Phase 2 schema design — partly implemented; check migrations for what actually landed |
-| `supabase/migrations/*.sql` | **Ground truth for the schema.** Docs can be stale; migrations are not |
+| `docs/README.md` | **Start here.** What every doc is for, and bugs vs refinements vs wishlist |
+| `docs/cutover.md` | Everything blocking go-live, in order. The open-items table is the short answer to "what's left" |
+| `docs/bugs.md` | Defects in both codebases, fixed and carried forward |
+| `docs/refinements.md` | Built but incomplete or not yet right for the business. R1–R7 |
+| `docs/feature-wishlist.md` | Parked ideas that are **not** Fred requirements |
+| `docs/fred-feedback-2026-08-12.md` | Vanessa's update **to** Fred with his replies interleaved, plus his 2026-09-20 email verbatim. Primary source; attribution inside is unmarked — see the note at the top |
+| `docs/2026-09-20_mvp-plan.md` | The September push as it happened, and every decision taken without asking Fred with the reasoning |
+| `docs/design/` | How the built things were built. Read before changing one |
+| `docs/archive/` | Superseded. Never current truth; `archive/README.md` says what replaced each |
+| `supabase/migrations/*.sql` | **Ground truth for the schema.** Docs can be stale; applied migrations cannot |
 
 ## What's built (new app)
 
 Pipeline board (19 steps, with a Needs attention panel and follow-up rules:
-`docs/pipeline-attention-design.md`), Customer Jobs, Customers, Job detail, Stock, Order
+`docs/design/pipeline-attention-design.md`), Customer Jobs, Customers, Job detail, Stock, Order
 List, Purchase Orders (draft → send to supplier / mark sent, receive against
 the PO, print, delete; open POs count as stock on order), Suppliers, Receive
 Stock (AI-read invoice; ad-hoc from the Stock page via `receive_stock`, or
 against a PO via `receive_goods` with the PO's lines as a reading hint),
-Stock takes (printed count sheet → counts → apply; `docs/stock-take-design.md`),
+Stock takes (printed count sheet → counts → apply; `docs/design/stock-take-design.md`),
 Settings (email service), Daily Load Profile.
 
 Auth with two roles: **admin** (Fred — everything) and **installer**. As of
@@ -112,7 +116,7 @@ emails, roles and when each last signed in: **Settings → Who is using the
 CRM**, backed by the admin-only `public.user_activity()`. To reset a password
 or create an account: Supabase dashboard → Authentication → Users.
 "Installer One" is the test installer referenced in `docs/bugs.md` #14 and
-`docs/installer-model-design.md` — the name is in the docs, the address is in
+`docs/design/installer-model-design.md` — the name is in the docs, the address is in
 the app, the password is in Vanessa's password manager.
 
 ## What's not built
@@ -248,10 +252,10 @@ on mount to open Settings. Any future external return trip has to do the same.
    `installer_can_set` (who may tick it), `date_column` (which `jobs`
    column holds its date, if any; otherwise the date is in
    `job_step_dates`) and `follow_up_days` / `follow_up_action` (when a job
-   sitting there needs chasing; `docs/pipeline-attention-design.md`).
+   sitting there needs chasing; `docs/design/pipeline-attention-design.md`).
    Hardcoded positions have already bitten twice: an
    off-by-one board offset, and a move-back that cleared the wrong date.
-   Full model: `docs/installer-model-design.md`.
+   Full model: `docs/design/installer-model-design.md`.
 5. **RLS discipline**: explicit `grant`, `enable row level security`, then one
    policy per operation. `anon` gets nothing.
 
@@ -287,7 +291,7 @@ on mount to open Settings. Any future external return trip has to do the same.
 - **Pricing/stock linkage is a regex.** The calculator generates part *names*
   from templates, and `app/src/lib/normalizePart.ts` fuzzy-matches them against
   `stocks.name`. It fails silently when it doesn't match. This is the central
-  problem `docs/quote-configurator-design.md` sets out to remove — read it
+  problem `docs/design/quote-configurator-design.md` sets out to remove — read it
   before touching anything in the quote → stock path.
 - **On hand (`stocks.qty`) is read-only to the app.** Every change must carry a
   reference: receiving (PO / receipt), installs (job), stock takes (ST-####).
@@ -295,7 +299,7 @@ on mount to open Settings. Any future external return trip has to do the same.
   `SECURITY DEFINER` functions through, telling them apart by `current_user`,
   so it **must stay `SECURITY INVOKER`**. Anything new that moves stock must be
   a `SECURITY DEFINER` function that records its reference, not a table update
-  from the app. See `docs/stock-take-design.md`.
+  from the app. See `docs/design/stock-take-design.md`.
 - **`last_cost` is hand-typed.** `receive_stock` captures no unit cost, so what
   Fred paid is not what the system knows.
 - **Assumption costs and stock costs are unlinked** and drift silently

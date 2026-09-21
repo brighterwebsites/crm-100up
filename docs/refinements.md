@@ -43,7 +43,7 @@ record.
 
 **As built:** a Save button exists at the bottom of the Customer Details
 card (`CustomersPage.tsx` `CustomerDetail`). The layout spec
-(`docs/Customers-layout.md`) puts EDIT/SAVE at the **top** of the main
+(`docs/archive/2026-07_layout-specs/Customers-layout.md`) puts EDIT/SAVE at the **top** of the main
 section; the live UI puts it under the fields. Job detail can also save the
 same customer fields via **Save details**.
 
@@ -100,7 +100,7 @@ received record.
 **Stock Received** needs its own section (flat list of receipts), not only a
 modal launched from Stock / Purchase Orders.
 
-This is not a new design. `docs/goods-receipt-design.md` §7 already specified
+This is not a new design. `docs/design/goods-receipt-design.md` §7 already specified
 the nav split, the Customers-style Suppliers layout, and a Stock Received
 tab. Schema and receive RPCs landed; the GUI split did not. Build the
 designed screens rather than inventing a third layout.
@@ -119,7 +119,7 @@ client-side JSON file named `100UP_stock-crm_YYYY-MM-DD.json`, `version:
 stock-1.2`. It denormalises the in-memory `jobs` / `customers` /
 `installation_requests` / `stocks` / `suppliers` / `purchaseOrders` back into
 the **old app’s flat export shape** so the file would still be importable
-into V46 if ever needed (`docs/schema-restructure-proposal.md` § Backup
+into V46 if ever needed (`docs/archive/schema-restructure-proposal.md` § Backup
 export).
 
 It is **not**:
@@ -166,7 +166,7 @@ is that there is no visibility at all.
 Minimum: a list (name, model, product type, maybe planning cost) of every
 stock row currently attached to a system config, plus every `gm_component`
 the Ground Mount BOM will pick up. No editors required. The real editor
-belongs in the configurator (`docs/quote-configurator-design.md`); this is
+belongs in the configurator (`docs/design/quote-configurator-design.md`); this is
 the stop-gap so Fred can see what the quotes are standing on.
 
 ---
@@ -204,4 +204,4 @@ steps jumped *past*, and it does **not** restore stock or clear later dates
 on a backward jump. Do not wire the dropdown to that override as-is. New
 RPC (`move_job_to_step`, keyed), or fix the override before exposing it.
 
-Stage/step/dates stay RPC-only (`docs/installer-model-design.md`).
+Stage/step/dates stay RPC-only (`docs/design/installer-model-design.md`).

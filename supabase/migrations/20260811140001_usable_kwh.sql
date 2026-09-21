@@ -1,6 +1,6 @@
 -- 100UP CRM — separate usable battery capacity from nominal.
 --
--- Clears the blocker in docs/phase-b-parity-gate.md §1.
+-- Clears the blocker in docs/archive/phase-b-parity-gate.md §1.
 --
 -- THE PROBLEM: `stocks.kwh` holds NOMINAL capacity, because it was populated
 -- for CES — that form asks for "Nominal storage capacity kWh". The V46 pricing

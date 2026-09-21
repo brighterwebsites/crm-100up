@@ -1,5 +1,5 @@
 -- ── Step permissions, step keys, editable step dates ───────────────────
--- Installer model part 1 (docs/installer-model-design.md).
+-- Installer model part 1 (docs/design/installer-model-design.md).
 --
 -- 1. pipeline_steps gains a stable `key`, an `installer_can_set` flag and a
 --    `date_column` (for the seven steps whose date lives on jobs). The step

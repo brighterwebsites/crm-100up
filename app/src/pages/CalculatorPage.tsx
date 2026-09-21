@@ -16,7 +16,7 @@
  * Parity: ACCEPTED BY OWNER, 2026-09-20. Fred signed the engine off in
  * practice — "within the parameters tested and how Fred plans to use it, it
  * works fine" — rather than buying the ten-scenario run in
- * docs/phase-b-parity-gate.md. The known divergences are listed there; the
+ * docs/archive/phase-b-parity-gate.md. The known divergences are listed there; the
  * material one (bug #8) is fixed here and caused no historical underpricing.
  */
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'

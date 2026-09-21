@@ -1,7 +1,7 @@
 // Stock takes: created when the count sheet is printed, so the paper and the
 // system share one number (ST-0001); counted; then applied, which sets on hand
 // to the counted figures and records what each replaced.
-// Design: docs/stock-take-design.md. DB: 20260915130001_stock_takes.sql.
+// Design: docs/design/stock-take-design.md. DB: 20260915130001_stock_takes.sql.
 
 import type { Stock, StockTake, StockTakeLine, Supplier } from '../../lib/data'
 import { PRODUCT_TYPE_LABEL } from '../../lib/productTypes'

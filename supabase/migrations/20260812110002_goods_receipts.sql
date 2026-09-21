@@ -1,6 +1,6 @@
 -- 100UP CRM — goods receipts, separated from purchase orders.
 --
--- See docs/goods-receipt-design.md. The short version: `purchase_orders` has
+-- See docs/design/goods-receipt-design.md. The short version: `purchase_orders` has
 -- been doing three jobs, and `receive_stock` writes a receipt as a fake closed
 -- PO with NO purchase_order_items rows at all — so what was received is not
 -- recorded anywhere, only the resulting stocks.qty increment.

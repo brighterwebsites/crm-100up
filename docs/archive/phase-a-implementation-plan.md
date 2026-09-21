@@ -8,8 +8,8 @@ settled elsewhere and is not revisited here:
 
 | Where | What it settles |
 |---|---|
-| `docs/quote-configurator-design.md` | Product-driven configurator; 9-step build order; D1–D6 all resolved |
-| `docs/2026-08-11_design-brief.md` | Visual system; §7 resolved (light only, no dark calculator mode) |
+| `docs/design/quote-configurator-design.md` | Product-driven configurator; 9-step build order; D1–D6 all resolved |
+| `docs/design/2026-08-11_design-brief.md` | Visual system; §7 resolved (light only, no dark calculator mode) |
 | `docs/bugs.md` | #6–#9, all reproduced |
 
 **Why this document exists.** Those two plans interleave, and they collide at
@@ -56,12 +56,12 @@ Ordered by dependency. Each item ships on its own and leaves the app working.
 
 ## After Phase A
 
-Unchanged from `docs/quote-configurator-design.md` §8 — restated only for
+Unchanged from `docs/design/quote-configurator-design.md` §8 — restated only for
 sequence. Do not re-plan these until Phase A lands.
 
 | Phase | Content | Gate |
 |---|---|---|
-| **B** | `system_configs` + inverters/batteries/components; `priceSystem()` engine; `[DEVELOPMENT SANITY CHECK]` parity panel | **Hard gate:** see `docs/phase-b-parity-gate.md`. Blocker cleared — `usable_kwh` added and guarded. Phase B is unblocked |
+| **B** | `system_configs` + inverters/batteries/components; `priceSystem()` engine; `[DEVELOPMENT SANITY CHECK]` parity panel | **Hard gate:** see `docs/archive/phase-b-parity-gate.md`. Blocker cleared — `usable_kwh` added and guarded. Phase B is unblocked |
 | **C** | Calculator (1φ) → 3 Phase → GM BOM | Each a discrete deliverable |
 | **D** | `quotes` + `quote_lines` (snapshot costs, 18-month expiry, versioning); convert quote → job | Step 7 precedes step 8: the quote record is what creates the customer |
 | **E** | Quick Estimate, Simulation | |

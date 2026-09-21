@@ -3,7 +3,7 @@
  * the product-driven engine. Same "5 kWh base + 5 kWh/person" formula, same
  * fully-off-grid-vs-generator-assisted comparison, same Sigenergy/Deye price
  * range. Shares priceSystem/optimisePanels with CalculatorPage, whose parity
- * Fred accepted on 2026-09-20 (docs/phase-b-parity-gate.md).
+ * Fred accepted on 2026-09-20 (docs/archive/phase-b-parity-gate.md).
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Copy } from 'lucide-react'

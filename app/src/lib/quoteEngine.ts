@@ -8,7 +8,7 @@
  * everything that depended on it is now a row in system_config_components.
  *
  * The arithmetic is a faithful port — the Phase B parity gate
- * (docs/phase-b-parity-gate.md) requires this to reproduce V46 to the cent,
+ * (docs/archive/phase-b-parity-gate.md) requires this to reproduce V46 to the cent,
  * excluding the documented divergences. Two deliberate differences:
  *
  *   1. Line items sum EXACTLY to base cost. V46 prints the inverter row

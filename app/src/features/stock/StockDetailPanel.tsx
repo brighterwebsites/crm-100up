@@ -358,7 +358,7 @@ export default function StockDetailPanel({ stockId, onClose, onCreated }: Props)
 
       {/* The stock-take part of this item's trail: what each count found
           against what the system held. Receipts and installs join this in
-          the planned Stock history panel (docs/stock-take-design.md). */}
+          the planned Stock history panel (docs/design/stock-take-design.md). */}
       {takeHistory.length > 0 && (
         <div className="jdp-section">
           <div className="jdp-section-title">Stock takes</div>

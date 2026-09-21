@@ -1,3 +1,22 @@
+> **STATUS 2026-09-21 — both halves resolved. This plan is history.**
+>
+> - **Feedback desk: BUILT**, not spec'd. It was small enough that a design doc
+>   would have cost more than the build, and Fred was already testing.
+>   `feedback_items` (`20260921130001`) + `app/src/features/feedback/`.
+>   Trimmed on the way: **no screenshots** (first Storage use, ~half the
+>   effort, and it cuts against "the CRM does not hold files" — parked as
+>   wishlist W5), three live statuses rather than four, and one list with a
+>   filter rather than a list plus a history page.
+> - **AI/MCP: spec'd** at `docs/design/ai-in-crm-design.md`, with one reversal
+>   argued there — **build the MCP server before the in-app chat.** Fred has
+>   Claude Max and ChatGPT Pro, so his own subscription pays for the model and
+>   MCP is a protocol rather than a Claude feature.
+> - **Numbering:** the W3/W4 in this plan collided. They are **W4 (AI/MCP)**
+>   and **W5 (screenshots)** in `docs/feature-wishlist.md`; W3 was taken by the
+>   quote → customer flow.
+> - Paths below predate the 2026-09-21 docs reorganisation. See
+>   `docs/README.md`.
+
 ---
 name: Feedback and CRM AI
 overview: "Document two specs in crm-100up: (1) an in-app feedback desk for Fred during freeze/cutover, and (2) phased AI-in-CRM with a shared tool layer that also powers an optional Claude.ai remote MCP connector."

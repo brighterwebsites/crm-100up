@@ -11,7 +11,7 @@
 -- (PO / receipt), installs (job) and apply_stock_take (ST-####). Until now the
 -- Stock item panel could overwrite it with no record, which is how
 -- "4 purchased, 6 on hand" happens with nothing to explain it.
--- Design: docs/stock-take-design.md.
+-- Design: docs/design/stock-take-design.md.
 
 create sequence public.stock_take_ref_seq;
 

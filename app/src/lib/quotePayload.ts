@@ -9,7 +9,7 @@
  * **v2 carries `stockId`.** V46 could only emit part *names*, generated from
  * templates, which `normalizePart()` then had to fuzzy-match back against
  * `stocks.name` — the central failure in the quote → stock path, because a
- * miss is silent (`docs/quote-configurator-design.md`). The rebuilt engine
+ * miss is silent (`docs/design/quote-configurator-design.md`). The rebuilt engine
  * already knows which stock row each cost line IS: `CostLine.stockId`. Passing
  * it through removes the round trip for anything quoted in the new app.
  *

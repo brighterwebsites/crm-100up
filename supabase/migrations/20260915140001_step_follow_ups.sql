@@ -11,7 +11,7 @@
 -- Starting defaults proposed 2026-09-15 and emailed to Fred for adjustment;
 -- they are data, so his numbers are an UPDATE, not a code change. Full rule
 -- set (these four plus two date-based rules computed in the app):
--- docs/pipeline-attention-design.md.
+-- docs/design/pipeline-attention-design.md.
 
 alter table public.pipeline_steps
   add column follow_up_days   integer check (follow_up_days is null or follow_up_days > 0),

@@ -3,7 +3,7 @@
 **Date:** 11 August 2026
 **Prepared by:** Brighter Websites
 **Status:** Proposal — nothing built. For Cursor/dev implementation once agreed.
-**Scope:** Visual/interaction design only. Information architecture, page layouts, and data model are already decided in `docs/main-layout.md` and the per-page layout docs — this brief does not revisit those.
+**Scope:** Visual/interaction design only. Information architecture, page layouts, and data model are already decided in `docs/archive/2026-07_layout-specs/main-layout.md` and the per-page layout docs — this brief does not revisit those.
 
 ---
 
@@ -118,8 +118,8 @@ Not new components — codifying what the app already needs across its current 9
 ## 5. What this does *not* cover
 
 - IA and screen layout — already specified per-page in `docs/*-layout.md`, unchanged by this brief.
-- The Quote Designer's actual calculation logic, product-catalogue configurator work in `docs/quote-configurator-design.md` — that's a data/logic project, this is skin.
-- Mobile-specific interaction patterns beyond what `index.css`'s existing two `@media` breakpoints (640px, 768px) already handle — worth a dedicated pass once the token/component work above lands, since `docs/2026-07-29_status-gap-and-decisions.md` and the CSS file both flag installers using this on phones as a real constraint, not an edge case.
+- The Quote Designer's actual calculation logic, product-catalogue configurator work in `docs/design/quote-configurator-design.md` — that's a data/logic project, this is skin.
+- Mobile-specific interaction patterns beyond what `index.css`'s existing two `@media` breakpoints (640px, 768px) already handle — worth a dedicated pass once the token/component work above lands, since `docs/archive/2026-07-29_status-gap-and-decisions.md` and the CSS file both flag installers using this on phones as a real constraint, not an edge case.
 
 ---
 

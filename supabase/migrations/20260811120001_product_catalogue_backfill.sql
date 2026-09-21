@@ -1,6 +1,6 @@
 -- 100UP CRM — classify existing stock as products; add the two missing sets.
 --
--- A4 of docs/phase-a-implementation-plan.md. Data only, no schema.
+-- A4 of docs/archive/phase-a-implementation-plan.md. Data only, no schema.
 --
 -- Values come from 100UP_assumptions_2026-06-20.json (the figures the V46
 -- calculator actually quotes with today) and GM_DEFAULT_COSTS in
@@ -28,7 +28,7 @@ update public.stocks set product_type = 'inverter', phase = 'three',  planning_c
 -- Batteries are phase-agnostic — they sit behind the inverter.
 -- kwh here is NOMINAL (the model name). The USABLE figure the engine sizes on
 -- is lower and differs: BAT 10.0 sizes on 9 kWh, AI-W5.1-B on 5.1. Do not
--- "correct" kwh to match the model name — see docs/quote-configurator-design.md
+-- "correct" kwh to match the model name — see docs/design/quote-configurator-design.md
 -- D3a on why spec fields are not cost fields.
 update public.stocks set product_type = 'battery', phase = 'na', planning_cost = 2600 where name = 'SigenStor BAT 10.0';
 update public.stocks set product_type = 'battery', phase = 'na', planning_cost = 2200 where name = 'SigenStor BAT 8.0';

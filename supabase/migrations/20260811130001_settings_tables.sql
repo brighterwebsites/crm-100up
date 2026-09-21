@@ -1,6 +1,6 @@
 -- 100UP CRM — break the 45-column `assumptions` singleton into real settings.
 --
--- A6 of docs/phase-a-implementation-plan.md; §4.3-4.7 of the configurator
+-- A6 of docs/archive/phase-a-implementation-plan.md; §4.3-4.7 of the configurator
 -- design. This is the item that removes the reason to open V46 to change a
 -- price, and with it the standing risk that the old file and the database
 -- disagree about cost (2026-07-29 status doc, §5 "Two systems in parallel").

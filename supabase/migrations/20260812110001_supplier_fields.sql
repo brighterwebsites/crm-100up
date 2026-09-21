@@ -2,7 +2,7 @@
 --
 -- `suppliers` holds name, phone, email and notes, which is too thin for the
 -- Customers-style detail panel the Suppliers page is being reworked into
--- (docs/goods-receipt-design.md §7, D6).
+-- (docs/design/goods-receipt-design.md §7, D6).
 --
 -- Text with `not null default ''` throughout, matching the existing phone /
 -- email / notes columns — the app treats blank as "not recorded" and never

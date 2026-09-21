@@ -2,7 +2,7 @@
 
 Ideas raised and deliberately parked. Not commitments, and not bugs — see
 `docs/bugs.md` for defects, `docs/refinements.md` for incomplete / not-fully-
-working features, and `docs/2026-07-29_status-gap-and-decisions.md` for the
+working features, and `docs/archive/2026-07-29_status-gap-and-decisions.md` for the
 open decision register.
 
 Each entry records the idea, why it was parked, and enough of the thinking
@@ -17,7 +17,7 @@ that picking it up later does not mean re-deriving it.
 
 The goods receipt flow reads a supplier invoice or delivery docket and keeps
 the extracted data. It does **not** keep the original file — that was decided
-against for v1 (see `docs/goods-receipt-design.md` D7) because storing PDFs
+against for v1 (see `docs/design/goods-receipt-design.md` D7) because storing PDFs
 needs a Supabase Storage bucket with its own RLS, and the extraction result is
 what the CRM actually queries.
 
@@ -80,7 +80,7 @@ whether to allow both, but how to make the disagreement visible.
 3. **Separate the fields.** `last_cost_invoiced` (receipts only, never
    hand-edited) alongside `planning_cost` (hand-set, what quotes use). No
    conflict possible because nothing is shared. Biggest change, and it
-   overlaps the `docs/quote-configurator-design.md` work on linking
+   overlaps the `docs/design/quote-configurator-design.md` work on linking
    assumptions to stock — worth resolving together rather than twice.
 
 Leaning toward 1 as a first step, since it is additive and makes 2 or 3
@@ -145,7 +145,7 @@ up as two records.
 
 **Raised** 2026-09-20 in `.cursor/plans/feedback_and_crm_ai_bb3bbf3e.plan.md`.
 **Post-cutover.** The feedback desk that plan paired this with was built on
-2026-09-21; this half still needs its spec (`docs/ai-in-crm-design.md`).
+2026-09-21; this half still needs its spec (`docs/design/ai-in-crm-design.md`).
 
 Baseline today: Anthropic via `aiComplete` → `extract-invoice` only, logged to
 `ai_call_log`, key in `integrations`.
@@ -173,7 +173,7 @@ someone whose watchword is "don't over-complicate" — mitigated by setting it
 up with him once. Either way MCP-first serves Vanessa immediately (CRM
 querying from Claude Code).
 
-**Full design: `docs/ai-in-crm-design.md`.**
+**Full design: `docs/design/ai-in-crm-design.md`.**
 
 **Security, the part to get right.** A long-lived admin token pasted into
 Claude.ai is a credential living in Anthropic's cloud, fronting a public

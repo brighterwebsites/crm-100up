@@ -3,7 +3,7 @@
 --
 -- Applied directly to the live DB via execute_sql on 2026-07-19.
 -- This file is the authoritative record of those changes.
--- See docs/schema-restructure-proposal.md for full design rationale.
+-- See docs/archive/schema-restructure-proposal.md for full design rationale.
 --
 -- Scope:
 --   §1  customers table  (split from jobs.name/email/phone/contact_method)
