@@ -27,6 +27,12 @@ patches `jobs.assigned_installer_id` (`saveJobAndCustomer`). The job-order
 row is a second form (`saveIR` / `JobOrderModal`), and the step date is a
 third (`set_step_date`). Nothing ties them together.
 
+**Found 2026-09-21 while auditing:** `JobOrderModal` in
+`features/jobs/modals.tsx` is **exported and never rendered** — dead code.
+The only live path to a job order ref is the inline form in `JobDetailPanel`
+(`saveIR`). Don't go looking for a modal you can open; either revive it
+deliberately or delete it when R1 is built.
+
 The modal already knows a default ref shape: `JO-{jobId padded 4}-{year}`.
 That is a reasonable auto value if one is not already set. Do not overwrite
 an existing ref. The step-date write still has to go through `set_step_date`
@@ -178,6 +184,33 @@ stock row currently attached to a system config, plus every `gm_component`
 the Ground Mount BOM will pick up. No editors required. The real editor
 belongs in the configurator (`docs/design/quote-configurator-design.md`); this is
 the stop-gap so Fred can see what the quotes are standing on.
+
+---
+
+## R8 — Suppliers table shows stale values after an edit made elsewhere
+
+**Screen:** Suppliers.
+
+**Found 2026-09-21** by the audit that followed `bugs.md` #17, looking for the
+same shape of defect. This is the mild relative of it.
+
+Each cell is an **uncontrolled** input: `<input defaultValue={sp[f]} onBlur=…>`.
+`defaultValue` behaves exactly like a `useState` initialiser — it applies on
+mount and never again. The row is keyed `sp.id`, so **switching suppliers is
+safe** and none of #17's cross-record corruption can happen here.
+
+What does happen: if a supplier's details change from anywhere else — another
+admin, another screen, the realtime refresh — React re-renders the row with a
+new `defaultValue`, and the DOM input keeps showing the old text. The table
+looks current and is not.
+
+Low harm, because editing a supplier is rare and there are two admins. But
+saving from a stale field writes the stale value back, which is a quiet way to
+undo someone else's change.
+
+**Fix when picked up:** make the inputs controlled, or key each cell on the
+value as well as the field. Controlled is the honest fix and matches the rest
+of the app.
 
 ---
 

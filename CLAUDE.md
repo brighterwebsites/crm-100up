@@ -331,6 +331,29 @@ on mount to open Settings. Any future external return trip has to do the same.
   shows "added by …" while in testing mode only. There is deliberately **no
   test/real flag** — nothing is real, so there is no split to make, only an
   authorship question.
+- **State seeded from a prop needs a `key` or a resetting effect.** A
+  `useState` initialiser — and `defaultValue` on an uncontrolled input — runs
+  **only on mount**. A detail component rendered at a position where the
+  record swaps will keep the previous record's values on screen while its
+  `id` prop has moved on, and a save then writes them to the **wrong row**.
+  That is `docs/bugs.md` #17, which corrupted customer records silently and
+  was reported as "saving doesn't work".
+
+  Audited the whole app 2026-09-21. Everything else is guarded, by one of
+  three means, and new code should pick one deliberately:
+
+  | Component | Guard |
+  |---|---|
+  | `JobDetailPanel` (`jobForm`/`custForm`/`irForm`), `StepDateInput` | `useEffect(…, [record])` |
+  | `StockDetailPanel` | `useEffect(…, [stockId, stock?.id])` |
+  | `StockTakeCount`, `FeedbackRow`, `CustomerDetail` | `key={id}` at the call site |
+  | `CesModal`, `LinkQuoteModal`, `ReceiveModal` | Conditionally rendered, so they unmount on close |
+
+  **Prefer a `key`** where the whole panel should reset: it also clears error,
+  saved and busy flags, which an effect on the record leaves stale. Only
+  `SuppliersPage` is still loose (`refinements.md` R8) — keyed rows, so no
+  cross-record write, but uncontrolled inputs that go stale when the row
+  changes underneath.
 - **Fred is testing live, so deploys land under an open tab.** Two banners
   handle it (`app/src/features/notice/Banners.tsx`). The **update** banner is
   automatic: Vite compiles a build id into the bundle and emits a matching
