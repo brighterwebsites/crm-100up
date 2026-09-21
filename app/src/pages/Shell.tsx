@@ -20,6 +20,7 @@ import AssumptionsPage from './AssumptionsPage'
 import CalculatorPage from './CalculatorPage'
 import QuickEstimatePage from './QuickEstimatePage'
 import SimulationPage from './SimulationPage'
+import { MaintenanceBanner, UpdateBanner } from '../features/notice/Banners'
 import GroundMountBomPage from './GroundMountBomPage'
 
 type Page =
@@ -169,6 +170,10 @@ function ShellInner() {
   return (
     <div className="shell-layout">
       {/* ── Top header ── */}
+      {/* Above the header, and above the sidebar, because both banners are
+          about the whole app rather than the page you happen to be on. */}
+      <UpdateBanner />
+      <MaintenanceBanner />
       <header className="app-header">
         <div className="header-left">
           <button className="sidebar-toggle-btn" onClick={() => setSidebarOpen(!sidebarOpen)} title="Toggle sidebar">

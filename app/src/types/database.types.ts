@@ -50,6 +50,41 @@ export type Database = {
         }
         Relationships: []
       }
+      app_notice: {
+        Row: {
+          active: boolean
+          id: number
+          message: string
+          until: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          id?: number
+          message?: string
+          until?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          id?: number
+          message?: string
+          until?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_notice_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assumptions: {
         Row: {
           created_at: string

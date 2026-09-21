@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../lib/auth'
+import { useData } from '../lib/data'
+import { supabase } from '../lib/supabaseClient'
 import {
   getAiUsageThisMonth,
   getIntegrationStatus,
@@ -478,11 +480,104 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 // ── Page ─────────────────────────────────────────────────────────────────
 
+// ── Maintenance notice ───────────────────────────────────────────────────
+
+/**
+ * The manual half of the two-banner scheme (features/notice/Banners.tsx).
+ *
+ * The automatic half needs no control at all: the app compares its build id
+ * against /version.json and offers a reload when this tab is behind. That
+ * covers "a deploy happened". It cannot cover "I am mid-change right now,
+ * expect wobble", which is a judgement, so this is the switch for that.
+ *
+ * Every duration sets an expiry. A banner that must be turned off by hand is
+ * one that stays up for three weeks and stops being read — and it would mean
+ * coming back to a dev session just to clear it, which was the thing to
+ * avoid.
+ */
+function MaintenanceCard() {
+  const { notice, refresh } = useData()
+  const [message, setMessage] = useState('')
+  const [hours, setHours] = useState(2)
+  const { busy, msg, err, setMsg, run } = useCardState()
+
+  useEffect(() => { setMessage(notice?.message ?? '') }, [notice?.message])
+
+  const liveUntil = notice?.until ? new Date(notice.until) : null
+  const isLive = Boolean(notice?.active && (!liveUntil || liveUntil.getTime() > Date.now()))
+
+  const setNotice = (active: boolean) =>
+    run('save', async () => {
+      const { error } = await supabase
+        .from('app_notice')
+        .update({
+          active,
+          message: message.trim(),
+          until: active ? new Date(Date.now() + hours * 3600_000).toISOString() : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', 1)
+      if (error) throw new Error(error.message)
+      await refresh()
+      setMsg(active ? `Banner is up for the next ${hours} hour${hours === 1 ? '' : 's'}.` : 'Banner cleared.')
+    })
+
+  return (
+    <div className="card settings-card">
+      <div className="card-title">Work-in-progress banner</div>
+      <p className="settings-hint" style={{ marginTop: 0 }}>
+        Shows a notice to everyone signed in, straight away — no reload needed. Use it when
+        you are actively changing things. A deploy on its own needs nothing here: the app
+        spots its own new version and offers Fred a Reload button.
+      </p>
+      <Notices err={err} msg={msg} />
+
+      {isLive && (
+        <div className="calc-warning" style={{ marginBottom: 12 }}>
+          <strong>Banner is showing now.</strong>{' '}
+          {liveUntil ? `It clears itself at ${liveUntil.toLocaleTimeString()}.` : 'No expiry set.'}
+        </div>
+      )}
+
+      <div className="form-grid">
+        <label>
+          Message
+          <input
+            placeholder="Updates in progress — some things may briefly not work."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+          />
+        </label>
+        <label>
+          Clear after
+          <select value={hours} onChange={(e) => setHours(Number(e.target.value))}>
+            <option value={1}>1 hour</option>
+            <option value={2}>2 hours</option>
+            <option value={4}>4 hours</option>
+            <option value={8}>8 hours</option>
+          </select>
+        </label>
+      </div>
+      <div className="settings-actions">
+        {isLive && (
+          <button className="btn btn-gray" disabled={Boolean(busy)} onClick={() => void setNotice(false)}>
+            Take it down
+          </button>
+        )}
+        <button className="btn btn-primary" disabled={Boolean(busy)} onClick={() => void setNotice(true)}>
+          {busy === 'save' ? 'Saving…' : isLive ? 'Update / extend' : 'Show the banner'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function SettingsPage({ gmailReturn }: { gmailReturn?: GmailReturn }) {
   return (
     <div>
       <h2 style={{ margin: '0 0 16px' }}>Settings</h2>
       <div className="settings-stack">
+        <MaintenanceCard />
         <EmailCard />
         <AnthropicCard />
         <GmailCard gmailReturn={gmailReturn} />

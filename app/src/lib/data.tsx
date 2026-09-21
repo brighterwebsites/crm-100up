@@ -19,6 +19,7 @@ export type PipelineStep = Tables<'pipeline_steps'>
 export type JobStepDate = Tables<'job_step_dates'>
 export type StockTake = Tables<'stock_takes'>
 export type StockTakeLine = Tables<'stock_take_lines'>
+export type AppNotice = Tables<'app_notice'>
 
 /** The 24-hour relative-weight load shape lives in assumptions.load_profile
  * as jsonb — parse defensively since Postgres returns it untyped `Json`. */
@@ -59,6 +60,9 @@ interface DataState {
   /** Admin-only by RLS; empty for installers. */
   stockTakes: StockTake[]
   stockTakeLines: StockTakeLine[]
+  /** Manual "work in progress" banner. Realtime-published, so switching it
+   *  on reaches an open tab without a refresh. */
+  notice: AppNotice | null
   loading: boolean
   refresh: () => Promise<void>
 }
@@ -79,6 +83,7 @@ const DataContext = createContext<DataState>({
   stepDates: [],
   stockTakes: [],
   stockTakeLines: [],
+  notice: null,
   loading: true,
   refresh: async () => {},
 })
@@ -125,6 +130,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     stepDates: [],
     stockTakes: [],
     stockTakeLines: [],
+    notice: null,
     loading: true,
   })
   const timer = useRef<ReturnType<typeof setTimeout>>(null)
@@ -142,7 +148,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     // the parts on their job. They read `stocks_visible`, which carries the
     // same columns with every cost redacted to 0 and rows limited to their own
     // jobs' allocations.
-    const [jobs, customers, installationRequests, stocks, manufacturers, suppliers, purchaseOrders, purchaseOrderItems, items, profiles, assumptions, pipelineSteps, stepDates, stockTakes, stockTakeLines] =
+    const [jobs, customers, installationRequests, stocks, manufacturers, suppliers, purchaseOrders, purchaseOrderItems, items, profiles, assumptions, pipelineSteps, stepDates, stockTakes, stockTakeLines, notice] =
       await Promise.all([
         supabase.from('jobs').select('*').order('id', { ascending: false }),
         supabase.from('customers').select('*').order('name'),
@@ -161,6 +167,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         supabase.from('job_step_dates').select('*'),
         supabase.from('stock_takes').select('*').order('id', { ascending: false }),
         supabase.from('stock_take_lines').select('*'),
+        supabase.from('app_notice').select('*').eq('id', 1).maybeSingle(),
       ])
     setState({
       jobs: jobs.data ?? [],
@@ -180,6 +187,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       stepDates: stepDates.data ?? [],
       stockTakes: stockTakes.data ?? [],
       stockTakeLines: stockTakeLines.data ?? [],
+      notice: notice.data ?? null,
       loading: false,
     })
   }, [isAdmin])
