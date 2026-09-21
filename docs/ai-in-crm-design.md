@@ -88,6 +88,15 @@ like `mcp.offgridcrm.100up.com.au`. Streamable HTTP transport. A Supabase Edge
 Function would also work; Cloudflare wins on being where the app already is
 and on request logging.
 
+> **Gotcha for the in-app surface only.** A zone-level Content-Security-Policy
+> on `100up.com.au` applies to the CRM and is **not in this repo**. Its
+> `connect-src` is an allowlist naming `'self'` and the Supabase project, so
+> an in-app chat calling an MCP server on a different subdomain would be
+> blocked by the browser before the request left. Add the origin to the zone
+> CSP, or serve the MCP endpoint under the app's own origin. Claude.ai and
+> ChatGPT are unaffected — they call the server from Anthropic's or OpenAI's
+> cloud, not from Fred's browser.
+
 ---
 
 ## 4. Security — the part to get right

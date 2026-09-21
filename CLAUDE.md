@@ -284,6 +284,19 @@ on mount to open Settings. Any future external return trip has to do the same.
   Fred paid is not what the system knows.
 - **Assumption costs and stock costs are unlinked** and drift silently
   (`docs/bugs.md` #3).
+- **A Cloudflare zone-level CSP applies to the CRM, and it is not in this
+  repo.** `app/public/_headers` sets only `X-Robots-Tag`. Everything else on a
+  live response — `content-security-policy`, HSTS, `x-frame-options`,
+  `permissions-policy` — comes from zone config on `100up.com.au` and is
+  inherited by the subdomain. It reads as a policy written for the WordPress
+  marketing site (it allows `*.facebook.net`, `*.youtube.com`,
+  `analytics.ahrefs.com`, `'unsafe-eval'`), which the CRM needs none of.
+  **Nothing is currently broken**: `connect-src` names the Supabase project
+  including `wss://` for realtime, and `font-src`/`style-src` cover Google
+  Fonts. **But `connect-src` is an allowlist**, so any future call to a new
+  origin is blocked before it leaves the browser — the planned MCP server on
+  its own subdomain would be, for instance. Check the live headers, not the
+  repo, when a fetch fails for no visible reason.
 - **The CRM presents itself as NOT LIVE until cutover.** `app_notice.mode`
   (`testing` | `live`) drives a permanent banner telling Fred that anything he
   enters is deleted at go-live and to keep real work in V46. That is the
