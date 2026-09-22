@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import {
-  Clock, ClipboardList, Download, FlaskConical, House, LayoutGrid, Menu, Package,
+  Clock, ClipboardList, FlaskConical, House, LayoutGrid, Menu, Package,
   Pickaxe, Plug, ReceiptText, Ruler, Settings, ShoppingCart, SlidersHorizontal,
   Truck, Users, Wrench,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useAuth } from '../lib/auth'
-import { DataProvider, useData } from '../lib/data'
+import { DataProvider } from '../lib/data'
 import StockPage from '../features/stock/StockPage'
 import OrderList from '../features/stock/OrderList'
 import SuppliersPage from '../features/suppliers/SuppliersPage'
@@ -55,7 +55,6 @@ function ShellInner() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [orderJobId, setOrderJobId]   = useState<number | null>(null)
   const [gmailReturn, setGmailReturn] = useState<GmailReturn | undefined>()
-  const { jobs, customers, stocks, suppliers, purchaseOrders, items, installationRequests } = useData()
 
   // Gmail OAuth return trip. The app has no router — `page` is state and always
   // starts on Pipeline — so the callback lands on the root with ?gmail=… and
@@ -69,83 +68,6 @@ function ShellInner() {
     setPage('settings')
     window.history.replaceState({}, '', window.location.pathname)
   }, [])
-
-  // Backup export — denormalises customers + installation_requests back to
-  // the old app's flat JSON shape so the file stays importable if ever needed.
-  function exportJson() {
-    const byJob = (jobId: number, status: string) =>
-      items
-        .filter((i) => i.job_id === jobId && i.status === status)
-        .map((i) => ({
-          stockId: i.stock_id,
-          name: stocks.find((s) => s.id === i.stock_id)?.name ?? `stock #${i.stock_id}`,
-          qty: i.qty,
-          ...(i.notes ? { notes: i.notes } : {}),
-        }))
-    const data = {
-      jobs: jobs.map((j) => {
-        const cust = customers.find((c) => c.id === j.customer_id)
-        const ir = installationRequests.find((r) => r.job_id === j.id)
-        const jobOrder = ir
-          ? {
-              ref: ir.job_order_ref,
-              issued: ir.issued_date ?? '',
-              customItems: ir.custom_items,
-              savedAt: new Date(ir.updated_at).getTime(),
-            }
-          : undefined
-        return {
-          id: j.id,
-          name: cust?.name ?? '',
-          loc: j.location,
-          system: j.system_description,
-          value: j.value,
-          email: cust?.email ?? '',
-          phone: cust?.phone ?? '',
-          contact: cust?.contact_method ?? 'Email',
-          jobType: j.job_type,
-          stage: j.stage,
-          step: j.step,
-          notes: j.notes,
-          installerNotes: j.installer_notes,
-          created: new Date(j.created_at).getTime(),
-          stockItems: byJob(j.id, 'assigned'),
-          stockConsumed: byJob(j.id, 'consumed'),
-          pendingBom: byJob(j.id, 'pending').length ? byJob(j.id, 'pending') : null,
-          jobOrder,
-          dateBooked: j.planned_install_date ?? '',
-          installStart: j.install_start_date ?? '',
-          installDate: j.install_completion_date ?? '',
-          cesSubmitted: j.ces_submitted ?? '',
-          cesReceived: j.ces_received ?? '',
-          rebateSubmitted: j.rebate_submitted ?? '',
-          rebateReceived: j.rebate_received ?? '',
-        }
-      }),
-      stocks: stocks.map((s) => ({ id: s.id, name: s.name, qty: s.qty, ...(s.preferred_supplier_id ? { supplierId: s.preferred_supplier_id } : {}) })),
-      suppliers: suppliers.map((sp) => ({ id: sp.id, name: sp.name, phone: sp.phone, email: sp.email, notes: sp.notes })),
-      receipts: purchaseOrders.map((r) => ({
-        id: r.id,
-        date: r.occurred_at,
-        supplier: suppliers.find((sp) => sp.id === r.supplier_id)?.name ?? '',
-        invoiceRef: r.invoice_ref,
-        itemCount: r.item_count,
-        totalUnits: r.total_units,
-      })),
-      nextId: Math.max(0, ...jobs.map((j) => j.id)) + 1,
-      stockNextId: Math.max(0, ...stocks.map((s) => s.id)) + 1,
-      supplierNextId: Math.max(0, ...suppliers.map((sp) => sp.id)) + 1,
-      receiptNextId: Math.max(0, ...purchaseOrders.map((r) => r.id)) + 1,
-      exportedAt: new Date().toISOString(),
-      version: 'stock-1.2',
-    }
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = `100UP_stock-crm_${new Date().toLocaleDateString('en-CA')}.json`
-    a.click()
-    URL.revokeObjectURL(a.href)
-  }
 
   // When OrderList wants to open a job, jump to Customer Jobs page with it selected
   function handleOpenJob(id: number) {
@@ -188,11 +110,6 @@ function ShellInner() {
           <span className="nav-brand">100UP <span className="badge">CRM</span></span>
         </div>
         <div className="header-right">
-          {isAdmin && (
-            <button className="btn btn-gray btn-icon" style={{ fontSize: 12 }} onClick={exportJson} title="Download JSON backup">
-              <Download size={14} strokeWidth={2} aria-hidden /> Backup
-            </button>
-          )}
           <span className="nav-user">
             {profile?.full_name || session?.user.email}
             <span className={`role-pill ${isAdmin ? 'role-admin' : 'role-installer'}`}>{profile?.role ?? '…'}</span>

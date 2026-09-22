@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../lib/auth'
 import { useData } from '../lib/data'
 import { supabase } from '../lib/supabaseClient'
+import { Download } from 'lucide-react'
 import { fmtAgo } from '../lib/format'
 import type { Tables } from '../types/database.types'
 import {
@@ -740,12 +741,134 @@ function ActivityCard() {
   )
 }
 
+// ── V46 JSON export ──────────────────────────────────────────────────────
+
+/**
+ * Moved out of the header 2026-09-21 (refinements.md R5).
+ *
+ * It sat next to Sign out labelled **Backup**, which is the one thing it is
+ * not. It downloads a client-side JSON file in the OLD app's flat shape, so
+ * V46 could still ingest it — useful while Fred runs the business there, and
+ * actively dangerous as a name, because someone who believes they have a
+ * backup stops making one.
+ *
+ * It is not a database backup, there is no import path for it in this app,
+ * and it is not even complete: goods receipts, assumptions, system configs,
+ * step dates and POs-as-POs are all absent, because none of them existed in
+ * V46's shape. A real backup is Supabase's own.
+ *
+ * Candidate for deletion once Fred is off V46 and nothing needs a file the
+ * old HTML can read.
+ */
+function V46ExportCard() {
+  const { jobs, customers, stocks, suppliers, purchaseOrders, items, installationRequests } = useData()
+
+  function exportJson() {
+    const byJob = (jobId: number, status: string) =>
+      items
+        .filter((i) => i.job_id === jobId && i.status === status)
+        .map((i) => ({
+          stockId: i.stock_id,
+          name: stocks.find((s) => s.id === i.stock_id)?.name ?? `stock #${i.stock_id}`,
+          qty: i.qty,
+          ...(i.notes ? { notes: i.notes } : {}),
+        }))
+    const data = {
+      jobs: jobs.map((j) => {
+        const cust = customers.find((c) => c.id === j.customer_id)
+        const ir = installationRequests.find((r) => r.job_id === j.id)
+        const jobOrder = ir
+          ? {
+              ref: ir.job_order_ref,
+              issued: ir.issued_date ?? '',
+              customItems: ir.custom_items,
+              savedAt: new Date(ir.updated_at).getTime(),
+            }
+          : undefined
+        return {
+          id: j.id,
+          name: cust?.name ?? '',
+          loc: j.location,
+          system: j.system_description,
+          value: j.value,
+          email: cust?.email ?? '',
+          phone: cust?.phone ?? '',
+          contact: cust?.contact_method ?? 'Email',
+          jobType: j.job_type,
+          stage: j.stage,
+          step: j.step,
+          notes: j.notes,
+          installerNotes: j.installer_notes,
+          created: new Date(j.created_at).getTime(),
+          stockItems: byJob(j.id, 'assigned'),
+          stockConsumed: byJob(j.id, 'consumed'),
+          pendingBom: byJob(j.id, 'pending').length ? byJob(j.id, 'pending') : null,
+          jobOrder,
+          dateBooked: j.planned_install_date ?? '',
+          installStart: j.install_start_date ?? '',
+          installDate: j.install_completion_date ?? '',
+          cesSubmitted: j.ces_submitted ?? '',
+          cesReceived: j.ces_received ?? '',
+          rebateSubmitted: j.rebate_submitted ?? '',
+          rebateReceived: j.rebate_received ?? '',
+        }
+      }),
+      stocks: stocks.map((s) => ({ id: s.id, name: s.name, qty: s.qty, ...(s.preferred_supplier_id ? { supplierId: s.preferred_supplier_id } : {}) })),
+      suppliers: suppliers.map((sp) => ({ id: sp.id, name: sp.name, phone: sp.phone, email: sp.email, notes: sp.notes })),
+      receipts: purchaseOrders.map((r) => ({
+        id: r.id,
+        date: r.occurred_at,
+        supplier: suppliers.find((sp) => sp.id === r.supplier_id)?.name ?? '',
+        invoiceRef: r.invoice_ref,
+        itemCount: r.item_count,
+        totalUnits: r.total_units,
+      })),
+      nextId: Math.max(0, ...jobs.map((j) => j.id)) + 1,
+      stockNextId: Math.max(0, ...stocks.map((s) => s.id)) + 1,
+      supplierNextId: Math.max(0, ...suppliers.map((sp) => sp.id)) + 1,
+      receiptNextId: Math.max(0, ...purchaseOrders.map((r) => r.id)) + 1,
+      exportedAt: new Date().toISOString(),
+      version: 'stock-1.2',
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `100UP_stock-crm_${new Date().toLocaleDateString('en-CA')}.json`
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
+
+  return (
+    <div className="card settings-card">
+      <div className="card-title">Download V46-shaped JSON</div>
+      <p className="settings-hint" style={{ marginTop: 0 }}>
+        Exports jobs, customers, stock, suppliers and orders in the <strong>old
+        app's</strong> flat format, so the file can still be opened by V46. Useful
+        while both systems are running.
+      </p>
+      <div className="cost-drift" style={{ marginBottom: 12 }}>
+        <strong>This is not a backup.</strong> It is a one-way export for V46, it
+        cannot be imported back into this app, and it leaves out everything V46
+        never had — goods receipts, assumptions, system configuration, pipeline
+        step dates, and purchase orders as purchase orders. For a real backup use
+        the Supabase dashboard.
+      </div>
+      <div className="settings-actions">
+        <button className="btn btn-gray" onClick={exportJson}>
+          <Download size={14} strokeWidth={2} aria-hidden /> Download JSON
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function SettingsPage({ gmailReturn }: { gmailReturn?: GmailReturn }) {
   return (
     <div>
       <h2 style={{ margin: '0 0 16px' }}>Settings</h2>
       <div className="settings-stack">
         <ActivityCard />
+        <V46ExportCard />
         <MaintenanceCard />
         <EmailCard />
         <AnthropicCard />

@@ -123,7 +123,7 @@ designed screens rather than inventing a third layout.
 
 ---
 
-## R5 — Header Backup button: leftover V46 JSON export, not a real backup
+## R5 — Header Backup button: leftover V46 JSON export, not a real backup | DONE
 
 **Question asked:** what is the Backup button actually doing? Assumed it has
 drifted far from the original and is probably in the wrong place (Settings).
@@ -151,10 +151,15 @@ V46 needed this because the live data lived in `localStorage`. The live data
 now lives in Postgres. A real backup is the Supabase dashboard (or a
 scheduled dump), not this button.
 
-**Placement:** agreed it does not belong in the header. If it stays at all,
-Settings is the honest home, labelled as “Download V46-shaped JSON” so it is
-not mistaken for disaster recovery. Candidate to remove once Fred is off V46
-and nobody needs a file the old HTML can ingest.
+**Done 2026-09-21.** Moved out of the header into Settings as **Download
+V46-shaped JSON**, with a warning saying in as many words that it is not a
+backup, cannot be imported back, and omits everything V46 never had. Doing
+this while Fred is testing mattered more than the tidiness: a button labelled
+*Backup* sitting beside *Sign out* is not just wrong, it is the kind of wrong
+that stops someone taking a real backup.
+
+Still a candidate for deletion once Fred is off V46 and nothing needs a file
+the old HTML can ingest.
 
 ---
 
@@ -187,7 +192,7 @@ the stop-gap so Fred can see what the quotes are standing on.
 
 ---
 
-## R8 — Suppliers table shows stale values after an edit made elsewhere
+## R8 — Suppliers table shows stale values after an edit made elsewhere | FOLD INTO R4
 
 **Screen:** Suppliers.
 
@@ -211,6 +216,20 @@ undo someone else's change.
 **Fix when picked up:** make the inputs controlled, or key each cell on the
 value as well as the field. Controlled is the honest fix and matches the rest
 of the app.
+
+**Do not fix this on its own — fold it into R4.** The Suppliers page is due to
+be rebuilt as a Customers-style list-and-detail screen, which replaces these
+inputs entirely. Patching a table that is about to be deleted is wasted work,
+and it would leave the real problem in place:
+
+**`suppliers` already has nine fields the page never shows.** `abn`,
+`address_line`, `suburb`, `state`, `postcode`, `account_number`, `website`,
+`payment_terms` and `contact_name` were added in `20260812110001` — explicitly
+*“too thin for the Customers-style detail panel the Suppliers page is being
+reworked into”*. The migration landed, the panel did not. Those columns appear
+nowhere in `app/src/` except the generated types. So the database is not
+wrong; it is **ahead of the UI by nine fields**, and the four-column table is
+the whole of what got built.
 
 ---
 
